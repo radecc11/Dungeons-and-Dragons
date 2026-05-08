@@ -643,7 +643,7 @@ async function toggleChat(open){
   await updateDoc(doc(db,"game","session"),{chatOpen:open});
   await addSystemLog(open?"Chat aberto pelo GM/Host.":"Chat fechado pelo GM/Host.");
 }
-async async function sendSessionMessage(){
+async function sendSessionMessage(){
   if(!sessionData.open) return alert("A sessão ainda está fechada.");
   const open=sessionData.chatOpen!==false;
   if(!open && !isOwner() && !isGmLogged()) return alert("O chat está fechado para jogadores.");
