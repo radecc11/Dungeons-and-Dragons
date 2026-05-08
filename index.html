@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hollow Break RPG</title>
+  <title>Hollow Break RPG Online</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
@@ -19,10 +19,7 @@
       --border: rgba(255, 208, 0, 0.35);
     }
 
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
 
     body {
       margin: 0;
@@ -37,7 +34,7 @@
     header {
       padding: 24px;
       border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,0.72);
+      background: rgba(0,0,0,0.76);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -54,28 +51,21 @@
       flex-wrap: wrap;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .logo { display: flex; align-items: center; gap: 12px; }
 
     .mark {
-      width: 46px;
-      height: 46px;
+      width: 46px; height: 46px;
       border: 2px solid var(--yellow);
       background: linear-gradient(135deg, #000, #2a2300);
       border-radius: 14px;
-      display: grid;
-      place-items: center;
-      color: var(--yellow);
-      font-weight: 900;
+      display: grid; place-items: center;
+      color: var(--yellow); font-weight: 900;
       box-shadow: 0 0 18px rgba(255,208,0,.35);
     }
 
     h1, h2, h3 { margin: 0; }
     h1 { color: var(--yellow); letter-spacing: 1px; }
-    small { color: var(--muted); }
+    small, p { color: var(--muted); }
 
     .status-pill {
       border: 1px solid var(--border);
@@ -86,18 +76,9 @@
       font-size: 14px;
     }
 
-    main {
-      max-width: 1200px;
-      margin: 24px auto;
-      padding: 0 16px 40px;
-    }
+    main { max-width: 1200px; margin: 24px auto; padding: 0 16px 40px; }
 
-    .tabs {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
 
     .tab-btn, button, .file-label {
       border: 1px solid var(--border);
@@ -108,6 +89,8 @@
       cursor: pointer;
       font-weight: 700;
       transition: 0.18s;
+      display: inline-block;
+      text-align: center;
     }
 
     .tab-btn:hover, button:hover, .file-label:hover {
@@ -115,20 +98,11 @@
       box-shadow: 0 0 20px rgba(255,208,0,.25);
     }
 
-    .tab-btn.active {
-      background: var(--yellow);
-      color: #050505;
-      box-shadow: 0 0 22px rgba(255,208,0,.45);
-    }
-
+    .tab-btn.active { background: var(--yellow); color: #050505; box-shadow: 0 0 22px rgba(255,208,0,.45); }
     .tab { display: none; }
     .tab.active { display: block; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
-    }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
 
     .card {
       background: linear-gradient(180deg, rgba(25,25,25,.96), rgba(9,9,9,.96));
@@ -143,155 +117,66 @@
     .span-8 { grid-column: span 8; }
     .span-12 { grid-column: span 12; }
 
-    label {
-      display: block;
-      margin: 12px 0 6px;
-      color: var(--yellow2);
-      font-size: 14px;
-      font-weight: 700;
-    }
+    label { display: block; margin: 12px 0 6px; color: var(--yellow2); font-size: 14px; font-weight: 700; }
 
     input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
+      width: 100%; padding: 12px; border-radius: 12px;
       border: 1px solid rgba(255,255,255,.12);
-      background: #070707;
-      color: var(--text);
-      outline: none;
+      background: #070707; color: var(--text); outline: none;
     }
 
     textarea { min-height: 100px; resize: vertical; }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--yellow);
-      box-shadow: 0 0 0 3px rgba(255,208,0,.12);
-    }
+    input:focus, select:focus, textarea:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,208,0,.12); }
 
     .face-box {
-      width: 220px;
-      height: 220px;
-      border-radius: 24px;
-      border: 2px dashed var(--border);
-      background: #080808;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      margin: 10px auto;
-      color: var(--muted);
-      text-align: center;
+      width: 220px; height: 220px; border-radius: 24px;
+      border: 2px dashed var(--border); background: #080808;
+      display: grid; place-items: center; overflow: hidden;
+      margin: 10px auto; color: var(--muted); text-align: center;
     }
-
-    .face-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
+    .face-box img { width: 100%; height: 100%; object-fit: cover; }
     input[type="file"] { display: none; }
 
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .row > * { flex: 1; }
 
-    .stat-list {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-    }
+    .stat-list { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+    .stat-card { background: #080808; border: 1px solid rgba(255,208,0,.25); border-radius: 16px; padding: 12px; text-align: center; }
+    .stat-card strong { display: block; color: var(--yellow); font-size: 22px; }
 
-    .stat-card {
-      background: #080808;
-      border: 1px solid rgba(255,208,0,.25);
-      border-radius: 16px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .stat-card strong {
-      display: block;
-      color: var(--yellow);
-      font-size: 22px;
-    }
-
-    .warning {
-      color: var(--danger);
-      font-weight: 700;
-    }
-
-    .ok {
-      color: var(--ok);
-      font-weight: 700;
-    }
+    .warning { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--ok); font-weight: 700; }
 
     .character-card {
-      display: grid;
-      grid-template-columns: 90px 1fr auto;
-      gap: 12px;
-      align-items: center;
+      display: grid; grid-template-columns: 90px 1fr auto;
+      gap: 12px; align-items: center;
       border: 1px solid rgba(255,208,0,.2);
-      background: #090909;
-      border-radius: 18px;
-      padding: 12px;
-      margin: 10px 0;
+      background: #090909; border-radius: 18px;
+      padding: 12px; margin: 10px 0;
     }
 
     .avatar-small {
-      width: 90px;
-      height: 90px;
-      border-radius: 16px;
-      background: #1b1b1b;
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      border: 1px solid var(--border);
+      width: 90px; height: 90px; border-radius: 16px;
+      background: #1b1b1b; overflow: hidden;
+      display: grid; place-items: center; color: var(--muted);
+      border: 1px solid var(--border); text-align: center; font-size: 12px;
     }
-
     .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
-    .session-panel {
-      border: 2px solid var(--yellow);
-      background: linear-gradient(135deg, #0b0b0b, #231d00);
-    }
-
-    .big-session {
-      font-size: 28px;
-      color: var(--yellow);
-      text-align: center;
-      margin: 12px 0;
-    }
+    .session-panel { border: 2px solid var(--yellow); background: linear-gradient(135deg, #0b0b0b, #231d00); }
+    .big-session { font-size: 28px; color: var(--yellow); text-align: center; margin: 12px 0; }
 
     .rules p, .rules li { color: #ddd; line-height: 1.55; }
     .rules ul { margin-top: 8px; }
 
-    .export-card {
-      background: #080808;
-      width: 720px;
-      max-width: 100%;
-      border: 3px solid var(--yellow);
-      border-radius: 24px;
-      padding: 22px;
-      color: var(--text);
-    }
-
-    .export-head {
-      display: flex;
-      gap: 18px;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-    }
-
-    .hidden-render {
-      position: fixed;
-      left: -99999px;
-      top: 0;
-      background: #050505;
-    }
+    .export-card { background: #080808; width: 760px; max-width: 100%; border: 3px solid var(--yellow); border-radius: 24px; padding: 22px; color: var(--text); }
+    .export-head { display: flex; gap: 18px; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+    .hidden-render { position: fixed; left: -99999px; top: 0; background: #050505; }
 
     .danger-btn { color: #fff; border-color: rgba(255,68,68,.6); background: linear-gradient(180deg, #521010, #090909); }
     .green-btn { color: #001707; border-color: rgba(56,255,139,.6); background: linear-gradient(180deg, #38ff8b, #caffdd); }
+
+    .firebase-box { border: 1px solid rgba(255,68,68,.55); background: rgba(255,68,68,.08); }
 
     @media (max-width: 850px) {
       .span-4, .span-6, .span-8, .span-12 { grid-column: span 12; }
@@ -307,8 +192,8 @@
       <div class="logo">
         <div class="mark">HB</div>
         <div>
-          <h1>Hollow Break RPG</h1>
-          <small>Fichas, sessão, GM e agentes em clima urbano futurista</small>
+          <h1>Hollow Break RPG Online</h1>
+          <small>Fichas online, sessão, GM e agentes em clima preto/amarelo</small>
         </div>
       </div>
       <div class="status-pill" id="ownerStatus">Modo visitante</div>
@@ -319,7 +204,7 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="openTab('home', this)">Início</button>
       <button class="tab-btn" onclick="openTab('creator', this)">Criar Personagem</button>
-      <button class="tab-btn" onclick="openTab('library', this)">Fichas</button>
+      <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
       <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
       <button class="tab-btn" onclick="openTab('gm', this)">Painel do Dono</button>
       <button class="tab-btn" onclick="openTab('rules', this)">Regras</button>
@@ -329,13 +214,17 @@
       <div class="grid">
         <div class="card span-8">
           <h2>Bem-vindo ao Hollow Break</h2>
-          <p>Crie sua ficha, importe o rosto PNG do personagem, salve no navegador e entre na sessão quando o dono liberar.</p>
-          <p><b>Importante:</b> esta versão é 100% gratuita e funciona no GitHub Pages. Ela salva os dados no navegador de cada jogador. Para todo mundo ver tudo em tempo real no mesmo servidor, depois precisa ligar Firebase ou Supabase.</p>
+          <p>Este site usa Firebase Firestore. Quando você colocar seu firebaseConfig, fichas, sessão e GMs ficam online para todos os amigos no mesmo link.</p>
+          <p><b>Antes de publicar:</b> procure no código por <b>COLE_AQUI</b> e troque pelos dados do seu Firebase.</p>
         </div>
         <div class="card span-4 session-panel">
           <h2>Status da Sessão</h2>
-          <div class="big-session" id="homeSessionStatus">FECHADA</div>
-          <p id="homeSessionText">O dono ainda não iniciou a sessão.</p>
+          <div class="big-session" id="homeSessionStatus">CARREGANDO</div>
+          <p id="homeSessionText">Conectando ao Firebase...</p>
+        </div>
+        <div class="card span-12 firebase-box" id="firebaseWarning" style="display:none">
+          <h2>Firebase ainda não configurado</h2>
+          <p>Você precisa colar o firebaseConfig no código. Sem isso o site não salva online.</p>
         </div>
       </div>
     </section>
@@ -362,7 +251,7 @@
             <div><label>Nível</label><input id="level" type="number" value="1" min="1" /></div>
           </div>
 
-          <h3 style="margin-top:18px;color:var(--yellow)">Atributos: distribua 14 pontos, máximo inicial 4</h3>
+          <h3 style="margin-top:18px;color:var(--yellow)">Atributos: distribua 10 pontos, máximo inicial 4</h3>
           <div class="stat-list">
             <div class="stat-card"><label>Corpo</label><input id="corpo" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
             <div class="stat-card"><label>Agilidade</label><input id="agilidade" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
@@ -390,7 +279,7 @@
           <textarea id="story" placeholder="Personalidade, visual, passado e objetivo"></textarea>
 
           <div class="row" style="margin-top:14px">
-            <button onclick="saveCharacter()">Salvar ficha</button>
+            <button onclick="saveCharacter()">Salvar ficha online</button>
             <button onclick="downloadCharacterJson()">Exportar ficha JSON</button>
             <button onclick="exportCharacterImage()">Exportar imagem da ficha</button>
           </div>
@@ -400,12 +289,12 @@
 
     <section id="library" class="tab">
       <div class="card">
-        <h2>Fichas Salvas / Importadas</h2>
-        <p>Para seus amigos entrarem na sessão, cada um precisa criar ou importar uma ficha neste site.</p>
+        <h2>Fichas Online</h2>
+        <p>Todos os personagens salvos aparecem aqui para todo mundo.</p>
         <div class="row">
           <label class="file-label" for="importJson">Importar ficha JSON</label>
           <input type="file" id="importJson" accept="application/json" />
-          <button onclick="renderCharacters()">Atualizar lista</button>
+          <button onclick="renderAll()">Atualizar lista</button>
         </div>
         <div id="charactersList"></div>
       </div>
@@ -415,8 +304,8 @@
       <div class="grid">
         <div class="card span-6 session-panel">
           <h2>Sessão do RPG</h2>
-          <div class="big-session" id="sessionStatus">FECHADA</div>
-          <p id="sessionMsg">A sessão ainda não foi iniciada pelo dono.</p>
+          <div class="big-session" id="sessionStatus">CARREGANDO</div>
+          <p id="sessionMsg">Conectando ao Firebase...</p>
           <button id="joinBtn" onclick="joinSession()">Entrar na sessão com minha ficha</button>
         </div>
         <div class="card span-6">
@@ -430,11 +319,11 @@
       <div class="grid">
         <div class="card span-6">
           <h2>Login do Dono</h2>
-          <p>Defina uma senha de dono na primeira vez. Guarde ela. Só quem tiver essa senha consegue iniciar sessão e promover GM neste navegador.</p>
+          <p>Crie uma senha de dono. Essa senha fica salva no Firebase e libera o botão de iniciar sessão e tornar GM.</p>
           <label>Senha do dono</label>
           <input id="ownerPass" type="password" placeholder="Digite sua senha de dono" />
           <div class="row" style="margin-top:12px">
-            <button onclick="setOwnerPassword()">Criar/Salvar senha</button>
+            <button onclick="setOwnerPassword()">Criar senha</button>
             <button onclick="ownerLogin()">Entrar como dono</button>
             <button class="danger-btn" onclick="ownerLogout()">Sair</button>
           </div>
@@ -465,23 +354,56 @@
           <li>10 a 13: sucesso</li>
           <li>14 ou mais: sucesso crítico</li>
         </ul>
-        <p><b>Vida:</b> 12 + Fortitude × 3 + Corpo. <b>Defesa:</b> 6 + Agilidade + metade do Reflexo arredondada para baixo. <b>PE:</b> máximo padrão 5.</p>
-        <p><b>Combo em cadeia:</b> gaste 1 PE para agir após um aliado, ganhar +2 no ataque e adicionar 1d6 de dano.</p>
+        <p><b>Vida:</b> 12 + Fortitude × 3 + Corpo.</p>
+        <p><b>Defesa:</b> 6 + Agilidade + metade do Reflexo arredondada para baixo.</p>
+        <p><b>PE:</b> máximo padrão 5.</p>
       </div>
     </section>
   </main>
 
   <div id="hiddenRender" class="hidden-render"></div>
 
-  <script>
-    const STORAGE_KEYS = {
-      chars: 'hollow_break_characters',
-      session: 'hollow_break_session',
-      ownerHash: 'hollow_break_owner_hash',
-      ownerLogged: 'hollow_break_owner_logged'
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      getDocs,
+      onSnapshot,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "COLE_AQUI",
+      authDomain: "COLE_AQUI",
+      projectId: "COLE_AQUI",
+      storageBucket: "COLE_AQUI",
+      messagingSenderId: "COLE_AQUI",
+      appId: "COLE_AQUI"
     };
 
+    const firebaseReady = firebaseConfig.apiKey !== "COLE_AQUI";
+    window.firebaseReady = firebaseReady;
+
+    if (firebaseReady) {
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      window.hbFirebase = { db, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, serverTimestamp };
+      window.dispatchEvent(new Event('firebase-ready'));
+    } else {
+      window.dispatchEvent(new Event('firebase-missing'));
+    }
+  </script>
+
+  <script>
     let faceData = '';
+    let characters = [];
+    let sessionData = { open: false, party: [] };
 
     function openTab(id, btn) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -491,20 +413,45 @@
       renderAll();
     }
 
-    function getChars() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.chars) || '[]');
+    function fb() { return window.hbFirebase; }
+
+    function showFirebaseMissing() {
+      document.getElementById('firebaseWarning').style.display = 'block';
+      document.getElementById('homeSessionStatus').textContent = 'SEM FIREBASE';
+      document.getElementById('homeSessionText').textContent = 'Cole o firebaseConfig no código para salvar online.';
+      document.getElementById('sessionStatus').textContent = 'SEM FIREBASE';
+      document.getElementById('sessionMsg').textContent = 'O site ainda não está conectado ao Firebase.';
     }
 
-    function setChars(chars) {
-      localStorage.setItem(STORAGE_KEYS.chars, JSON.stringify(chars));
+    window.addEventListener('firebase-missing', showFirebaseMissing);
+
+    window.addEventListener('firebase-ready', async () => {
+      listenCharacters();
+      listenSession();
+      updateOwnerStatus();
+    });
+
+    function listenCharacters() {
+      const { db, collection, onSnapshot } = fb();
+      onSnapshot(collection(db, 'characters'), snapshot => {
+        characters = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        characters.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+        renderAll();
+      });
     }
 
-    function getSession() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || '{"open":false,"party":[]}');
-    }
-
-    function setSession(session) {
-      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
+    function listenSession() {
+      const { db, doc, onSnapshot, setDoc } = fb();
+      const sessionRef = doc(db, 'game', 'session');
+      onSnapshot(sessionRef, async snap => {
+        if (!snap.exists()) {
+          await setDoc(sessionRef, { open: false, party: [] });
+          return;
+        }
+        sessionData = snap.data();
+        if (!Array.isArray(sessionData.party)) sessionData.party = [];
+        renderAll();
+      });
     }
 
     async function simpleHash(text) {
@@ -513,9 +460,7 @@
       return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    function isOwner() {
-      return sessionStorage.getItem(STORAGE_KEYS.ownerLogged) === 'true';
-    }
+    function isOwner() { return sessionStorage.getItem('hollow_break_owner_logged') === 'true'; }
 
     function updateOwnerStatus() {
       const el = document.getElementById('ownerStatus');
@@ -534,19 +479,25 @@
     }
 
     async function setOwnerPassword() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       const pass = document.getElementById('ownerPass').value.trim();
-      if (localStorage.getItem(STORAGE_KEYS.ownerHash)) return alert('Já existe uma senha de dono neste navegador.');
       if (pass.length < 4) return alert('Use uma senha com pelo menos 4 caracteres.');
-      localStorage.setItem(STORAGE_KEYS.ownerHash, await simpleHash(pass));
-      alert('Senha do dono criada.');
+      const { db, doc, getDoc, setDoc } = fb();
+      const ref = doc(db, 'game', 'owner');
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data().passwordHash) return alert('Já existe uma senha de dono no Firebase.');
+      await setDoc(ref, { passwordHash: await simpleHash(pass) });
+      alert('Senha do dono criada online.');
     }
 
     async function ownerLogin() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       const pass = document.getElementById('ownerPass').value.trim();
-      const saved = localStorage.getItem(STORAGE_KEYS.ownerHash);
-      if (!saved) return alert('Crie a senha do dono primeiro.');
-      if (await simpleHash(pass) === saved) {
-        sessionStorage.setItem(STORAGE_KEYS.ownerLogged, 'true');
+      const { db, doc, getDoc } = fb();
+      const snap = await getDoc(doc(db, 'game', 'owner'));
+      if (!snap.exists()) return alert('Crie a senha do dono primeiro.');
+      if (await simpleHash(pass) === snap.data().passwordHash) {
+        sessionStorage.setItem('hollow_break_owner_logged', 'true');
         alert('Você entrou como dono.');
       } else {
         alert('Senha errada.');
@@ -555,7 +506,7 @@
     }
 
     function ownerLogout() {
-      sessionStorage.removeItem(STORAGE_KEYS.ownerLogged);
+      sessionStorage.removeItem('hollow_break_owner_logged');
       renderAll();
     }
 
@@ -594,7 +545,6 @@
 
     function makeCharacter() {
       return {
-        id: crypto.randomUUID(),
         name: document.getElementById('charName').value.trim(),
         player: document.getElementById('playerName').value.trim(),
         className: document.getElementById('charClass').value,
@@ -609,30 +559,29 @@
           presenca: Number(document.getElementById('presenca').value || 0),
           eter: Number(document.getElementById('eterStat').value || 0)
         },
-        vida: Number(document.getElementById('vida').value || 10),
-        defesa: Number(document.getElementById('defesa').value || 5),
+        vida: Number(document.getElementById('vida').value || 12),
+        defesa: Number(document.getElementById('defesa').value || 6),
         pe: Number(document.getElementById('pe').value || 5),
         skills: document.getElementById('skills').value.trim(),
         weapon: document.getElementById('weapon').value.trim(),
         ultimate: document.getElementById('ultimate').value.trim(),
         story: document.getElementById('story').value.trim(),
         face: faceData,
-        gm: false,
-        createdAt: new Date().toISOString()
+        gm: false
       };
     }
 
-    function saveCharacter() {
+    async function saveCharacter() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       updateDerived();
       const c = makeCharacter();
       if (!c.name || !c.player) return alert('Coloque o nome do personagem e do jogador.');
       const total = Object.values(c.stats).reduce((a,b)=>a+b,0);
-      if (total > 14) return alert('Você passou de 14 pontos de atributo.');
-      const chars = getChars();
-      chars.push(c);
-      setChars(chars);
-      alert('Ficha salva.');
-      renderAll();
+      if (total > 14) return alert('Você passou de 10 pontos de atributo.');
+      const { db, collection, doc, setDoc, serverTimestamp } = fb();
+      const ref = doc(collection(db, 'characters'));
+      await setDoc(ref, { ...c, createdAt: serverTimestamp() });
+      alert('Ficha salva online.');
     }
 
     function downloadFile(filename, content, type) {
@@ -655,34 +604,28 @@
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         try {
+          if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
           const c = JSON.parse(reader.result);
           if (!c.name || !c.player) throw new Error('Ficha inválida');
-          c.id = crypto.randomUUID();
+          const { db, collection, doc, setDoc, serverTimestamp } = fb();
+          const ref = doc(collection(db, 'characters'));
+          delete c.id;
           c.gm = false;
-          const chars = getChars();
-          chars.push(c);
-          setChars(chars);
-          alert('Ficha importada.');
-          renderAll();
-        } catch(err) {
-          alert('Arquivo inválido.');
-        }
+          await setDoc(ref, { ...c, createdAt: serverTimestamp() });
+          alert('Ficha importada online.');
+        } catch(err) { alert('Arquivo inválido.'); }
       };
       reader.readAsText(file);
     });
 
     function renderCharacters() {
-      const chars = getChars();
       const box = document.getElementById('charactersList');
-      if (!chars.length) {
-        box.innerHTML = '<p>Nenhuma ficha salva ainda.</p>';
-        return;
-      }
-      box.innerHTML = chars.map(c => `
+      if (!characters.length) { box.innerHTML = '<p>Nenhuma ficha online ainda.</p>'; return; }
+      box.innerHTML = characters.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
           <div>
             <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3>
             <small>Jogador: ${escapeHtml(c.player)} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</small>
@@ -697,95 +640,88 @@
       `).join('');
     }
 
-    function deleteCharacter(id) {
-      if (!confirm('Excluir esta ficha?')) return;
-      setChars(getChars().filter(c => c.id !== id));
-      const s = getSession();
-      s.party = s.party.filter(pid => pid !== id);
-      setSession(s);
-      renderAll();
+    async function deleteCharacter(id) {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
+      if (!confirm('Excluir esta ficha online?')) return;
+      const { db, doc, deleteDoc, updateDoc } = fb();
+      await deleteDoc(doc(db, 'characters', id));
+      const party = (sessionData.party || []).filter(pid => pid !== id);
+      await updateDoc(doc(db, 'game', 'session'), { party });
     }
 
     function downloadSavedJson(id) {
-      const c = getChars().find(x => x.id === id);
+      const c = characters.find(x => x.id === id);
       if (!c) return;
       downloadFile(`${c.name.replaceAll(' ', '_')}_hollow_break.json`, JSON.stringify(c, null, 2), 'application/json');
     }
 
-    function startSession() {
+    async function startSession() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       if (!isOwner()) return alert('Somente o dono pode iniciar.');
-      const chars = getChars();
-      if (!chars.length) return alert('Precisa ter pelo menos uma ficha salva/importada.');
-      const s = getSession();
-      s.open = true;
-      setSession(s);
-      alert('Sessão iniciada.');
-      renderAll();
+      if (!characters.length) return alert('Precisa ter pelo menos uma ficha salva/importada.');
+      const { db, doc, setDoc } = fb();
+      await setDoc(doc(db, 'game', 'session'), { open: true, party: sessionData.party || [] });
+      alert('Sessão iniciada online.');
     }
 
-    function endSession() {
+    async function endSession() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       if (!isOwner()) return alert('Somente o dono pode encerrar.');
-      setSession({ open: false, party: [] });
-      alert('Sessão encerrada.');
-      renderAll();
+      const { db, doc, setDoc } = fb();
+      await setDoc(doc(db, 'game', 'session'), { open: false, party: [] });
+      alert('Sessão encerrada online.');
     }
 
-    function joinSession() {
-      const chars = getChars();
-      const s = getSession();
-      if (!s.open) return alert('A sessão ainda está fechada.');
-      if (!chars.length) return alert('Você precisa criar ou importar uma ficha antes de entrar.');
-      const choice = prompt('Digite o número da ficha para entrar:\n' + chars.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join('\n'));
+    async function joinSession() {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
+      if (!sessionData.open) return alert('A sessão ainda está fechada.');
+      if (!characters.length) return alert('Você precisa criar ou importar uma ficha antes de entrar.');
+      const choice = prompt('Digite o número da ficha para entrar:
+' + characters.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join('
+'));
       const index = Number(choice) - 1;
-      if (!chars[index]) return alert('Ficha inválida.');
-      if (!s.party.includes(chars[index].id)) s.party.push(chars[index].id);
-      setSession(s);
-      alert('Você entrou na sessão.');
-      renderAll();
+      if (!characters[index]) return alert('Ficha inválida.');
+      const party = sessionData.party || [];
+      if (!party.includes(characters[index].id)) party.push(characters[index].id);
+      const { db, doc, updateDoc } = fb();
+      await updateDoc(doc(db, 'game', 'session'), { party });
+      alert('Você entrou na sessão online.');
     }
 
     function renderSession() {
-      const s = getSession();
-      const chars = getChars();
+      const s = sessionData;
       document.getElementById('sessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
       document.getElementById('homeSessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
-      document.getElementById('sessionMsg').textContent = s.open ? 'A sessão começou. Entre com uma ficha salva/importada.' : 'A sessão ainda não foi iniciada pelo dono.';
+      document.getElementById('sessionMsg').textContent = s.open ? 'A sessão começou. Entre com uma ficha online.' : 'A sessão ainda não foi iniciada pelo dono.';
       document.getElementById('homeSessionText').textContent = s.open ? 'A mesa está aberta. Prepare os dados.' : 'O dono ainda não iniciou a sessão.';
-      const party = chars.filter(c => s.party.includes(c.id));
+      const party = characters.filter(c => (s.party || []).includes(c.id));
       document.getElementById('partyList').innerHTML = party.length ? party.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
           <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small></div>
         </div>
       `).join('') : '<p>Ninguém entrou ainda.</p>';
     }
 
     function renderGmManage() {
-      const chars = getChars();
       const box = document.getElementById('gmManageList');
-      if (!chars.length) {
-        box.innerHTML = '<p>Nenhuma ficha para gerenciar.</p>';
-        return;
-      }
-      box.innerHTML = chars.map(c => `
+      if (!characters.length) { box.innerHTML = '<p>Nenhuma ficha para gerenciar.</p>'; return; }
+      box.innerHTML = characters.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
           <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>Jogador: ${escapeHtml(c.player)}</small></div>
-          <div class="row">
-            <button onclick="toggleGm('${c.id}')">${c.gm ? 'Remover GM' : 'Tornar GM'}</button>
-          </div>
+          <div class="row"><button onclick="toggleGm('${c.id}')">${c.gm ? 'Remover GM' : 'Tornar GM'}</button></div>
         </div>
       `).join('');
     }
 
-    function toggleGm(id) {
+    async function toggleGm(id) {
+      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
       if (!isOwner()) return alert('Somente o dono pode mexer em GM.');
-      const chars = getChars();
-      const c = chars.find(x => x.id === id);
+      const c = characters.find(x => x.id === id);
       if (!c) return;
-      c.gm = !c.gm;
-      setChars(chars);
-      renderAll();
+      const { db, doc, updateDoc } = fb();
+      await updateDoc(doc(db, 'characters', id), { gm: !c.gm });
     }
 
     function characterCardHtml(c) {
@@ -800,13 +736,13 @@
             </div>
           </div>
           <div class="stat-list">
-            <div class="stat-card">Corpo<strong>${c.stats.corpo}</strong></div>
-            <div class="stat-card">Agilidade<strong>${c.stats.agilidade || 0}</strong></div>
-            <div class="stat-card">Fortitude<strong>${c.stats.fortitude || 0}</strong></div>
-            <div class="stat-card">Reflexo<strong>${c.stats.reflexo}</strong></div>
-            <div class="stat-card">Técnica<strong>${c.stats.tecnica}</strong></div>
-            <div class="stat-card">Presença<strong>${c.stats.presenca}</strong></div>
-            <div class="stat-card">Éter<strong>${c.stats.eter}</strong></div>
+            <div class="stat-card">Corpo<strong>${c.stats?.corpo || 0}</strong></div>
+            <div class="stat-card">Agilidade<strong>${c.stats?.agilidade || 0}</strong></div>
+            <div class="stat-card">Fortitude<strong>${c.stats?.fortitude || 0}</strong></div>
+            <div class="stat-card">Reflexo<strong>${c.stats?.reflexo || 0}</strong></div>
+            <div class="stat-card">Técnica<strong>${c.stats?.tecnica || 0}</strong></div>
+            <div class="stat-card">Presença<strong>${c.stats?.presenca || 0}</strong></div>
+            <div class="stat-card">Éter<strong>${c.stats?.eter || 0}</strong></div>
           </div>
           <p><b>Vida:</b> ${c.vida} • <b>Defesa:</b> ${c.defesa} • <b>PE:</b> ${c.pe}</p>
           <p><b>Especializações:</b> ${escapeHtml(c.skills || '-')}</p>
@@ -823,7 +759,7 @@
     }
 
     async function exportSavedImage(id) {
-      const c = getChars().find(x => x.id === id);
+      const c = characters.find(x => x.id === id);
       if (c) await exportImageFromCharacter(c);
     }
 
