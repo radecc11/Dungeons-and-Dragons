@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hollow Break RPG Online</title>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     :root {
       --bg: #050505;
@@ -19,7 +21,10 @@
       --border: rgba(255, 208, 0, 0.35);
     }
 
-    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
     body {
       margin: 0;
@@ -34,7 +39,7 @@
     header {
       padding: 24px;
       border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,0.76);
+      background: rgba(0, 0, 0, 0.78);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -51,21 +56,37 @@
       flex-wrap: wrap;
     }
 
-    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
     .mark {
-      width: 46px; height: 46px;
+      width: 46px;
+      height: 46px;
       border: 2px solid var(--yellow);
       background: linear-gradient(135deg, #000, #2a2300);
       border-radius: 14px;
-      display: grid; place-items: center;
-      color: var(--yellow); font-weight: 900;
-      box-shadow: 0 0 18px rgba(255,208,0,.35);
+      display: grid;
+      place-items: center;
+      color: var(--yellow);
+      font-weight: 900;
+      box-shadow: 0 0 18px rgba(255, 208, 0, 0.35);
     }
 
-    h1, h2, h3 { margin: 0; }
-    h1 { color: var(--yellow); letter-spacing: 1px; }
-    small, p { color: var(--muted); }
+    h1, h2, h3 {
+      margin: 0;
+    }
+
+    h1 {
+      color: var(--yellow);
+      letter-spacing: 1px;
+    }
+
+    small, p {
+      color: var(--muted);
+    }
 
     .status-pill {
       border: 1px solid var(--border);
@@ -76,9 +97,18 @@
       font-size: 14px;
     }
 
-    main { max-width: 1200px; margin: 24px auto; padding: 0 16px 40px; }
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
 
-    .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
 
     .tab-btn, button, .file-label {
       border: 1px solid var(--border);
@@ -95,21 +125,35 @@
 
     .tab-btn:hover, button:hover, .file-label:hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 20px rgba(255,208,0,.25);
+      box-shadow: 0 0 20px rgba(255, 208, 0, 0.25);
     }
 
-    .tab-btn.active { background: var(--yellow); color: #050505; box-shadow: 0 0 22px rgba(255,208,0,.45); }
-    .tab { display: none; }
-    .tab.active { display: block; }
+    .tab-btn.active {
+      background: var(--yellow);
+      color: #050505;
+      box-shadow: 0 0 22px rgba(255, 208, 0, 0.45);
+    }
 
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
 
     .card {
-      background: linear-gradient(180deg, rgba(25,25,25,.96), rgba(9,9,9,.96));
+      background: linear-gradient(180deg, rgba(25, 25, 25, 0.96), rgba(9, 9, 9, 0.96));
       border: 1px solid var(--border);
       border-radius: 22px;
       padding: 18px;
-      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
     }
 
     .span-4 { grid-column: span 4; }
@@ -117,75 +161,230 @@
     .span-8 { grid-column: span 8; }
     .span-12 { grid-column: span 12; }
 
-    label { display: block; margin: 12px 0 6px; color: var(--yellow2); font-size: 14px; font-weight: 700; }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: var(--yellow2);
+      font-size: 14px;
+      font-weight: 700;
+    }
 
     input, select, textarea {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: #070707; color: var(--text); outline: none;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #070707;
+      color: var(--text);
+      outline: none;
     }
 
-    textarea { min-height: 100px; resize: vertical; }
-    input:focus, select:focus, textarea:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,208,0,.12); }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(255, 208, 0, 0.12);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
 
     .face-box {
-      width: 220px; height: 220px; border-radius: 24px;
-      border: 2px dashed var(--border); background: #080808;
-      display: grid; place-items: center; overflow: hidden;
-      margin: 10px auto; color: var(--muted); text-align: center;
+      width: 220px;
+      height: 220px;
+      border-radius: 24px;
+      border: 2px dashed var(--border);
+      background: #080808;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin: 10px auto;
+      color: var(--muted);
+      text-align: center;
     }
-    .face-box img { width: 100%; height: 100%; object-fit: cover; }
-    input[type="file"] { display: none; }
 
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .row > * { flex: 1; }
+    .face-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-    .stat-list { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-    .stat-card { background: #080808; border: 1px solid rgba(255,208,0,.25); border-radius: 16px; padding: 12px; text-align: center; }
-    .stat-card strong { display: block; color: var(--yellow); font-size: 22px; }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
 
-    .warning { color: var(--danger); font-weight: 700; }
-    .ok { color: var(--ok); font-weight: 700; }
+    .row > * {
+      flex: 1;
+    }
+
+    .stat-list {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: #080808;
+      border: 1px solid rgba(255, 208, 0, 0.25);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-card strong {
+      display: block;
+      color: var(--yellow);
+      font-size: 22px;
+    }
+
+    .warning {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
 
     .character-card {
-      display: grid; grid-template-columns: 90px 1fr auto;
-      gap: 12px; align-items: center;
-      border: 1px solid rgba(255,208,0,.2);
-      background: #090909; border-radius: 18px;
-      padding: 12px; margin: 10px 0;
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(255, 208, 0, 0.2);
+      background: #090909;
+      border-radius: 18px;
+      padding: 12px;
+      margin: 10px 0;
     }
 
     .avatar-small {
-      width: 90px; height: 90px; border-radius: 16px;
-      background: #1b1b1b; overflow: hidden;
-      display: grid; place-items: center; color: var(--muted);
-      border: 1px solid var(--border); text-align: center; font-size: 12px;
+      width: 90px;
+      height: 90px;
+      border-radius: 16px;
+      background: #1b1b1b;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      text-align: center;
+      font-size: 12px;
     }
-    .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
-    .session-panel { border: 2px solid var(--yellow); background: linear-gradient(135deg, #0b0b0b, #231d00); }
-    .big-session { font-size: 28px; color: var(--yellow); text-align: center; margin: 12px 0; }
+    .avatar-small img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-    .rules p, .rules li { color: #ddd; line-height: 1.55; }
-    .rules ul { margin-top: 8px; }
+    .session-panel {
+      border: 2px solid var(--yellow);
+      background: linear-gradient(135deg, #0b0b0b, #231d00);
+    }
 
-    .export-card { background: #080808; width: 760px; max-width: 100%; border: 3px solid var(--yellow); border-radius: 24px; padding: 22px; color: var(--text); }
-    .export-head { display: flex; gap: 18px; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
-    .hidden-render { position: fixed; left: -99999px; top: 0; background: #050505; }
+    .big-session {
+      font-size: 28px;
+      color: var(--yellow);
+      text-align: center;
+      margin: 12px 0;
+    }
 
-    .danger-btn { color: #fff; border-color: rgba(255,68,68,.6); background: linear-gradient(180deg, #521010, #090909); }
-    .green-btn { color: #001707; border-color: rgba(56,255,139,.6); background: linear-gradient(180deg, #38ff8b, #caffdd); }
+    .rules p, .rules li {
+      color: #ddd;
+      line-height: 1.55;
+    }
 
-    .firebase-box { border: 1px solid rgba(255,68,68,.55); background: rgba(255,68,68,.08); }
+    .rules ul {
+      margin-top: 8px;
+    }
+
+    .export-card {
+      background: #080808;
+      width: 760px;
+      max-width: 100%;
+      border: 3px solid var(--yellow);
+      border-radius: 24px;
+      padding: 22px;
+      color: var(--text);
+    }
+
+    .export-head {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+
+    .hidden-render {
+      position: fixed;
+      left: -99999px;
+      top: 0;
+      background: #050505;
+    }
+
+    .danger-btn {
+      color: #fff;
+      border-color: rgba(255, 68, 68, 0.6);
+      background: linear-gradient(180deg, #521010, #090909);
+    }
+
+    .green-btn {
+      color: #001707;
+      border-color: rgba(56, 255, 139, 0.6);
+      background: linear-gradient(180deg, #38ff8b, #caffdd);
+    }
+
+    .firebase-box {
+      border: 1px solid rgba(255, 68, 68, 0.55);
+      background: rgba(255, 68, 68, 0.08);
+    }
+
+    .edit-panel {
+      border: 1px solid rgba(56, 255, 139, 0.55);
+      background: rgba(56, 255, 139, 0.06);
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--yellow2);
+      font-size: 12px;
+      margin: 2px;
+    }
 
     @media (max-width: 850px) {
-      .span-4, .span-6, .span-8, .span-12 { grid-column: span 12; }
-      .stat-list { grid-template-columns: repeat(2, 1fr); }
-      .character-card { grid-template-columns: 70px 1fr; }
-      .character-card .row { grid-column: span 2; }
+      .span-4, .span-6, .span-8, .span-12 {
+        grid-column: span 12;
+      }
+
+      .stat-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .character-card {
+        grid-template-columns: 70px 1fr;
+      }
+
+      .character-card .row {
+        grid-column: span 2;
+      }
     }
   </style>
 </head>
+
 <body>
   <header>
     <div class="topbar">
@@ -193,7 +392,7 @@
         <div class="mark">HB</div>
         <div>
           <h1>Hollow Break RPG Online</h1>
-          <small>Fichas online, sessão, GM e agentes em clima preto/amarelo</small>
+          <small>Fichas online, sessão, Host, GMs e edição ao vivo</small>
         </div>
       </div>
       <div class="status-pill" id="ownerStatus">Modo visitante</div>
@@ -206,7 +405,7 @@
       <button class="tab-btn" onclick="openTab('creator', this)">Criar Personagem</button>
       <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
       <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
-      <button class="tab-btn" onclick="openTab('gm', this)">Painel do Dono</button>
+      <button class="tab-btn" onclick="openTab('gm', this)">Painel Host / GM</button>
       <button class="tab-btn" onclick="openTab('rules', this)">Regras</button>
     </div>
 
@@ -214,17 +413,20 @@
       <div class="grid">
         <div class="card span-8">
           <h2>Bem-vindo ao Hollow Break</h2>
-          <p>Este site usa Firebase Firestore. Quando você colocar seu firebaseConfig, fichas, sessão e GMs ficam online para todos os amigos no mesmo link.</p>
-          <p><b>Antes de publicar:</b> procure no código por <b>COLE_AQUI</b> e troque pelos dados do seu Firebase.</p>
+          <p>Este site está ligado ao Firebase Firestore. As fichas, sessão e GMs ficam online para todos no mesmo link.</p>
+          <p><b>Controle:</b> só o Host com senha pode iniciar sessão, encerrar sessão e transformar jogadores em GM.</p>
+          <p><b>Durante a sessão:</b> Host e GMs promovidos podem editar fichas online, atributos, aparência e características físicas.</p>
         </div>
+
         <div class="card span-4 session-panel">
           <h2>Status da Sessão</h2>
           <div class="big-session" id="homeSessionStatus">CARREGANDO</div>
           <p id="homeSessionText">Conectando ao Firebase...</p>
         </div>
+
         <div class="card span-12 firebase-box" id="firebaseWarning" style="display:none">
-          <h2>Firebase ainda não configurado</h2>
-          <p>Você precisa colar o firebaseConfig no código. Sem isso o site não salva online.</p>
+          <h2>Erro no Firebase</h2>
+          <p>Confira se o Firestore foi criado e se as regras estão liberadas para teste.</p>
         </div>
       </div>
     </section>
@@ -241,40 +443,110 @@
 
         <div class="card span-8">
           <h2>Ficha do Agente</h2>
+
           <div class="row">
-            <div><label>Nome</label><input id="charName" placeholder="Ex: Kael Vortex" /></div>
-            <div><label>Jogador</label><input id="playerName" placeholder="Seu nome" /></div>
-          </div>
-          <div class="row">
-            <div><label>Classe</label><select id="charClass"><option>Executor</option><option>Anômalo</option><option>Guardião</option><option>Especialista</option><option>Atirador</option></select></div>
-            <div><label>Afinidade de Éter</label><select id="ether"><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Físico</option><option>Caos</option><option>Vácuo</option></select></div>
-            <div><label>Nível</label><input id="level" type="number" value="1" min="1" /></div>
+            <div>
+              <label>Nome</label>
+              <input id="charName" placeholder="Ex: Kael Vortex" />
+            </div>
+            <div>
+              <label>Jogador</label>
+              <input id="playerName" placeholder="Seu nome" />
+            </div>
           </div>
 
-          <h3 style="margin-top:18px;color:var(--yellow)">Atributos: distribua 10 pontos, máximo inicial 4</h3>
+          <div class="row">
+            <div>
+              <label>Classe</label>
+              <select id="charClass">
+                <option>Executor</option>
+                <option>Anômalo</option>
+                <option>Guardião</option>
+                <option>Especialista</option>
+                <option>Atirador</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Afinidade de Éter</label>
+              <select id="ether">
+                <option>Fogo</option>
+                <option>Gelo</option>
+                <option>Elétrico</option>
+                <option>Físico</option>
+                <option>Caos</option>
+                <option>Vácuo</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Nível</label>
+              <input id="level" type="number" value="1" min="1" />
+            </div>
+          </div>
+
+          <h3 style="margin-top:18px;color:var(--yellow)">Distribuição livre de atributos</h3>
+
           <div class="stat-list">
-            <div class="stat-card"><label>Corpo</label><input id="corpo" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Agilidade</label><input id="agilidade" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Fortitude</label><input id="fortitude" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Reflexo</label><input id="reflexo" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Técnica</label><input id="tecnica" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Presença</label><input id="presenca" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
-            <div class="stat-card"><label>Éter</label><input id="eterStat" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card">
+              <label>Corpo</label>
+              <input id="corpo" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Agilidade</label>
+              <input id="agilidade" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Fortitude</label>
+              <input id="fortitude" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Reflexo</label>
+              <input id="reflexo" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Técnica</label>
+              <input id="tecnica" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Presença</label>
+              <input id="presenca" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Éter</label>
+              <input id="eterStat" type="number" value="0" min="0" oninput="updateDerived()" />
+            </div>
           </div>
-          <p id="pointsInfo">Pontos usados: 0/10</p>
+
+          <p id="pointsInfo">Pontos usados: 0</p>
 
           <div class="row">
-            <div><label>Vida</label><input id="vida" readonly /></div>
-            <div><label>Defesa</label><input id="defesa" readonly /></div>
-            <div><label>PE Máximo</label><input id="pe" type="number" value="5" min="0" /></div>
+            <div>
+              <label>Vida</label>
+              <input id="vida" readonly />
+            </div>
+            <div>
+              <label>Defesa</label>
+              <input id="defesa" readonly />
+            </div>
+            <div>
+              <label>PE Máximo</label>
+              <input id="pe" type="number" value="5" min="0" />
+            </div>
           </div>
 
           <label>Especializações, separe por vírgula</label>
           <input id="skills" placeholder="Katana, Acrobacia, Intimidação" />
+
           <label>Arma principal</label>
           <input id="weapon" placeholder="Ex: Pistolas duplas, Katana elétrica" />
+
+          <label>Características físicas</label>
+          <textarea id="physical" placeholder="Ex: cabelo branco, cicatriz no olho, jaqueta amarela, olhos elétricos"></textarea>
+
           <label>Habilidade Suprema</label>
           <textarea id="ultimate" placeholder="Descreva a ultimate do personagem"></textarea>
+
           <label>História / Aparência</label>
           <textarea id="story" placeholder="Personalidade, visual, passado e objetivo"></textarea>
 
@@ -291,11 +563,13 @@
       <div class="card">
         <h2>Fichas Online</h2>
         <p>Todos os personagens salvos aparecem aqui para todo mundo.</p>
+
         <div class="row">
           <label class="file-label" for="importJson">Importar ficha JSON</label>
           <input type="file" id="importJson" accept="application/json" />
           <button onclick="renderAll()">Atualizar lista</button>
         </div>
+
         <div id="charactersList"></div>
       </div>
     </section>
@@ -308,6 +582,7 @@
           <p id="sessionMsg">Conectando ao Firebase...</p>
           <button id="joinBtn" onclick="joinSession()">Entrar na sessão com minha ficha</button>
         </div>
+
         <div class="card span-6">
           <h2>Participantes</h2>
           <div id="partyList"></div>
@@ -318,28 +593,171 @@
     <section id="gm" class="tab">
       <div class="grid">
         <div class="card span-6">
-          <h2>Login do Dono</h2>
-          <p>Crie uma senha de dono. Essa senha fica salva no Firebase e libera o botão de iniciar sessão e tornar GM.</p>
-          <label>Senha do dono</label>
-          <input id="ownerPass" type="password" placeholder="Digite sua senha de dono" />
+          <h2>Login do Host</h2>
+          <p>Crie uma senha de Host. Só o Host pode iniciar sessão, encerrar sessão e transformar alguém em GM.</p>
+
+          <label>Senha do Host</label>
+          <input id="ownerPass" type="password" placeholder="Digite sua senha de Host" />
+
           <div class="row" style="margin-top:12px">
-            <button onclick="setOwnerPassword()">Criar senha</button>
-            <button onclick="ownerLogin()">Entrar como dono</button>
-            <button class="danger-btn" onclick="ownerLogout()">Sair</button>
+            <button onclick="setOwnerPassword()">Criar senha do Host</button>
+            <button onclick="ownerLogin()">Entrar como Host</button>
+            <button class="danger-btn" onclick="ownerLogout()">Sair do Host</button>
           </div>
         </div>
+
+        <div class="card span-6">
+          <h2>Login de GM Promovido</h2>
+          <p>Se o Host te transformou em GM, escolha sua ficha aqui para liberar edição.</p>
+
+          <label>Escolha sua ficha GM</label>
+          <select id="gmLoginSelect"></select>
+
+          <div class="row" style="margin-top:12px">
+            <button onclick="gmLogin()">Entrar como GM</button>
+            <button class="danger-btn" onclick="gmLogout()">Sair do GM</button>
+          </div>
+
+          <p id="gmLoginStatus" class="warning">GM não logado.</p>
+        </div>
+
         <div class="card span-6">
           <h2>Controle da Sessão</h2>
-          <p id="gmAccess" class="warning">Acesso bloqueado. Entre como dono.</p>
+          <p id="gmAccess" class="warning">Acesso bloqueado. Entre como Host ou GM.</p>
+
           <div class="row">
             <button class="green-btn" onclick="startSession()">Iniciar sessão</button>
             <button class="danger-btn" onclick="endSession()">Encerrar sessão</button>
           </div>
         </div>
+
+        <div class="card span-6">
+          <h2>Permissões</h2>
+          <p><span class="tag">Host</span> pode iniciar/encerrar sessão, promover GM, remover GM e editar fichas.</p>
+          <p><span class="tag">GM</span> pode editar fichas durante a sessão, mas não pode promover outros GMs.</p>
+          <p><span class="tag">Jogador</span> cria ficha e entra na sessão.</p>
+        </div>
+
         <div class="card span-12">
           <h2>Transformar jogador em GM</h2>
-          <p>Somente o dono pode promover ou remover GM.</p>
+          <p>Somente o Host pode promover ou remover GM.</p>
           <div id="gmManageList"></div>
+        </div>
+
+        <div class="card span-12 edit-panel">
+          <h2>Editor de Fichas do Host / GM</h2>
+          <p>Host pode editar sempre. GM só edita quando a sessão estiver aberta.</p>
+
+          <label>Ficha para editar</label>
+          <select id="editSelect" onchange="loadEditCharacter()"></select>
+
+          <div class="row">
+            <div>
+              <label>Nome</label>
+              <input id="editName" />
+            </div>
+            <div>
+              <label>Jogador</label>
+              <input id="editPlayer" />
+            </div>
+            <div>
+              <label>Nível</label>
+              <input id="editLevel" type="number" min="1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Classe</label>
+              <select id="editClass">
+                <option>Executor</option>
+                <option>Anômalo</option>
+                <option>Guardião</option>
+                <option>Especialista</option>
+                <option>Atirador</option>
+              </select>
+            </div>
+            <div>
+              <label>Afinidade</label>
+              <select id="editEther">
+                <option>Fogo</option>
+                <option>Gelo</option>
+                <option>Elétrico</option>
+                <option>Físico</option>
+                <option>Caos</option>
+                <option>Vácuo</option>
+              </select>
+            </div>
+          </div>
+
+          <h3 style="margin-top:18px;color:var(--yellow)">Atributos</h3>
+
+          <div class="stat-list">
+            <div class="stat-card">
+              <label>Corpo</label>
+              <input id="editCorpo" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Agilidade</label>
+              <input id="editAgilidade" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Fortitude</label>
+              <input id="editFortitude" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Reflexo</label>
+              <input id="editReflexo" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Técnica</label>
+              <input id="editTecnica" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Presença</label>
+              <input id="editPresenca" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+            <div class="stat-card">
+              <label>Éter</label>
+              <input id="editEterStat" type="number" min="0" oninput="updateEditDerived()" />
+            </div>
+          </div>
+
+          <p id="editPointsInfo">Pontos usados: 0</p>
+
+          <div class="row">
+            <div>
+              <label>Vida</label>
+              <input id="editVida" readonly />
+            </div>
+            <div>
+              <label>Defesa</label>
+              <input id="editDefesa" readonly />
+            </div>
+            <div>
+              <label>PE Máximo</label>
+              <input id="editPe" type="number" min="0" />
+            </div>
+          </div>
+
+          <label>Especializações</label>
+          <input id="editSkills" />
+
+          <label>Arma principal</label>
+          <input id="editWeapon" />
+
+          <label>Características físicas</label>
+          <textarea id="editPhysical"></textarea>
+
+          <label>Habilidade Suprema</label>
+          <textarea id="editUltimate"></textarea>
+
+          <label>História / Aparência</label>
+          <textarea id="editStory"></textarea>
+
+          <div class="row" style="margin-top:14px">
+            <button class="green-btn" onclick="saveEditedCharacter()">Salvar alterações online</button>
+          </div>
         </div>
       </div>
     </section>
@@ -387,45 +805,83 @@
       appId: "1:632413344872:web:c8fc7e99339d8300f097dd"
     };
 
-    const firebaseReady = firebaseConfig.apiKey !== "COLE_AQUI";
-    window.firebaseReady = firebaseReady;
-
-    if (firebaseReady) {
+    try {
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
-      window.hbFirebase = { db, collection, doc, setDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, serverTimestamp };
-      window.dispatchEvent(new Event('firebase-ready'));
-    } else {
-      window.dispatchEvent(new Event('firebase-missing'));
+
+      window.hbFirebase = {
+        db,
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        getDocs,
+        onSnapshot,
+        updateDoc,
+        deleteDoc,
+        serverTimestamp
+      };
+
+      window.firebaseReady = true;
+      window.dispatchEvent(new Event("firebase-ready"));
+    } catch (error) {
+      console.error("Erro ao iniciar Firebase:", error);
+      window.firebaseReady = false;
+      window.dispatchEvent(new Event("firebase-error"));
     }
   </script>
 
   <script>
-    let faceData = '';
+    let faceData = "";
     let characters = [];
     let sessionData = { open: false, party: [] };
 
     function openTab(id, btn) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      btn.classList.add('active');
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      btn.classList.add("active");
       renderAll();
     }
 
-    function fb() { return window.hbFirebase; }
-
-    function showFirebaseMissing() {
-      document.getElementById('firebaseWarning').style.display = 'block';
-      document.getElementById('homeSessionStatus').textContent = 'SEM FIREBASE';
-      document.getElementById('homeSessionText').textContent = 'Cole o firebaseConfig no código para salvar online.';
-      document.getElementById('sessionStatus').textContent = 'SEM FIREBASE';
-      document.getElementById('sessionMsg').textContent = 'O site ainda não está conectado ao Firebase.';
+    function fb() {
+      return window.hbFirebase;
     }
 
-    window.addEventListener('firebase-missing', showFirebaseMissing);
+    function getLoggedGmId() {
+      return sessionStorage.getItem("hollow_break_gm_id") || "";
+    }
 
-    window.addEventListener('firebase-ready', async () => {
+    function isOwner() {
+      return sessionStorage.getItem("hollow_break_owner_logged") === "true";
+    }
+
+    function getLoggedGmCharacter() {
+      const id = getLoggedGmId();
+      return characters.find(c => c.id === id && c.gm);
+    }
+
+    function isGmLogged() {
+      return Boolean(getLoggedGmCharacter());
+    }
+
+    function canEditSheets() {
+      if (isOwner()) return true;
+      if (isGmLogged() && sessionData.open) return true;
+      return false;
+    }
+
+    window.addEventListener("firebase-error", showFirebaseError);
+
+    function showFirebaseError() {
+      document.getElementById("firebaseWarning").style.display = "block";
+      document.getElementById("homeSessionStatus").textContent = "ERRO";
+      document.getElementById("homeSessionText").textContent = "Firebase não conectou. Confira Firestore e regras.";
+      document.getElementById("sessionStatus").textContent = "ERRO";
+      document.getElementById("sessionMsg").textContent = "Firebase não conectou.";
+    }
+
+    window.addEventListener("firebase-ready", async () => {
       listenCharacters();
       listenSession();
       updateOwnerStatus();
@@ -433,308 +889,652 @@
 
     function listenCharacters() {
       const { db, collection, onSnapshot } = fb();
-      onSnapshot(collection(db, 'characters'), snapshot => {
+
+      onSnapshot(collection(db, "characters"), snapshot => {
         characters = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         characters.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
         renderAll();
+      }, error => {
+        console.error(error);
+        alert("Erro ao carregar fichas. Veja se as Rules do Firestore estão liberadas.");
       });
     }
 
     function listenSession() {
       const { db, doc, onSnapshot, setDoc } = fb();
-      const sessionRef = doc(db, 'game', 'session');
+      const sessionRef = doc(db, "game", "session");
+
       onSnapshot(sessionRef, async snap => {
         if (!snap.exists()) {
           await setDoc(sessionRef, { open: false, party: [] });
           return;
         }
+
         sessionData = snap.data();
-        if (!Array.isArray(sessionData.party)) sessionData.party = [];
+
+        if (!Array.isArray(sessionData.party)) {
+          sessionData.party = [];
+        }
+
         renderAll();
+      }, error => {
+        console.error(error);
+        alert("Erro ao carregar sessão. Veja se as Rules do Firestore estão liberadas.");
       });
     }
 
     async function simpleHash(text) {
       const data = new TextEncoder().encode(text);
-      const hash = await crypto.subtle.digest('SHA-256', data);
-      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const hash = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
     }
 
-    function isOwner() { return sessionStorage.getItem('hollow_break_owner_logged') === 'true'; }
-
     function updateOwnerStatus() {
-      const el = document.getElementById('ownerStatus');
-      const gmAccess = document.getElementById('gmAccess');
+      const el = document.getElementById("ownerStatus");
+      const gmAccess = document.getElementById("gmAccess");
+      const gmStatus = document.getElementById("gmLoginStatus");
+
+      const gmChar = getLoggedGmCharacter();
+
       if (isOwner()) {
-        el.textContent = 'Modo DONO ativo';
-        el.style.color = 'var(--ok)';
-        gmAccess.textContent = 'Acesso liberado. Você é o dono.';
-        gmAccess.className = 'ok';
+        el.textContent = "Modo HOST ativo";
+        el.style.color = "var(--ok)";
+        if (gmAccess) {
+          gmAccess.textContent = "Acesso liberado. Você é o Host.";
+          gmAccess.className = "ok";
+        }
+      } else if (gmChar) {
+        el.textContent = `Modo GM: ${gmChar.name}`;
+        el.style.color = "var(--ok)";
+        if (gmAccess) {
+          gmAccess.textContent = sessionData.open
+            ? "Acesso liberado. Você é GM e a sessão está aberta."
+            : "Você é GM, mas só pode editar quando a sessão estiver aberta.";
+          gmAccess.className = sessionData.open ? "ok" : "warning";
+        }
       } else {
-        el.textContent = 'Modo visitante';
-        el.style.color = 'var(--yellow2)';
-        gmAccess.textContent = 'Acesso bloqueado. Entre como dono.';
-        gmAccess.className = 'warning';
+        el.textContent = "Modo visitante";
+        el.style.color = "var(--yellow2)";
+        if (gmAccess) {
+          gmAccess.textContent = "Acesso bloqueado. Entre como Host ou GM.";
+          gmAccess.className = "warning";
+        }
+      }
+
+      if (gmStatus) {
+        gmStatus.textContent = gmChar ? `GM logado: ${gmChar.name}` : "GM não logado.";
+        gmStatus.className = gmChar ? "ok" : "warning";
       }
     }
 
     async function setOwnerPassword() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      const pass = document.getElementById('ownerPass').value.trim();
-      if (pass.length < 4) return alert('Use uma senha com pelo menos 4 caracteres.');
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      const pass = document.getElementById("ownerPass").value.trim();
+
+      if (pass.length < 4) {
+        return alert("Use uma senha com pelo menos 4 caracteres.");
+      }
+
       const { db, doc, getDoc, setDoc } = fb();
-      const ref = doc(db, 'game', 'owner');
+      const ref = doc(db, "game", "owner");
       const snap = await getDoc(ref);
-      if (snap.exists() && snap.data().passwordHash) return alert('Já existe uma senha de dono no Firebase.');
+
+      if (snap.exists() && snap.data().passwordHash) {
+        return alert("Já existe uma senha de Host no Firebase.");
+      }
+
       await setDoc(ref, { passwordHash: await simpleHash(pass) });
-      alert('Senha do dono criada online.');
+      alert("Senha do Host criada online.");
     }
 
     async function ownerLogin() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      const pass = document.getElementById('ownerPass').value.trim();
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      const pass = document.getElementById("ownerPass").value.trim();
       const { db, doc, getDoc } = fb();
-      const snap = await getDoc(doc(db, 'game', 'owner'));
-      if (!snap.exists()) return alert('Crie a senha do dono primeiro.');
-      if (await simpleHash(pass) === snap.data().passwordHash) {
-        sessionStorage.setItem('hollow_break_owner_logged', 'true');
-        alert('Você entrou como dono.');
-      } else {
-        alert('Senha errada.');
+      const snap = await getDoc(doc(db, "game", "owner"));
+
+      if (!snap.exists()) {
+        return alert("Crie a senha do Host primeiro.");
       }
+
+      if (await simpleHash(pass) === snap.data().passwordHash) {
+        sessionStorage.setItem("hollow_break_owner_logged", "true");
+        alert("Você entrou como Host.");
+      } else {
+        alert("Senha errada.");
+      }
+
       renderAll();
     }
 
     function ownerLogout() {
-      sessionStorage.removeItem('hollow_break_owner_logged');
+      sessionStorage.removeItem("hollow_break_owner_logged");
+      renderAll();
+    }
+
+    function gmLogin() {
+      const id = document.getElementById("gmLoginSelect").value;
+      const character = characters.find(c => c.id === id);
+
+      if (!character) {
+        return alert("Escolha uma ficha.");
+      }
+
+      if (!character.gm) {
+        return alert("Essa ficha ainda não foi transformada em GM pelo Host.");
+      }
+
+      sessionStorage.setItem("hollow_break_gm_id", id);
+      alert(`Você entrou como GM: ${character.name}`);
+      renderAll();
+    }
+
+    function gmLogout() {
+      sessionStorage.removeItem("hollow_break_gm_id");
       renderAll();
     }
 
     function updateDerived() {
-      const corpo = Number(document.getElementById('corpo').value || 0);
-      const agilidade = Number(document.getElementById('agilidade').value || 0);
-      const fortitude = Number(document.getElementById('fortitude').value || 0);
-      const reflexo = Number(document.getElementById('reflexo').value || 0);
-      const tecnica = Number(document.getElementById('tecnica').value || 0);
-      const presenca = Number(document.getElementById('presenca').value || 0);
-      const eter = Number(document.getElementById('eterStat').value || 0);
+      const corpo = Number(document.getElementById("corpo").value || 0);
+      const agilidade = Number(document.getElementById("agilidade").value || 0);
+      const fortitude = Number(document.getElementById("fortitude").value || 0);
+      const reflexo = Number(document.getElementById("reflexo").value || 0);
+      const tecnica = Number(document.getElementById("tecnica").value || 0);
+      const presenca = Number(document.getElementById("presenca").value || 0);
+      const eter = Number(document.getElementById("eterStat").value || 0);
+
       const total = corpo + agilidade + fortitude + reflexo + tecnica + presenca + eter;
-      document.getElementById('vida').value = 12 + fortitude * 3 + corpo;
-      document.getElementById('defesa').value = 6 + agilidade + Math.floor(reflexo / 2);
-      const p = document.getElementById('pointsInfo');
-      p.textContent = `Pontos usados: ${total}/10`;
-      p.className = total > 14 ? 'warning' : 'ok';
+
+      document.getElementById("vida").value = 12 + fortitude * 3 + corpo;
+      document.getElementById("defesa").value = 6 + agilidade + Math.floor(reflexo / 2);
+
+      const p = document.getElementById("pointsInfo");
+      p.textContent = `Pontos usados: ${total}`;
+      p.className = "ok";
     }
 
-    document.getElementById('faceInput').addEventListener('change', function(e) {
+    function updateEditDerived() {
+      const corpo = Number(document.getElementById("editCorpo").value || 0);
+      const agilidade = Number(document.getElementById("editAgilidade").value || 0);
+      const fortitude = Number(document.getElementById("editFortitude").value || 0);
+      const reflexo = Number(document.getElementById("editReflexo").value || 0);
+      const tecnica = Number(document.getElementById("editTecnica").value || 0);
+      const presenca = Number(document.getElementById("editPresenca").value || 0);
+      const eter = Number(document.getElementById("editEterStat").value || 0);
+
+      const total = corpo + agilidade + fortitude + reflexo + tecnica + presenca + eter;
+
+      document.getElementById("editVida").value = 12 + fortitude * 3 + corpo;
+      document.getElementById("editDefesa").value = 6 + agilidade + Math.floor(reflexo / 2);
+
+      const p = document.getElementById("editPointsInfo");
+      p.textContent = `Pontos usados: ${total}`;
+      p.className = "ok";
+    }
+
+    document.getElementById("faceInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
+
       if (!file) return;
+
       const reader = new FileReader();
+
       reader.onload = () => {
         faceData = reader.result;
-        document.getElementById('facePreview').innerHTML = `<img src="${faceData}" alt="Rosto do personagem">`;
+        document.getElementById("facePreview").innerHTML = `<img src="${faceData}" alt="Rosto do personagem">`;
       };
+
       reader.readAsDataURL(file);
     });
 
     function clearFace() {
-      faceData = '';
-      document.getElementById('facePreview').textContent = 'Importe um PNG/JPG do rosto';
-      document.getElementById('faceInput').value = '';
+      faceData = "";
+      document.getElementById("facePreview").textContent = "Importe um PNG/JPG do rosto";
+      document.getElementById("faceInput").value = "";
     }
 
     function makeCharacter() {
       return {
-        name: document.getElementById('charName').value.trim(),
-        player: document.getElementById('playerName').value.trim(),
-        className: document.getElementById('charClass').value,
-        ether: document.getElementById('ether').value,
-        level: Number(document.getElementById('level').value || 1),
+        name: document.getElementById("charName").value.trim(),
+        player: document.getElementById("playerName").value.trim(),
+        className: document.getElementById("charClass").value,
+        ether: document.getElementById("ether").value,
+        level: Number(document.getElementById("level").value || 1),
         stats: {
-          corpo: Number(document.getElementById('corpo').value || 0),
-          agilidade: Number(document.getElementById('agilidade').value || 0),
-          fortitude: Number(document.getElementById('fortitude').value || 0),
-          reflexo: Number(document.getElementById('reflexo').value || 0),
-          tecnica: Number(document.getElementById('tecnica').value || 0),
-          presenca: Number(document.getElementById('presenca').value || 0),
-          eter: Number(document.getElementById('eterStat').value || 0)
+          corpo: Number(document.getElementById("corpo").value || 0),
+          agilidade: Number(document.getElementById("agilidade").value || 0),
+          fortitude: Number(document.getElementById("fortitude").value || 0),
+          reflexo: Number(document.getElementById("reflexo").value || 0),
+          tecnica: Number(document.getElementById("tecnica").value || 0),
+          presenca: Number(document.getElementById("presenca").value || 0),
+          eter: Number(document.getElementById("eterStat").value || 0)
         },
-        vida: Number(document.getElementById('vida').value || 12),
-        defesa: Number(document.getElementById('defesa').value || 6),
-        pe: Number(document.getElementById('pe').value || 5),
-        skills: document.getElementById('skills').value.trim(),
-        weapon: document.getElementById('weapon').value.trim(),
-        ultimate: document.getElementById('ultimate').value.trim(),
-        story: document.getElementById('story').value.trim(),
+        vida: Number(document.getElementById("vida").value || 12),
+        defesa: Number(document.getElementById("defesa").value || 6),
+        pe: Number(document.getElementById("pe").value || 5),
+        skills: document.getElementById("skills").value.trim(),
+        weapon: document.getElementById("weapon").value.trim(),
+        physical: document.getElementById("physical").value.trim(),
+        ultimate: document.getElementById("ultimate").value.trim(),
+        story: document.getElementById("story").value.trim(),
         face: faceData,
         gm: false
       };
     }
 
     async function saveCharacter() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
       updateDerived();
+
       const c = makeCharacter();
-      if (!c.name || !c.player) return alert('Coloque o nome do personagem e do jogador.');
-      const total = Object.values(c.stats).reduce((a,b)=>a+b,0);
-      if (total > 10) return alert('Você passou de 10 pontos de atributo.');
+
+      if (!c.name || !c.player) {
+        return alert("Coloque o nome do personagem e do jogador.");
+      }
+
       const { db, collection, doc, setDoc, serverTimestamp } = fb();
-      const ref = doc(collection(db, 'characters'));
+      const ref = doc(collection(db, "characters"));
+
       await setDoc(ref, { ...c, createdAt: serverTimestamp() });
-      alert('Ficha salva online.');
+
+      alert("Ficha salva online.");
     }
 
     function downloadFile(filename, content, type) {
       const blob = new Blob([content], { type });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
+
       a.href = url;
       a.download = filename;
       a.click();
+
       URL.revokeObjectURL(url);
     }
 
     function downloadCharacterJson() {
       const c = makeCharacter();
-      if (!c.name) return alert('Coloque o nome do personagem antes.');
-      downloadFile(`${c.name.replaceAll(' ', '_')}_hollow_break.json`, JSON.stringify(c, null, 2), 'application/json');
+
+      if (!c.name) {
+        return alert("Coloque o nome do personagem antes.");
+      }
+
+      downloadFile(
+        `${c.name.replaceAll(" ", "_")}_hollow_break.json`,
+        JSON.stringify(c, null, 2),
+        "application/json"
+      );
     }
 
-    document.getElementById('importJson').addEventListener('change', function(e) {
+    document.getElementById("importJson").addEventListener("change", function(e) {
       const file = e.target.files[0];
+
       if (!file) return;
+
       const reader = new FileReader();
+
       reader.onload = async () => {
         try {
-          if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
+          if (!window.firebaseReady) return alert("Firebase não conectou.");
+
           const c = JSON.parse(reader.result);
-          if (!c.name || !c.player) throw new Error('Ficha inválida');
+
+          if (!c.name || !c.player) {
+            throw new Error("Ficha inválida");
+          }
+
           const { db, collection, doc, setDoc, serverTimestamp } = fb();
-          const ref = doc(collection(db, 'characters'));
+          const ref = doc(collection(db, "characters"));
+
           delete c.id;
           c.gm = false;
+
           await setDoc(ref, { ...c, createdAt: serverTimestamp() });
-          alert('Ficha importada online.');
-        } catch(err) { alert('Arquivo inválido.'); }
+
+          alert("Ficha importada online.");
+        } catch (err) {
+          alert("Arquivo inválido.");
+        }
       };
+
       reader.readAsText(file);
     });
 
     function renderCharacters() {
-      const box = document.getElementById('charactersList');
-      if (!characters.length) { box.innerHTML = '<p>Nenhuma ficha online ainda.</p>'; return; }
+      const box = document.getElementById("charactersList");
+
+      if (!characters.length) {
+        box.innerHTML = "<p>Nenhuma ficha online ainda.</p>";
+        return;
+      }
+
       box.innerHTML = characters.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
+          <div class="avatar-small">
+            ${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : "Sem rosto"}
+          </div>
+
           <div>
-            <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3>
+            <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ""}</h3>
             <small>Jogador: ${escapeHtml(c.player)} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</small>
             <p>Vida ${c.vida} • Defesa ${c.defesa} • PE ${c.pe}</p>
+            <p><b>Físico:</b> ${escapeHtml(c.physical || "-")}</p>
           </div>
+
           <div class="row">
             <button onclick="exportSavedImage('${c.id}')">Imagem</button>
             <button onclick="downloadSavedJson('${c.id}')">JSON</button>
+            <button onclick="quickLoadEdit('${c.id}')">Editar</button>
             <button class="danger-btn" onclick="deleteCharacter('${c.id}')">Excluir</button>
           </div>
         </div>
-      `).join('');
+      `).join("");
     }
 
     async function deleteCharacter(id) {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      if (!confirm('Excluir esta ficha online?')) return;
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!isOwner()) {
+        return alert("Somente o Host pode excluir fichas.");
+      }
+
+      if (!confirm("Excluir esta ficha online?")) return;
+
       const { db, doc, deleteDoc, updateDoc } = fb();
-      await deleteDoc(doc(db, 'characters', id));
+
+      await deleteDoc(doc(db, "characters", id));
+
       const party = (sessionData.party || []).filter(pid => pid !== id);
-      await updateDoc(doc(db, 'game', 'session'), { party });
+
+      await updateDoc(doc(db, "game", "session"), { party });
     }
 
     function downloadSavedJson(id) {
       const c = characters.find(x => x.id === id);
+
       if (!c) return;
-      downloadFile(`${c.name.replaceAll(' ', '_')}_hollow_break.json`, JSON.stringify(c, null, 2), 'application/json');
+
+      downloadFile(
+        `${c.name.replaceAll(" ", "_")}_hollow_break.json`,
+        JSON.stringify(c, null, 2),
+        "application/json"
+      );
     }
 
     async function startSession() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      if (!isOwner()) return alert('Somente o dono pode iniciar.');
-      if (!characters.length) return alert('Precisa ter pelo menos uma ficha salva/importada.');
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!isOwner()) {
+        return alert("Somente o Host pode iniciar.");
+      }
+
+      if (!characters.length) {
+        return alert("Precisa ter pelo menos uma ficha salva/importada.");
+      }
+
       const { db, doc, setDoc } = fb();
-      await setDoc(doc(db, 'game', 'session'), { open: true, party: sessionData.party || [] });
-      alert('Sessão iniciada online.');
+
+      await setDoc(doc(db, "game", "session"), {
+        open: true,
+        party: sessionData.party || []
+      });
+
+      alert("Sessão iniciada online. Agora Host e GMs podem editar fichas.");
     }
 
     async function endSession() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      if (!isOwner()) return alert('Somente o dono pode encerrar.');
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!isOwner()) {
+        return alert("Somente o Host pode encerrar.");
+      }
+
       const { db, doc, setDoc } = fb();
-      await setDoc(doc(db, 'game', 'session'), { open: false, party: [] });
-      alert('Sessão encerrada online.');
+
+      await setDoc(doc(db, "game", "session"), {
+        open: false,
+        party: []
+      });
+
+      alert("Sessão encerrada online.");
     }
 
     async function joinSession() {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      if (!sessionData.open) return alert('A sessão ainda está fechada.');
-      if (!characters.length) return alert('Você precisa criar ou importar uma ficha antes de entrar.');
-      const choice = prompt('Digite o número da ficha para entrar:
-' + characters.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join('
-'));
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!sessionData.open) {
+        return alert("A sessão ainda está fechada.");
+      }
+
+      if (!characters.length) {
+        return alert("Você precisa criar ou importar uma ficha antes de entrar.");
+      }
+
+      const choice = prompt(
+        "Digite o número da ficha para entrar:\n" +
+        characters.map((c, i) => `${i + 1} - ${c.name} (${c.player})`).join("\n")
+      );
+
       const index = Number(choice) - 1;
-      if (!characters[index]) return alert('Ficha inválida.');
+
+      if (!characters[index]) {
+        return alert("Ficha inválida.");
+      }
+
       const party = sessionData.party || [];
-      if (!party.includes(characters[index].id)) party.push(characters[index].id);
+
+      if (!party.includes(characters[index].id)) {
+        party.push(characters[index].id);
+      }
+
       const { db, doc, updateDoc } = fb();
-      await updateDoc(doc(db, 'game', 'session'), { party });
-      alert('Você entrou na sessão online.');
+
+      await updateDoc(doc(db, "game", "session"), { party });
+
+      alert("Você entrou na sessão online.");
     }
 
     function renderSession() {
       const s = sessionData;
-      document.getElementById('sessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
-      document.getElementById('homeSessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
-      document.getElementById('sessionMsg').textContent = s.open ? 'A sessão começou. Entre com uma ficha online.' : 'A sessão ainda não foi iniciada pelo dono.';
-      document.getElementById('homeSessionText').textContent = s.open ? 'A mesa está aberta. Prepare os dados.' : 'O dono ainda não iniciou a sessão.';
+
+      document.getElementById("sessionStatus").textContent = s.open ? "ABERTA" : "FECHADA";
+      document.getElementById("homeSessionStatus").textContent = s.open ? "ABERTA" : "FECHADA";
+      document.getElementById("sessionMsg").textContent = s.open
+        ? "A sessão começou. Entre com uma ficha online."
+        : "A sessão ainda não foi iniciada pelo Host.";
+      document.getElementById("homeSessionText").textContent = s.open
+        ? "A mesa está aberta. Host e GMs podem editar fichas."
+        : "O Host ainda não iniciou a sessão.";
+
       const party = characters.filter(c => (s.party || []).includes(c.id));
-      document.getElementById('partyList').innerHTML = party.length ? party.map(c => `
+
+      document.getElementById("partyList").innerHTML = party.length ? party.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
-          <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small></div>
+          <div class="avatar-small">
+            ${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : "Sem rosto"}
+          </div>
+          <div>
+            <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ""}</h3>
+            <small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small>
+          </div>
         </div>
-      `).join('') : '<p>Ninguém entrou ainda.</p>';
+      `).join("") : "<p>Ninguém entrou ainda.</p>";
     }
 
     function renderGmManage() {
-      const box = document.getElementById('gmManageList');
-      if (!characters.length) { box.innerHTML = '<p>Nenhuma ficha para gerenciar.</p>'; return; }
+      const box = document.getElementById("gmManageList");
+
+      if (!characters.length) {
+        box.innerHTML = "<p>Nenhuma ficha para gerenciar.</p>";
+        return;
+      }
+
       box.innerHTML = characters.map(c => `
         <div class="character-card">
-          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : 'Sem rosto'}</div>
-          <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>Jogador: ${escapeHtml(c.player)}</small></div>
-          <div class="row"><button onclick="toggleGm('${c.id}')">${c.gm ? 'Remover GM' : 'Tornar GM'}</button></div>
+          <div class="avatar-small">
+            ${c.face ? `<img src="${c.face}" alt="${escapeHtml(c.name)}">` : "Sem rosto"}
+          </div>
+
+          <div>
+            <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ""}</h3>
+            <small>Jogador: ${escapeHtml(c.player)}</small>
+          </div>
+
+          <div class="row">
+            <button onclick="toggleGm('${c.id}')">${c.gm ? "Remover GM" : "Tornar GM"}</button>
+          </div>
         </div>
-      `).join('');
+      `).join("");
     }
 
     async function toggleGm(id) {
-      if (!window.firebaseReady) return alert('Configure o Firebase primeiro.');
-      if (!isOwner()) return alert('Somente o dono pode mexer em GM.');
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!isOwner()) {
+        return alert("Somente o Host pode transformar alguém em GM.");
+      }
+
       const c = characters.find(x => x.id === id);
+
       if (!c) return;
+
       const { db, doc, updateDoc } = fb();
-      await updateDoc(doc(db, 'characters', id), { gm: !c.gm });
+
+      await updateDoc(doc(db, "characters", id), { gm: !c.gm });
+
+      alert(c.gm ? "GM removido." : "Jogador transformado em GM.");
+    }
+
+    function renderSelects() {
+      const gmSelect = document.getElementById("gmLoginSelect");
+      const editSelect = document.getElementById("editSelect");
+
+      if (gmSelect) {
+        const gmCharacters = characters.filter(c => c.gm);
+        gmSelect.innerHTML = gmCharacters.length
+          ? gmCharacters.map(c => `<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join("")
+          : `<option value="">Nenhuma ficha GM ainda</option>`;
+      }
+
+      if (editSelect) {
+        editSelect.innerHTML = characters.length
+          ? characters.map(c => `<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join("")
+          : `<option value="">Nenhuma ficha</option>`;
+      }
+    }
+
+    function quickLoadEdit(id) {
+      openTab("gm", document.querySelectorAll(".tab-btn")[4]);
+      const select = document.getElementById("editSelect");
+      select.value = id;
+      loadEditCharacter();
+    }
+
+    function loadEditCharacter() {
+      const id = document.getElementById("editSelect").value;
+      const c = characters.find(x => x.id === id);
+
+      if (!c) return;
+
+      document.getElementById("editName").value = c.name || "";
+      document.getElementById("editPlayer").value = c.player || "";
+      document.getElementById("editLevel").value = c.level || 1;
+      document.getElementById("editClass").value = c.className || "Executor";
+      document.getElementById("editEther").value = c.ether || "Fogo";
+
+      document.getElementById("editCorpo").value = c.stats?.corpo || 0;
+      document.getElementById("editAgilidade").value = c.stats?.agilidade || 0;
+      document.getElementById("editFortitude").value = c.stats?.fortitude || 0;
+      document.getElementById("editReflexo").value = c.stats?.reflexo || 0;
+      document.getElementById("editTecnica").value = c.stats?.tecnica || 0;
+      document.getElementById("editPresenca").value = c.stats?.presenca || 0;
+      document.getElementById("editEterStat").value = c.stats?.eter || 0;
+
+      document.getElementById("editPe").value = c.pe || 5;
+      document.getElementById("editSkills").value = c.skills || "";
+      document.getElementById("editWeapon").value = c.weapon || "";
+      document.getElementById("editPhysical").value = c.physical || "";
+      document.getElementById("editUltimate").value = c.ultimate || "";
+      document.getElementById("editStory").value = c.story || "";
+
+      updateEditDerived();
+    }
+
+    async function saveEditedCharacter() {
+      if (!window.firebaseReady) return alert("Firebase não conectou.");
+
+      if (!canEditSheets()) {
+        return alert("Só o Host pode editar sempre. GM só pode editar quando a sessão estiver aberta.");
+      }
+
+      const id = document.getElementById("editSelect").value;
+      const original = characters.find(x => x.id === id);
+
+      if (!original) {
+        return alert("Escolha uma ficha para editar.");
+      }
+
+      updateEditDerived();
+
+      const updated = {
+        name: document.getElementById("editName").value.trim(),
+        player: document.getElementById("editPlayer").value.trim(),
+        level: Number(document.getElementById("editLevel").value || 1),
+        className: document.getElementById("editClass").value,
+        ether: document.getElementById("editEther").value,
+        stats: {
+          corpo: Number(document.getElementById("editCorpo").value || 0),
+          agilidade: Number(document.getElementById("editAgilidade").value || 0),
+          fortitude: Number(document.getElementById("editFortitude").value || 0),
+          reflexo: Number(document.getElementById("editReflexo").value || 0),
+          tecnica: Number(document.getElementById("editTecnica").value || 0),
+          presenca: Number(document.getElementById("editPresenca").value || 0),
+          eter: Number(document.getElementById("editEterStat").value || 0)
+        },
+        vida: Number(document.getElementById("editVida").value || 12),
+        defesa: Number(document.getElementById("editDefesa").value || 6),
+        pe: Number(document.getElementById("editPe").value || 5),
+        skills: document.getElementById("editSkills").value.trim(),
+        weapon: document.getElementById("editWeapon").value.trim(),
+        physical: document.getElementById("editPhysical").value.trim(),
+        ultimate: document.getElementById("editUltimate").value.trim(),
+        story: document.getElementById("editStory").value.trim(),
+        gm: original.gm,
+        face: original.face || "",
+        editedAt: new Date().toISOString()
+      };
+
+      if (!updated.name || !updated.player) {
+        return alert("Nome e jogador não podem ficar vazios.");
+      }
+
+      const { db, doc, updateDoc } = fb();
+
+      await updateDoc(doc(db, "characters", id), updated);
+
+      alert("Ficha atualizada online.");
     }
 
     function characterCardHtml(c) {
       return `
         <div class="export-card" id="exportCard">
           <div class="export-head">
-            <div class="avatar-small" style="width:140px;height:140px;border-radius:22px">${c.face ? `<img src="${c.face}">` : 'Sem rosto'}</div>
+            <div class="avatar-small" style="width:140px;height:140px;border-radius:22px">
+              ${c.face ? `<img src="${c.face}">` : "Sem rosto"}
+            </div>
+
             <div>
-              <h1>${escapeHtml(c.name || 'Agente sem nome')}</h1>
-              <p>Jogador: ${escapeHtml(c.player || '-')}</p>
+              <h1>${escapeHtml(c.name || "Agente sem nome")}</h1>
+              <p>Jogador: ${escapeHtml(c.player || "-")}</p>
               <p>${escapeHtml(c.className)} • Éter ${escapeHtml(c.ether)} • Nível ${c.level}</p>
             </div>
           </div>
+
           <div class="stat-list">
             <div class="stat-card">Corpo<strong>${c.stats?.corpo || 0}</strong></div>
             <div class="stat-card">Agilidade<strong>${c.stats?.agilidade || 0}</strong></div>
@@ -744,11 +1544,13 @@
             <div class="stat-card">Presença<strong>${c.stats?.presenca || 0}</strong></div>
             <div class="stat-card">Éter<strong>${c.stats?.eter || 0}</strong></div>
           </div>
+
           <p><b>Vida:</b> ${c.vida} • <b>Defesa:</b> ${c.defesa} • <b>PE:</b> ${c.pe}</p>
-          <p><b>Especializações:</b> ${escapeHtml(c.skills || '-')}</p>
-          <p><b>Arma:</b> ${escapeHtml(c.weapon || '-')}</p>
-          <p><b>Suprema:</b> ${escapeHtml(c.ultimate || '-')}</p>
-          <p><b>História:</b> ${escapeHtml(c.story || '-')}</p>
+          <p><b>Especializações:</b> ${escapeHtml(c.skills || "-")}</p>
+          <p><b>Arma:</b> ${escapeHtml(c.weapon || "-")}</p>
+          <p><b>Físico:</b> ${escapeHtml(c.physical || "-")}</p>
+          <p><b>Suprema:</b> ${escapeHtml(c.ultimate || "-")}</p>
+          <p><b>História:</b> ${escapeHtml(c.story || "-")}</p>
         </div>
       `;
     }
@@ -760,31 +1562,54 @@
 
     async function exportSavedImage(id) {
       const c = characters.find(x => x.id === id);
-      if (c) await exportImageFromCharacter(c);
+
+      if (c) {
+        await exportImageFromCharacter(c);
+      }
     }
 
     async function exportImageFromCharacter(c) {
-      const hidden = document.getElementById('hiddenRender');
+      const hidden = document.getElementById("hiddenRender");
       hidden.innerHTML = characterCardHtml(c);
-      const card = document.getElementById('exportCard');
-      const canvas = await html2canvas(card, { backgroundColor: '#050505', scale: 2 });
-      const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `${(c.name || 'personagem').replaceAll(' ', '_')}_ficha.png`;
+
+      const card = document.getElementById("exportCard");
+      const canvas = await html2canvas(card, {
+        backgroundColor: "#050505",
+        scale: 2
+      });
+
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `${(c.name || "personagem").replaceAll(" ", "_")}_ficha.png`;
       a.click();
-      hidden.innerHTML = '';
+
+      hidden.innerHTML = "";
     }
 
     function escapeHtml(text) {
-      return String(text || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+      return String(text || "").replace(/[&<>'"]/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      }[c]));
     }
 
     function renderAll() {
       updateDerived();
       updateOwnerStatus();
+      renderSelects();
       renderCharacters();
       renderSession();
       renderGmManage();
+
+      const currentEdit = document.getElementById("editSelect")?.value;
+      if (currentEdit && characters.some(c => c.id === currentEdit)) {
+        const focused = document.activeElement;
+        const isEditing = focused && focused.id && focused.id.startsWith("edit");
+        if (!isEditing) loadEditCharacter();
+      }
     }
 
     renderAll();
