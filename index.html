@@ -685,8 +685,8 @@ async function loginAccountFromGate(){
 }
 async function createAccount(){
   if(!window.firebaseReady) return alert("Firebase não conectou.");
-  const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
-  const pass=(document.getElementById("accountPass").value||"").trim();
+  const username=((document.getElementById("accountUser")?.value || document.getElementById("gateUser")?.value || "")).trim().toLowerCase();
+  const pass=((document.getElementById("accountPass")?.value || document.getElementById("gatePass")?.value || "")).trim();
   if(username.length<3) return alert("Usuário precisa ter pelo menos 3 caracteres.");
   if(!/^[a-z0-9_.-]+$/.test(username)) return alert("Use só letras, números, ponto, traço ou underline no usuário.");
   if(pass.length<4) return alert("Senha/código precisa ter pelo menos 4 caracteres.");
@@ -702,8 +702,8 @@ async function createAccount(){
 }
 async function loginAccount(){
   if(!window.firebaseReady) return alert("Firebase não conectou.");
-  const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
-  const pass=(document.getElementById("accountPass").value||"").trim();
+  const username=((document.getElementById("accountUser")?.value || document.getElementById("gateUser")?.value || "")).trim().toLowerCase();
+  const pass=((document.getElementById("accountPass")?.value || document.getElementById("gatePass")?.value || "")).trim();
   if(!username||!pass) return alert("Digite usuário e senha/código.");
   const{db,doc,getDoc}=fb();
   const snap=await getDoc(doc(db,"accounts",username));
