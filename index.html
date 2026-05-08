@@ -131,8 +131,8 @@
   </div>
 </header>
 
-<section id="loginGate" class="locked-screen">
-  <div class="login-card">
+<section id="loginGate">
+  <div class="login-card" style="margin:20px auto;max-width:720px">
     <h1>Entrar no Hollow Break</h1>
     <p>Crie uma conta ou entre com seu usuário e senha/código. Sem conta, você não acessa as fichas, sessão, habilidades ou monstros.</p>
     <div class="row">
@@ -147,7 +147,7 @@
   </div>
 </section>
 
-<main id="appShell" class="app-shell locked">
+<main id="appShell" class="app-shell">
   <div class="tabs">
     <button class="tab-btn active" onclick="openTab('home', this)">Início</button>
     <button class="tab-btn" onclick="openTab('creator', this)">Criar Ficha</button>
@@ -716,8 +716,8 @@ function updateGate(){
   const logged=Boolean(currentAccountName());
   const gate=document.getElementById("loginGate");
   const app=document.getElementById("appShell");
-  if(gate) gate.style.display=logged?"none":"grid";
-  if(app) app.classList.toggle("locked",!logged);
+  if(gate) gate.style.display=logged?"none":"block";
+  if(app) app.classList.remove("locked");
   const gateStatus=document.getElementById("gateStatus");
   if(gateStatus){
     gateStatus.textContent=logged?`Logado como ${currentAccountName()}`:"Você ainda não está logado.";
@@ -823,9 +823,9 @@ function updateRaceInfo(){const r=document.getElementById("race").value;const b=
 function updateElementInfo(){const e=document.getElementById("ether").value;document.getElementById("elementInfo").innerHTML=`<b>${e}:</b> ${elementData[e]}`}
 document.getElementById("faceInput").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{faceData=reader.result;document.getElementById("facePreview").innerHTML=`<img src="${faceData}" alt="Rosto">`};reader.readAsDataURL(file)});
 function clearFace(){faceData="";document.getElementById("facePreview").textContent="PNG/JPG do rosto";document.getElementById("faceInput").value=""}
-function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:[val("skillPick1"),val("skillPick2"),val("skillPick3")].filter(Boolean).join(", "),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false,ownerAccount:currentAccountName()}}
+function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:[val("skillPick1"),val("skillPick2"),val("skillPick3")].filter(Boolean).join(", "),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false,ownerAccount:currentAccountName()||"visitante"}}
 function val(id){return document.getElementById(id)?.value?.trim()||""}function num(id,def=0){return Number(document.getElementById(id)?.value||def)}
-async function saveCharacter(){if(!window.firebaseReady)return alert("Firebase não conectou.");if(!currentAccountName()&&!isOwner())return alert("Crie ou entre em uma conta antes de salvar ficha.");const c=makeCharacter();if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Na criação inicial são 10 pontos base. O bônus da raça soma por cima.");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Ficha salva online.")}
+async function saveCharacter(){if(!window.firebaseReady)return alert("Firebase não conectou.");const c=makeCharacter(); if(!c.ownerAccount) c.ownerAccount=currentAccountName()||"visitante";if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Na criação inicial são 10 pontos base. O bônus da raça soma por cima.");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Ficha salva online.")}
 function downloadFile(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 function downloadCharacterJson(){const c=makeCharacter();if(!c.name)return alert("Coloque o nome.");downloadFile(`${c.name.replaceAll(" ","_")}_hollow_break.json`,JSON.stringify(c,null,2),"application/json")}
 document.getElementById("importJson").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{if(!window.firebaseReady)return alert("Firebase não conectou.");const c=JSON.parse(reader.result);if(!c.name||!c.player)throw new Error();const{db,collection,doc,setDoc,serverTimestamp}=fb();delete c.id;c.gm=false;await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Personagem importado.")}catch{alert("Arquivo inválido.")}};reader.readAsText(file)});
@@ -833,7 +833,7 @@ document.getElementById("importJson").addEventListener("change",e=>{const file=e
 function visibleCharacters(){
   if(isOwner()) return characters;
   const user=currentAccountName();
-  return characters.filter(c=>c.ownerAccount===user);
+  return characters.filter(c=>c.ownerAccount===user || (!user && c.ownerAccount==="visitante"));
 }
 function sessionVisibleCharacters(){
   if(isOwner()||isGmLogged()) return characters;
@@ -1259,7 +1259,7 @@ async function createSkill(){
   const charId=document.getElementById("skillCharacter").value;
   const c=characters.find(x=>x.id===charId);
   if(!c) return alert("Escolha uma ficha.");
-  if(!canUseCharacter(c)) return alert("Você só pode criar habilidade para ficha da sua conta.");
+  if(currentAccountName() && !canUseCharacter(c)) return alert("Você só pode criar habilidade para ficha da sua conta.");
   const name=val("skillName");
   if(!name) return alert("Coloque o nome da habilidade.");
   let chosenElement=val("skillElement") || c.ether;
@@ -1600,6 +1600,7 @@ async function addBattleEvent(){
 }
 function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();updateGate();renderScenario();renderPersonagemTab()}
 updateRaceInfo();updateElementInfo();renderAll();
+updateGate();
 </script>
 </body>
 </html>
