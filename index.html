@@ -55,6 +55,23 @@
     .export-card{background:#080808;width:820px;max-width:100%;border:3px solid var(--yellow);border-radius:24px;padding:22px;color:var(--text)}
     .export-head{display:flex;gap:18px;align-items:center;border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px}.hidden-render{position:fixed;left:-99999px;top:0;background:#050505}
     .rules p,.rules li{color:#ddd;line-height:1.55}.step-title{color:var(--yellow);margin-top:18px}
+
+    .session-layout{display:grid;grid-template-columns:360px 1fr;gap:16px}
+    .sheet-mini{border:1px solid var(--border);border-radius:20px;background:#080808;padding:14px}
+    .mini-head{display:flex;gap:12px;align-items:center;border-bottom:1px solid rgba(255,208,0,.2);padding-bottom:12px;margin-bottom:12px}
+    .mini-face{width:96px;height:96px;border-radius:16px;border:1px solid var(--border);background:#111;overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center}
+    .mini-face img{width:100%;height:100%;object-fit:cover}
+    .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .mini-stat{background:#050505;border:1px solid rgba(255,208,0,.2);border-radius:12px;padding:8px;text-align:center;font-size:12px}
+    .mini-stat strong{display:block;color:var(--yellow);font-size:18px}
+    .chat-box{height:520px;overflow:auto;background:#060606;border:1px solid rgba(255,208,0,.25);border-radius:18px;padding:12px}
+    .log-msg{border:1px solid rgba(255,255,255,.08);border-left:4px solid var(--yellow);background:#0d0d0d;border-radius:14px;padding:10px;margin:10px 0}
+    .log-msg.gm{border-left-color:var(--purple);background:linear-gradient(90deg,rgba(139,53,255,.14),#0d0d0d)}
+    .log-msg.system{border-left-color:var(--ok);background:rgba(56,255,139,.06)}
+    .log-msg small{display:block;margin-bottom:6px;color:var(--yellow2)}
+    .log-img{max-width:100%;border-radius:14px;border:1px solid var(--border);margin-top:8px}
+    .chat-closed{border:1px solid rgba(255,68,68,.6);background:rgba(255,68,68,.08);border-radius:14px;padding:10px;color:#fff}
+    @media(max-width:900px){.session-layout{grid-template-columns:1fr}.chat-box{height:420px}}
     @media(max-width:900px){.span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:span 12}.stat-list,.def-list{grid-template-columns:repeat(2,1fr)}.character-card{grid-template-columns:70px 1fr}.character-card .row{grid-column:span 2}.hero h2{font-size:28px}}
   </style>
 </head>
@@ -204,7 +221,76 @@
 
   <section id="library" class="tab"><div class="card"><h2>Fichas Online</h2><p>Todo personagem salvo aparece aqui para todos.</p><div class="row"><label class="file-label" for="importJson">Importar JSON</label><input type="file" id="importJson" accept="application/json"><button onclick="renderAll()">Atualizar</button></div><div id="charactersList"></div></div></section>
 
-  <section id="session" class="tab"><div class="grid"><div class="card span-6 session-panel"><h2>Sessão do RPG</h2><div class="big-session" id="sessionStatus">CARREGANDO</div><p id="sessionMsg">Conectando...</p><button onclick="joinSession()">Entrar com minha ficha</button></div><div class="card span-6"><h2>Participantes</h2><div id="partyList"></div></div></div></section>
+  
+  <section id="session" class="tab">
+    <div class="session-layout">
+      <div class="card">
+        <h2>Sessão do RPG</h2>
+        <div class="big-session" id="sessionStatus">CARREGANDO</div>
+        <p id="sessionMsg">Conectando...</p>
+        <button onclick="joinSession()">Entrar com minha ficha</button>
+
+        <label>Minha ficha em jogo</label>
+        <select id="mySessionCharacter" onchange="setMySessionCharacter(this.value)"></select>
+
+        <div id="mySheetSummary" class="sheet-mini" style="margin-top:12px">
+          <p>Entre na sessão para ver sua ficha aqui.</p>
+        </div>
+
+        <h3 style="margin-top:16px;color:var(--yellow)">Participantes</h3>
+        <div id="partyList"></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>Log da Sessão</h2>
+            <p id="chatStatusText">Chat carregando...</p>
+          </div>
+          <div class="row">
+            <button onclick="toggleChat(true)">Abrir chat</button>
+            <button class="danger-btn" onclick="toggleChat(false)">Fechar chat</button>
+          </div>
+        </div>
+
+        <div id="chatClosedWarning" class="chat-closed" style="display:none">
+          O chat está fechado pelo Host/GM. Jogadores não podem enviar mensagens agora.
+        </div>
+
+        <div id="sessionChat" class="chat-box"></div>
+
+        <div style="margin-top:12px">
+          <div class="row">
+            <div>
+              <label>Tipo de log</label>
+              <select id="chatType">
+                <option value="player">Jogador: fala/ação</option>
+                <option value="attack">Ataque</option>
+                <option value="skill">Habilidade</option>
+                <option value="gm">GM: cenário/aparição</option>
+                <option value="system">Sistema</option>
+              </select>
+            </div>
+            <div>
+              <label>Imagem PNG/JPG para aparecer no log</label>
+              <label class="file-label" for="chatImageInput">Importar imagem</label>
+              <input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp">
+            </div>
+          </div>
+
+          <label>Mensagem</label>
+          <textarea id="chatMessage" placeholder="Ex: GM: uma criatura saiu da Hollow... / Kael usa Corte Relâmpago..."></textarea>
+
+          <div class="row" style="margin-top:10px">
+            <button class="green-btn" onclick="sendSessionMessage()">Enviar para o log</button>
+            <button onclick="clearChatImage()">Remover imagem anexada</button>
+          </div>
+
+          <p><small>Anti-spam: espere alguns segundos entre mensagens.</small></p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="host" class="tab">
     <div class="grid">
@@ -255,7 +341,7 @@
 </script>
 
 <script>
-let faceData="",characters=[],sessionData={open:false,party:[]};
+let faceData="",characters=[],sessionData={open:false,party:[],chatOpen:true},sessionMessages=[],chatImageData="",lastChatSentAt=0;
 const raceData={
  "Humano":{b:{intelecto:2,vitalidade:1},d:"Normalmente não possuem habilidades sobre-humanas."},
  "Tireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Tireno tem característica única."},
@@ -275,17 +361,19 @@ const elementData={
 function fb(){return window.hbFirebase}
 function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");btn.classList.add("active");renderAll()}
 window.addEventListener("firebase-error",()=>{document.getElementById("firebaseWarning").style.display="block";document.getElementById("homeSessionStatus").textContent="ERRO";document.getElementById("sessionStatus").textContent="ERRO"});
-window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();renderRules();renderAll()});
+window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenSessionLog();renderRules();setupChatImageInput();renderAll()});
 function listenCharacters(){const{db,collection,onSnapshot}=fb();onSnapshot(collection(db,"characters"),snap=>{characters=snap.docs.map(d=>({id:d.id,...d.data()}));characters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()},err=>alert("Erro ao carregar fichas. Confira as Rules do Firestore."))}
-function listenSession(){const{db,doc,onSnapshot,setDoc}=fb();const ref=doc(db,"game","session");onSnapshot(ref,async snap=>{if(!snap.exists()){await setDoc(ref,{open:false,party:[]});return}sessionData=snap.data();if(!Array.isArray(sessionData.party))sessionData.party=[];renderAll()},err=>alert("Erro ao carregar sessão. Confira as Rules do Firestore."))}
+function listenSession(){const{db,doc,onSnapshot,setDoc}=fb();const ref=doc(db,"game","session");onSnapshot(ref,async snap=>{if(!snap.exists()){await setDoc(ref,{open:false,party:[],chatOpen:true});return}sessionData=snap.data();if(!Array.isArray(sessionData.party))sessionData.party=[];if(typeof sessionData.chatOpen!=="boolean")sessionData.chatOpen=true;renderAll()},err=>alert("Erro ao carregar sessão. Confira as Rules do Firestore."))}
 async function simpleHash(text){const data=new TextEncoder().encode(text);const hash=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("")}
 function isOwner(){return sessionStorage.getItem("hollow_break_owner_logged")==="true"}function getLoggedGmId(){return sessionStorage.getItem("hollow_break_gm_id")||""}function getLoggedGmCharacter(){return characters.find(c=>c.id===getLoggedGmId()&&c.gm)}function isGmLogged(){return Boolean(getLoggedGmCharacter())}function canEditSheets(){return isOwner()||(isGmLogged()&&sessionData.open)}
 function updateOwnerStatus(){const el=document.getElementById("ownerStatus"),gmAccess=document.getElementById("gmAccess"),gmStatus=document.getElementById("gmLoginStatus"),gmChar=getLoggedGmCharacter();if(isOwner()){el.textContent="Modo HOST ativo";el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent="Acesso liberado. Você é o Host.";gmAccess.className="ok"}}else if(gmChar){el.textContent=`Modo GM: ${gmChar.name}`;el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent=sessionData.open?"Acesso liberado. Você é GM.":"GM edita só com sessão aberta.";gmAccess.className=sessionData.open?"ok":"warning"}}else{el.textContent="Modo visitante";el.style.color="var(--yellow2)";if(gmAccess){gmAccess.textContent="Acesso bloqueado.";gmAccess.className="warning"}}if(gmStatus){gmStatus.textContent=gmChar?`GM logado: ${gmChar.name}`:"GM não logado.";gmStatus.className=gmChar?"ok":"warning"}}
 function raceBonus(race){return {forca:0,agilidade:0,vitalidade:0,intelecto:0,sensibilidade:0,carisma:0,...(raceData[race]?.b||{})}}
-function calcTotals(prefix=""){const race=document.getElementById(prefix+"race")?.value||"Humano";const b=raceBonus(race);const get=id=>Number(document.getElementById(prefix+id).value||0);const base={forca:get("forcaBase"),agilidade:get("agilidadeBase"),vitalidade:get("vitalidadeBase"),intelecto:get("intelectoBase"),sensibilidade:get("sensibilidadeBase"),carisma:get("carismaBase")};const total={};Object.keys(base).forEach(k=>total[k]=base[k]+(b[k]||0));return {race,base,total,used:Object.values(base).reduce((a,b)=>a+b,0)}}
+function fieldId(prefix,key,suffix="Base"){return prefix==="edit" ? "edit"+cap(key)+suffix : key+suffix}
+function outId(prefix,key,suffix="Total"){return prefix==="edit" ? "edit"+cap(key)+suffix : key+suffix}
+function calcTotals(prefix=""){const race=document.getElementById(prefix==="edit"?"editRace":"race")?.value||"Humano";const b=raceBonus(race);const get=key=>Number(document.getElementById(fieldId(prefix,key))?.value||0);const base={forca:get("forca"),agilidade:get("agilidade"),vitalidade:get("vitalidade"),intelecto:get("intelecto"),sensibilidade:get("sensibilidade"),carisma:get("carisma")};const total={};Object.keys(base).forEach(k=>total[k]=base[k]+(b[k]||0));return {race,base,total,used:Object.values(base).reduce((a,b)=>a+b,0)}}
 function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val}
 function setVal(id,val){const el=document.getElementById(id);if(el)el.value=val}
-function applyDerived(prefix=""){const c=calcTotals(prefix);["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].forEach(k=>setText(prefix+k+"Total",c.total[k]));const pv=10+c.total.vitalidade*2, esquiva=5+c.total.agilidade, res=5+c.total.sensibilidade, fort=5+c.total.vitalidade, vontade=5+c.total.intelecto;setText(prefix+"pvTotal",pv);setText(prefix+"esquivaTotal",esquiva);setText(prefix+"resEterTotal",res);setText(prefix+"fortitudeTotal",fort);setText(prefix+"vontadeTotal",vontade);setText(prefix+"peAuto",document.getElementById(prefix+"pe")?.value||5);setVal(prefix+"iniciativa",c.total.agilidade+c.total.sensibilidade);const p=document.getElementById(prefix+"pointsInfo");if(p){p.textContent=prefix?`Pontos base usados: ${c.used}`:`Pontos base usados: ${c.used}/10`;p.className=(!prefix&&c.used>10)?"warning":"ok"}return { ...c, pv, esquiva, res, fort, vontade }}
+function applyDerived(prefix=""){const c=calcTotals(prefix);["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].forEach(k=>setText(outId(prefix,k),c.total[k]));const pv=10+c.total.vitalidade*2, esquiva=5+c.total.agilidade, res=5+c.total.sensibilidade, fort=5+c.total.vitalidade, vontade=5+c.total.intelecto;setText(prefix?prefix+"PvTotal":"pvTotal",pv);setText(prefix?prefix+"EsquivaTotal":"esquivaTotal",esquiva);setText(prefix?prefix+"ResEterTotal":"resEterTotal",res);setText(prefix?prefix+"FortitudeTotal":"fortitudeTotal",fort);setText(prefix?prefix+"VontadeTotal":"vontadeTotal",vontade);setText(prefix?prefix+"PeAuto":"peAuto",document.getElementById(prefix?prefix+"Pe":"pe")?.value||5);setVal(prefix?prefix+"Iniciativa":"iniciativa",c.total.agilidade+c.total.sensibilidade);const p=document.getElementById(prefix?prefix+"PointsInfo":"pointsInfo");if(p){p.textContent=prefix?`Pontos base usados: ${c.used}`:`Pontos base usados: ${c.used}/10`;p.className=(!prefix&&c.used>10)?"warning":"ok"}return { ...c, pv, esquiva, res, fort, vontade }}
 function updateDerived(){applyDerived("");updateRaceInfo();updateElementInfo()}
 function updateEditDerived(){applyDerived("edit")}
 function updateRaceInfo(){const r=document.getElementById("race").value;const b=raceData[r].b;document.getElementById("raceInfo").innerHTML=`<b>${r}:</b> ${raceData[r].d} <span class="tag">${Object.entries(b).map(([k,v])=>`+${v} ${k}`).join("</span> <span class='tag'>")}</span>`}
@@ -301,10 +389,161 @@ document.getElementById("importJson").addEventListener("change",e=>{const file=e
 function renderCharacters(){const box=document.getElementById("charactersList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha online ainda.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}" alt="${escapeHtml(c.name)}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.race||"Humano")} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</small><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0} • Resist. Éter ${c.defenses?.resistenciaEter||0}</p><p><b>Arma:</b> ${escapeHtml(c.weaponType||"-")} ${c.weapon?"• "+escapeHtml(c.weapon):""}</p><p><b>Físico:</b> ${escapeHtml(c.physical||"-")}</p></div><div class="row"><button onclick="exportSavedImage('${c.id}')">PNG</button><button onclick="downloadSavedJson('${c.id}')">JSON</button><button onclick="quickLoadEdit('${c.id}')">Editar</button><button class="danger-btn" onclick="deleteCharacter('${c.id}')">Excluir</button></div></div>`).join("")}
 async function deleteCharacter(id){if(!isOwner())return alert("Somente o Host pode excluir.");if(!confirm("Excluir ficha?"))return;const{db,doc,deleteDoc,updateDoc}=fb();await deleteDoc(doc(db,"characters",id));await updateDoc(doc(db,"game","session"),{party:(sessionData.party||[]).filter(x=>x!==id)})}
 function downloadSavedJson(id){const c=characters.find(x=>x.id===id);if(c)downloadFile(`${c.name.replaceAll(" ","_")}_hollow_break.json`,JSON.stringify(c,null,2),"application/json")}
-async function startSession(){if(!isOwner())return alert("Somente o Host pode iniciar.");if(!characters.length)return alert("Precisa ter ficha.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:true,party:sessionData.party||[]});alert("Sessão iniciada.")}
-async function endSession(){if(!isOwner())return alert("Somente o Host pode encerrar.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:false,party:[]});alert("Sessão encerrada.")}
-async function joinSession(){if(!sessionData.open)return alert("Sessão fechada.");const choice=prompt("Digite o número da ficha:\n"+characters.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join("\n"));const c=characters[Number(choice)-1];if(!c)return alert("Ficha inválida.");const party=sessionData.party||[];if(!party.includes(c.id))party.push(c.id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"game","session"),{party});alert("Você entrou na sessão.")}
-function renderSession(){document.getElementById("sessionStatus").textContent=sessionData.open?"ABERTA":"FECHADA";document.getElementById("homeSessionStatus").textContent=sessionData.open?"ABERTA":"FECHADA";document.getElementById("sessionMsg").textContent=sessionData.open?"Sessão aberta. Entre com sua ficha.":"O Host ainda não iniciou.";document.getElementById("homeSessionText").textContent=sessionData.open?"A mesa está aberta.":"A sessão está fechada.";const party=characters.filter(c=>(sessionData.party||[]).includes(c.id));document.getElementById("partyList").innerHTML=party.length?party.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small></div></div>`).join(""):"<p>Ninguém entrou ainda.</p>"}
+async function startSession(){if(!isOwner())return alert("Somente o Host pode iniciar.");if(!characters.length)return alert("Precisa ter ficha.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:true,party:sessionData.party||[],chatOpen:true});await addSystemLog("Sessão iniciada pelo Host.");alert("Sessão iniciada.")}
+async function endSession(){if(!isOwner())return alert("Somente o Host pode encerrar.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:false,party:[],chatOpen:false});await addSystemLog("Sessão encerrada pelo Host.");alert("Sessão encerrada.")}
+async function joinSession(){if(!sessionData.open)return alert("Sessão fechada.");const choice=prompt("Digite o número da ficha:\n"+characters.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join("\n"));const c=characters[Number(choice)-1];if(!c)return alert("Ficha inválida.");const party=sessionData.party||[];if(!party.includes(c.id))party.push(c.id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"game","session"),{party});sessionStorage.setItem("hollow_break_player_id",c.id);await addSystemLog(`${c.name} entrou na sessão.`);alert("Você entrou na sessão.")}
+function getMySessionCharacterId(){
+  return sessionStorage.getItem("hollow_break_player_id") || "";
+}
+function setMySessionCharacter(id){
+  if(id) sessionStorage.setItem("hollow_break_player_id", id);
+  renderSession();
+}
+function renderSession(){
+  document.getElementById("sessionStatus").textContent=sessionData.open?"ABERTA":"FECHADA";
+  document.getElementById("homeSessionStatus").textContent=sessionData.open?"ABERTA":"FECHADA";
+  document.getElementById("sessionMsg").textContent=sessionData.open?"Sessão aberta. Escolha sua ficha e acompanhe o log.":"O Host ainda não iniciou.";
+  document.getElementById("homeSessionText").textContent=sessionData.open?"A mesa está aberta.":"A sessão está fechada.";
+
+  const party=characters.filter(c=>(sessionData.party||[]).includes(c.id));
+  const select=document.getElementById("mySessionCharacter");
+  if(select){
+    select.innerHTML=party.length?party.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha na sessão</option>`;
+    const saved=getMySessionCharacterId();
+    if(saved && party.some(c=>c.id===saved)) select.value=saved;
+    else if(party[0]) { select.value=party[0].id; sessionStorage.setItem("hollow_break_player_id",party[0].id); }
+  }
+
+  const current=characters.find(c=>c.id===getMySessionCharacterId());
+  document.getElementById("mySheetSummary").innerHTML=current?miniSheetHtml(current):"<p>Entre na sessão para ver sua ficha aqui.</p>";
+
+  document.getElementById("partyList").innerHTML=party.length?party.map(c=>`
+    <div class="character-card">
+      <div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div>
+      <div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small></div>
+    </div>
+  `).join(""):"<p>Ninguém entrou ainda.</p>";
+
+  renderChat();
+}
+function miniSheetHtml(c){
+  return `<div class="mini-head">
+    <div class="mini-face">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div>
+    <div><h3>${escapeHtml(c.name)}</h3><small>${escapeHtml(c.race||"Humano")} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)}</small><p>${escapeHtml(c.weaponType||"-")} ${c.weapon?"• "+escapeHtml(c.weapon):""}</p></div>
+  </div>
+  <div class="mini-grid">
+    <div class="mini-stat">FOR<strong>${c.stats?.forca||0}</strong></div>
+    <div class="mini-stat">AGI<strong>${c.stats?.agilidade||0}</strong></div>
+    <div class="mini-stat">VIT<strong>${c.stats?.vitalidade||0}</strong></div>
+    <div class="mini-stat">INT<strong>${c.stats?.intelecto||0}</strong></div>
+    <div class="mini-stat">SEN<strong>${c.stats?.sensibilidade||0}</strong></div>
+    <div class="mini-stat">CAR<strong>${c.stats?.carisma||0}</strong></div>
+  </div>
+  <div class="mini-grid">
+    <div class="mini-stat">PV<strong>${c.pv||0}</strong></div>
+    <div class="mini-stat">PE<strong>${c.pe||0}</strong></div>
+    <div class="mini-stat">Esquiva<strong>${c.defenses?.esquiva||0}</strong></div>
+  </div>
+  <p><b>Especializações:</b> ${escapeHtml(c.skills||"-")}</p>
+  <p><b>Suprema:</b> ${escapeHtml(c.ultimate||"-")}</p>`;
+}
+function listenSessionLog(){
+  const{db,collection,onSnapshot}=fb();
+  onSnapshot(collection(db,"sessionLog"),snap=>{
+    sessionMessages=snap.docs.map(d=>({id:d.id,...d.data()}));
+    sessionMessages.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
+    renderChat();
+  },err=>console.error("Erro no log",err));
+}
+function setupChatImageInput(){
+  const input=document.getElementById("chatImageInput");
+  if(!input) return;
+  input.addEventListener("change",e=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{chatImageData=reader.result; alert("Imagem anexada ao próximo log.");};
+    reader.readAsDataURL(file);
+  });
+}
+function clearChatImage(){
+  chatImageData="";
+  const input=document.getElementById("chatImageInput");
+  if(input) input.value="";
+  alert("Imagem removida do próximo log.");
+}
+function renderChat(){
+  const box=document.getElementById("sessionChat");
+  const status=document.getElementById("chatStatusText");
+  const warn=document.getElementById("chatClosedWarning");
+  if(!box) return;
+  const open=sessionData.chatOpen!==false;
+  if(status) status.textContent=open?"Chat aberto para a sessão.":"Chat fechado pelo Host/GM.";
+  if(warn) warn.style.display=open?"none":"block";
+  box.innerHTML=sessionMessages.length?sessionMessages.map(m=>`
+    <div class="log-msg ${m.role==='GM'?'gm':m.role==='Sistema'?'system':''}">
+      <small>${escapeHtml(m.role||"Log")} • ${escapeHtml(m.author||"Anônimo")} • ${escapeHtml(m.kind||"ação")} • ${escapeHtml(m.time||"")}</small>
+      <div>${escapeHtml(m.text||"").replaceAll("\n","<br>")}</div>
+      ${m.image?`<img class="log-img" src="${m.image}" alt="Imagem do log">`:""}
+    </div>
+  `).join(""):"<p>Nenhuma ação no log ainda.</p>";
+  box.scrollTop=box.scrollHeight;
+}
+function currentChatAuthor(){
+  if(isOwner()) return {role:"GM",author:"Host"};
+  const gm=getLoggedGmCharacter();
+  if(gm) return {role:"GM",author:gm.name};
+  const player=characters.find(c=>c.id===getMySessionCharacterId());
+  if(player) return {role:"Jogador",author:player.name};
+  return {role:"Jogador",author:"Visitante"};
+}
+async function toggleChat(open){
+  if(!isOwner()&&!isGmLogged()) return alert("Somente Host ou GM pode abrir/fechar o chat.");
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"game","session"),{chatOpen:open});
+  await addSystemLog(open?"Chat aberto pelo GM/Host.":"Chat fechado pelo GM/Host.");
+}
+async function sendSessionMessage(){
+  if(!sessionData.open) return alert("A sessão ainda está fechada.");
+  const open=sessionData.chatOpen!==false;
+  if(!open && !isOwner() && !isGmLogged()) return alert("O chat está fechado para jogadores.");
+  const now=Date.now();
+  if(now-lastChatSentAt<4500) return alert("Calma aí, anti-spam ativado. Espere alguns segundos.");
+  const text=(document.getElementById("chatMessage").value||"").trim();
+  const kind=document.getElementById("chatType").value;
+  if(!text && !chatImageData) return alert("Digite uma mensagem ou anexe uma imagem.");
+  if(text.length>700) return alert("Mensagem muito grande. Resume um pouco.");
+  const who=currentChatAuthor();
+  const finalRole=(kind==="gm"||kind==="system"||isOwner()||isGmLogged())?(kind==="system"?"Sistema":who.role):"Jogador";
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"sessionLog")),{
+    role:finalRole,
+    author:who.author,
+    kind,
+    text,
+    image:chatImageData||"",
+    time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+    createdAt:serverTimestamp(),
+    createdAtText:new Date().toISOString()
+  });
+  lastChatSentAt=now;
+  document.getElementById("chatMessage").value="";
+  clearChatImageSilent();
+}
+function clearChatImageSilent(){
+  chatImageData="";
+  const input=document.getElementById("chatImageInput");
+  if(input) input.value="";
+}
+async function addSystemLog(text){
+  if(!window.firebaseReady) return;
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"sessionLog")),{
+    role:"Sistema",author:"Hollow Break",kind:"system",text,image:"",
+    time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+    createdAt:serverTimestamp(),createdAtText:new Date().toISOString()
+  });
+}
 function renderGmManage(){const box=document.getElementById("gmManageList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)}</small></div><div><button onclick="toggleGm('${c.id}')">${c.gm?"Remover GM":"Tornar GM"}</button></div></div>`).join("")}
 async function toggleGm(id){if(!isOwner())return alert("Somente o Host pode transformar alguém em GM.");const c=characters.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),{gm:!c.gm});alert(c.gm?"GM removido.":"Jogador transformado em GM.")}
 function renderSelects(){const gm=document.getElementById("gmLoginSelect"),edit=document.getElementById("editSelect");if(gm){const g=characters.filter(c=>c.gm);gm.innerHTML=g.length?g.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha GM</option>`}if(edit){edit.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha</option>`}}
