@@ -110,6 +110,15 @@
     .item-secret{border:1px dashed rgba(57,255,136,.45);border-radius:14px;padding:10px;margin:8px 0;background:rgba(57,255,136,.06)}
     .account-required{border:1px solid rgba(255,68,68,.6);background:rgba(255,68,68,.08);border-radius:18px;padding:12px;margin:10px 0}
 
+
+    .pcard{border:1px solid var(--border);border-radius:18px;background:#07110b;padding:12px;margin:10px 0}
+    .battle-creatures{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .battle-monster{border:1px solid var(--pborder);border-radius:18px;background:linear-gradient(135deg,rgba(139,53,255,.12),#090909);padding:12px}
+    .battle-monster img{width:100%;height:160px;object-fit:cover;border-radius:14px;border:1px solid var(--pborder);margin-bottom:8px}
+    .request-card{border:1px solid rgba(57,255,136,.35);border-left:4px solid var(--yellow);border-radius:14px;background:#07110b;padding:10px;margin:10px 0}
+    .special-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media(max-width:900px){.special-grid{grid-template-columns:1fr}}
+
     @media(max-width:900px){.session-layout{grid-template-columns:1fr}.chat-box{height:520px}}
     @media(max-width:900px){.span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:span 12}.stat-list,.def-list{grid-template-columns:repeat(2,1fr)}.character-card{grid-template-columns:70px 1fr}.character-card .row{grid-column:span 2}.hero h2{font-size:28px}}
   </style>
@@ -144,6 +153,7 @@
     <button class="tab-btn" onclick="openTab('creator', this)">Criar Ficha</button>
     <button class="tab-btn" onclick="openTab('skills', this)">Habilidades</button>
     <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
+    <button class="tab-btn" onclick="openTab('personagem', this)">Personagem</button>
     <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
     <button class="tab-btn" onclick="openTab('scenario', this)">Cenário/Batalha</button>
     <button class="tab-btn" onclick="openTab('monsters', this)">Monstros</button>
@@ -158,7 +168,7 @@
       <div class="row" style="margin-top:16px">
         <button class="green-btn" onclick="openTab('creator', document.querySelectorAll('.tab-btn')[1])">Criar ficha</button>
         <button onclick="openTab('library', document.querySelectorAll('.tab-btn')[3])">Ver fichas</button>
-        <button onclick="openTab('session', document.querySelectorAll('.tab-btn')[4])">Entrar na sessão</button>
+        <button onclick="openTab('session', document.querySelectorAll('.tab-btn')[5])">Entrar na sessão</button>
       </div>
     </div>
     
@@ -262,7 +272,13 @@
           <div><label>Tipo de arma</label><select id="weaponType"><option>Espadas</option><option>Martelos</option><option>Pistolas</option><option>Rifles</option><option>Foices</option><option>Manoplas</option><option>Arma de Éter</option></select></div>
           <div><label>Arma principal</label><input id="weapon" placeholder="Ex: Katana elétrica"></div>
         </div>
-        <label>Especializações</label><input id="skills" placeholder="Escolha 3. Ex: Espadas, Acrobacia, Hacking. Cada uma concede +2 em testes relacionados.">
+        <label>Especializações, escolha 3</label>
+        <div class="special-grid">
+          <select id="skillPick1"><option>Espadas</option><option>Pistolas</option><option>Acrobacia</option><option>Hacking</option><option>Medicina</option><option>Pilotagem</option><option>Investigação</option><option>Música</option><option>Sobrevivência</option><option>Intimidação</option><option>Atletismo</option><option>Furtividade</option><option>Mecânica</option></select>
+          <select id="skillPick2"><option>Pistolas</option><option>Espadas</option><option>Acrobacia</option><option>Hacking</option><option>Medicina</option><option>Pilotagem</option><option>Investigação</option><option>Música</option><option>Sobrevivência</option><option>Intimidação</option><option>Atletismo</option><option>Furtividade</option><option>Mecânica</option></select>
+          <select id="skillPick3"><option>Acrobacia</option><option>Espadas</option><option>Pistolas</option><option>Hacking</option><option>Medicina</option><option>Pilotagem</option><option>Investigação</option><option>Música</option><option>Sobrevivência</option><option>Intimidação</option><option>Atletismo</option><option>Furtividade</option><option>Mecânica</option></select>
+        </div>
+        <p><small>Cada especialização concede +2 em testes relacionados.</small></p>
         <label>Características físicas</label><textarea id="physical" placeholder="Cabelo, olhos, cicatrizes, roupa, detalhes marcantes"></textarea>
         <label>Habilidade Suprema</label><textarea id="ultimate" placeholder="Custo 5 PE. Descreva o ataque supremo"></textarea>
         <label>História / personalidade</label><textarea id="story" placeholder="Passado, objetivo, estilo e ligação com Hollows"></textarea>
@@ -299,7 +315,8 @@
         <h2>Criar Habilidade</h2>
         <p>Você só pode criar habilidade para ficha que pertence à sua conta. Host pode criar para qualquer ficha.</p>
         <label>Ficha dona da habilidade</label>
-        <select id="skillCharacter"></select>
+        <select id="skillCharacter" onchange="syncSkillElementToCharacter()"></select>
+        <p id="skillElementHint" class="ok">Escolha uma ficha para travar o elemento.</p>
 
         <div class="row">
           <div><label>Nome da habilidade</label><input id="skillName" placeholder="Ex: Corte Relâmpago"></div>
@@ -335,7 +352,44 @@
 <section id="library" class="tab"><div class="card"><h2>Fichas Online</h2><p>Todo personagem salvo aparece aqui para todos.</p><div class="row"><label class="file-label" for="importJson">Importar JSON</label><input type="file" id="importJson" accept="application/json"><button onclick="renderAll()">Atualizar</button></div><div id="charactersList"></div></div></section>
 
   
-  <section id="session" class="tab">
+  
+  <section id="personagem" class="tab">
+    <div class="grid">
+      <div class="card span-5">
+        <h2>Meus Personagens</h2>
+        <p>Escolha uma ficha da sua conta para ver o resumo e entrar na batalha.</p>
+        <label>Personagem ativo</label>
+        <select id="activeCharacterSelect" onchange="setMySessionCharacter(this.value); renderPersonagemTab();"></select>
+        <div id="activeCharacterSheet" class="pcard"><p>Nenhum personagem selecionado.</p></div>
+        <button onclick="openTab('creator', document.querySelectorAll('.tab-btn')[1])">Criar novo personagem</button>
+      </div>
+      <div class="card span-7">
+        <h2>Cenário de Batalha</h2>
+        <div class="scene-board">
+          <h3 id="personagemSceneTitle">Sem cenário</h3>
+          <p id="personagemSceneDesc">Aguardando Host/GM.</p>
+          <div id="personagemSceneImg"></div>
+        </div>
+        <h3 style="margin-top:16px;color:var(--yellow)">Monstros no cenário</h3>
+        <div id="personagemMonsters" class="battle-creatures"></div>
+      </div>
+      <div class="card span-12">
+        <h2>Solicitar Ação ao Host/GM</h2>
+        <p>Escolha uma habilidade ou ataque básico e envie o pedido. O Host/GM aprova no log.</p>
+        <div class="row">
+          <div><label>Habilidade / ataque</label><select id="actionSkillSelect"></select></div>
+          <div><label>Alvo</label><select id="actionTargetSelect"></select></div>
+        </div>
+        <label>Descrição da ação</label>
+        <textarea id="actionRequestText" placeholder="Ex: quero usar Corte Relâmpago no Etéreo da frente"></textarea>
+        <button class="green-btn" onclick="requestAction()">Pedir ação ao Host/GM</button>
+        <h3 style="margin-top:16px;color:var(--yellow)">Pedidos pendentes</h3>
+        <div id="actionRequestsList"></div>
+      </div>
+    </div>
+  </section>
+
+<section id="session" class="tab">
     <div class="session-layout">
       <div class="card">
         <h2>Sessão do RPG</h2>
@@ -594,7 +648,7 @@
 </script>
 
 <script>
-let faceData="",characters=[],monsters=[],accounts=[],skills=[],sessionData={open:false,party:[],chatOpen:true},scenarioData={scene:{},battle:{round:1,turnOrder:[],turnIndex:0,events:[]},secretItems:[]},sessionMessages=[],chatImageData="",monsterImageData="",sceneImageData="",lastChatSentAt=0;
+let faceData="",characters=[],monsters=[],accounts=[],skills=[],actionRequests=[],sessionData={open:false,party:[],chatOpen:true},scenarioData={scene:{},battle:{round:1,turnOrder:[],turnIndex:0,events:[]},secretItems:[]},sessionMessages=[],chatImageData="",monsterImageData="",sceneImageData="",lastChatSentAt=0;
 const raceData={
  "Humano":{b:{intelecto:2,vitalidade:1},d:"Normalmente não possuem habilidades sobre-humanas."},
  "Tireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Tireno tem característica única."},
@@ -614,7 +668,7 @@ const elementData={
 function fb(){return window.hbFirebase}
 function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");btn.classList.add("active");renderAll()}
 window.addEventListener("firebase-error",()=>{document.getElementById("firebaseWarning").style.display="block";document.getElementById("homeSessionStatus").textContent="ERRO";document.getElementById("sessionStatus").textContent="ERRO"});
-window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenScenario();listenSessionLog();listenMonsters();listenAccounts();listenSkills();renderRules();setupChatImageInput();setupMonsterImageInput();setupSceneImageInput();renderAll()});
+window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenScenario();listenSessionLog();listenMonsters();listenAccounts();listenSkills();listenActionRequests();renderRules();setupChatImageInput();setupMonsterImageInput();setupSceneImageInput();renderAll()});
 function listenCharacters(){const{db,collection,onSnapshot}=fb();onSnapshot(collection(db,"characters"),snap=>{characters=snap.docs.map(d=>({id:d.id,...d.data()}));characters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()},err=>alert("Erro ao carregar fichas. Confira as Rules do Firestore."))}
 function listenSession(){const{db,doc,onSnapshot,setDoc}=fb();const ref=doc(db,"game","session");onSnapshot(ref,async snap=>{if(!snap.exists()){await setDoc(ref,{open:false,party:[],chatOpen:true});return}sessionData=snap.data();if(!Array.isArray(sessionData.party))sessionData.party=[];if(typeof sessionData.chatOpen!=="boolean")sessionData.chatOpen=true;renderAll()},err=>alert("Erro ao carregar sessão. Confira as Rules do Firestore."))}
 
@@ -742,7 +796,7 @@ function updateRaceInfo(){const r=document.getElementById("race").value;const b=
 function updateElementInfo(){const e=document.getElementById("ether").value;document.getElementById("elementInfo").innerHTML=`<b>${e}:</b> ${elementData[e]}`}
 document.getElementById("faceInput").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{faceData=reader.result;document.getElementById("facePreview").innerHTML=`<img src="${faceData}" alt="Rosto">`};reader.readAsDataURL(file)});
 function clearFace(){faceData="";document.getElementById("facePreview").textContent="PNG/JPG do rosto";document.getElementById("faceInput").value=""}
-function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:val("skills"),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false,ownerAccount:currentAccountName()}}
+function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:[val("skillPick1"),val("skillPick2"),val("skillPick3")].filter(Boolean).join(", "),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false,ownerAccount:currentAccountName()}}
 function val(id){return document.getElementById(id)?.value?.trim()||""}function num(id,def=0){return Number(document.getElementById(id)?.value||def)}
 async function saveCharacter(){if(!window.firebaseReady)return alert("Firebase não conectou.");if(!currentAccountName()&&!isOwner())return alert("Crie ou entre em uma conta antes de salvar ficha.");const c=makeCharacter();if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Na criação inicial são 10 pontos base. O bônus da raça soma por cima.");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Ficha salva online.")}
 function downloadFile(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
@@ -863,6 +917,15 @@ function listenSkills(){
     skills.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
     renderAll();
   },err=>console.error("Erro em habilidades",err));
+}
+
+function listenActionRequests(){
+  const{db,collection,onSnapshot}=fb();
+  onSnapshot(collection(db,"actionRequests"),snap=>{
+    actionRequests=snap.docs.map(d=>({id:d.id,...d.data()}));
+    actionRequests.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
+    renderAll();
+  },err=>console.error("Erro em pedidos de ação",err));
 }
 function setupMonsterImageInput(){
   const input=document.getElementById("monsterImageInput");
@@ -1172,7 +1235,7 @@ async function createSkill(){
   if(!canUseCharacter(c)) return alert("Você só pode criar habilidade para ficha da sua conta.");
   const name=val("skillName");
   if(!name) return alert("Coloque o nome da habilidade.");
-  const chosenElement=val("skillElement");
+  let chosenElement=val("skillElement") || c.ether;
   if(chosenElement!==c.ether) return alert(`Essa ficha é do elemento ${c.ether}. Você só pode criar habilidade desse elemento.`);
   const skill={
     characterId:charId,
@@ -1242,10 +1305,110 @@ function useSelectedSkillInChat(){
     chatSkill.innerHTML=`<option value="">Ataque manual</option>`+skills.map(s=>`<option value="${s.id}">${escapeHtml(s.characterName)} - ${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
   }
 
+
+  const activeSel=document.getElementById("activeCharacterSelect");
+  if(activeSel){
+    const mine=characters.filter(c=>c.ownerAccount===currentAccountName());
+    activeSel.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ether)}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
+    if(getMySessionCharacterId()) activeSel.value=getMySessionCharacterId();
+  }
+  const actionSkill=document.getElementById("actionSkillSelect");
+  if(actionSkill){
+    const charId=getMySessionCharacterId();
+    const c=characters.find(x=>x.id===charId);
+    const ownSkills=skills.filter(s=>s.characterId===charId);
+    actionSkill.innerHTML=`<option value="basic">Ataque básico (${c?.ether||"elemento"})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
+  }
+  const actionTarget=document.getElementById("actionTargetSelect");
+  if(actionTarget){
+    actionTarget.innerHTML=`<option value="">Sem alvo</option>`+monsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} [monstro]</option>`).join("");
+  }
+
   const actor=document.getElementById("chatActor");
   if(actor) actor.value=s.characterId;
   const msg=document.getElementById("chatMessage");
   if(msg&&!msg.value) msg.value=`${s.characterName} usa ${s.name}.\\nBase: ${s.base}\\n${s.desc}`;
+}
+
+function syncSkillElementToCharacter(){
+  const id=document.getElementById("skillCharacter")?.value;
+  const c=characters.find(x=>x.id===id);
+  const el=document.getElementById("skillElement");
+  const hint=document.getElementById("skillElementHint");
+  if(c&&el){
+    el.value=c.ether||"Físico";
+    if(hint) hint.textContent=`Elemento travado nessa ficha: ${c.ether}`;
+  }
+}
+function renderPersonagemTab(){
+  const select=document.getElementById("activeCharacterSelect");
+  const mine=characters.filter(c=>c.ownerAccount===currentAccountName());
+  if(select){
+    const current=getMySessionCharacterId();
+    select.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ether)}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
+    if(current) select.value=current;
+  }
+  const c=characters.find(x=>x.id===getMySessionCharacterId()) || mine[0];
+  if(c && !getMySessionCharacterId()) setMySessionCharacter(c.id);
+  const box=document.getElementById("activeCharacterSheet");
+  if(box){
+    box.innerHTML=c?`
+      <div class="row">
+        <div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div>
+        <div><h3>${escapeHtml(c.name)}</h3><small>${escapeHtml(c.race||"")} • ${escapeHtml(c.className||"")} • ${escapeHtml(c.ether||"")}</small></div>
+      </div>
+      <p>PV ${c.pv||0} • PE ${c.pe||0} • Esquiva ${c.defenses?.esquiva||0}</p>
+      <p><b>Especializações:</b> ${escapeHtml(c.skills||"-")}</p>
+      <p><b>Arma:</b> ${escapeHtml(c.weaponType||"-")} • ${escapeHtml(c.weapon||"-")}</p>`:"<p>Nenhum personagem seu criado.</p>";
+  }
+  const scene=scenarioData.scene||{};
+  setText("personagemSceneTitle",scene.title||"Sem cenário");
+  setText("personagemSceneDesc",scene.desc||"Aguardando Host/GM.");
+  const img=document.getElementById("personagemSceneImg");
+  if(img) img.innerHTML=scene.image?`<img class="log-img" src="${scene.image}">`:"";
+  const mons=document.getElementById("personagemMonsters");
+  if(mons){
+    const active=monsters.filter(m=>m.active!==false&&Number(m.hp)>0);
+    mons.innerHTML=active.length?active.map(m=>`<div class="battle-monster">${m.image?`<img src="${m.image}">`:""}<h3>${escapeHtml(m.name)}</h3><small>${escapeHtml(m.type)} • ${escapeHtml(m.element)}</small><p>PV ${m.hp}/${m.maxHp} • Pressão ${m.pressure||0}/${m.maxPressure||0}</p></div>`).join(""):"<p>Nenhum monstro ativo no cenário.</p>";
+  }
+  renderActionRequests();
+}
+async function requestAction(){
+  if(!sessionData.open) return alert("A sessão precisa estar aberta.");
+  const charId=getMySessionCharacterId();
+  const c=characters.find(x=>x.id===charId);
+  if(!c) return alert("Escolha seu personagem.");
+  if(c.ownerAccount!==currentAccountName()) return alert("Esse personagem não é da sua conta.");
+  const skillId=document.getElementById("actionSkillSelect")?.value||"basic";
+  const target=document.getElementById("actionTargetSelect")?.value||"";
+  const skill=skills.find(s=>s.id===skillId);
+  const text=val("actionRequestText") || (skill?`${c.name} quer usar ${skill.name}.`:`${c.name} quer usar ataque básico.`);
+  const req={characterId:c.id,characterName:c.name,ownerAccount:c.ownerAccount,skillId,skillName:skill?skill.name:"Ataque básico",element:skill?skill.element:c.ether,target,text,status:"pending",createdAtText:new Date().toISOString()};
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"actionRequests")),{...req,createdAt:serverTimestamp()});
+  await addSessionLogDirect({role:"Sistema",author:"Pedido de ação",kind:"system",text:`${c.name} pediu ação: ${req.skillName} em ${target||"sem alvo"}. Aguardando Host/GM.`,element:req.element});
+  setVal("actionRequestText","");
+}
+function renderActionRequests(){
+  const box=document.getElementById("actionRequestsList");
+  if(!box) return;
+  const list=(isOwner()||isGmLogged())?actionRequests:actionRequests.filter(r=>r.ownerAccount===currentAccountName());
+  const pending=list.filter(r=>r.status==="pending");
+  box.innerHTML=pending.length?pending.map(r=>`<div class="request-card"><h3>${escapeHtml(r.characterName)} → ${escapeHtml(r.skillName)}</h3><small>${escapeHtml(r.element)} • Alvo: ${escapeHtml(r.target||"-")}</small><p>${escapeHtml(r.text)}</p>${(isOwner()||isGmLogged())?`<div class="row"><button class="green-btn" onclick="approveAction('${r.id}')">Aprovar</button><button class="danger-btn" onclick="rejectAction('${r.id}')">Recusar</button></div>`:"<p>Aguardando aprovação...</p>"}</div>`).join(""):"<p>Nenhum pedido pendente.</p>";
+}
+async function approveAction(id){
+  if(!canEditSheets()) return alert("Somente Host/GM aprova ação.");
+  const r=actionRequests.find(x=>x.id===id); if(!r) return;
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"actionRequests",id),{status:"approved",approvedAt:new Date().toISOString()});
+  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"attack",move:r.skillName,target:r.target,element:r.element,text:`AÇÃO APROVADA: ${r.text}`});
+}
+async function rejectAction(id){
+  if(!canEditSheets()) return alert("Somente Host/GM recusa ação.");
+  const r=actionRequests.find(x=>x.id===id); if(!r) return;
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"actionRequests",id),{status:"rejected",rejectedAt:new Date().toISOString()});
+  await addSessionLogDirect({role:"Sistema",author:"Host/GM",kind:"system",text:`Ação recusada: ${r.characterName} → ${r.skillName}`});
 }
 function renderSelects(){
   const gm=document.getElementById("gmLoginSelect"),edit=document.getElementById("editSelect");
@@ -1260,6 +1423,25 @@ function renderSelects(){
     chatSkill.innerHTML=`<option value="">Ataque manual</option>`+skills.map(s=>`<option value="${s.id}">${escapeHtml(s.characterName)} - ${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
   }
 
+
+  const activeSel=document.getElementById("activeCharacterSelect");
+  if(activeSel){
+    const mine=characters.filter(c=>c.ownerAccount===currentAccountName());
+    activeSel.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ether)}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
+    if(getMySessionCharacterId()) activeSel.value=getMySessionCharacterId();
+  }
+  const actionSkill=document.getElementById("actionSkillSelect");
+  if(actionSkill){
+    const charId=getMySessionCharacterId();
+    const c=characters.find(x=>x.id===charId);
+    const ownSkills=skills.filter(s=>s.characterId===charId);
+    actionSkill.innerHTML=`<option value="basic">Ataque básico (${c?.ether||"elemento"})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
+  }
+  const actionTarget=document.getElementById("actionTargetSelect");
+  if(actionTarget){
+    actionTarget.innerHTML=`<option value="">Sem alvo</option>`+monsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} [monstro]</option>`).join("");
+  }
+
   const actor=document.getElementById("chatActor");
   if(actor){actor.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Sem personagens</option>`}
   const target=document.getElementById("chatTarget");
@@ -1268,13 +1450,14 @@ function renderSelects(){
     const monOpts=monsters.map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} [monstro]</option>`).join("");
     target.innerHTML=`<option value="">Sem alvo</option>${charOpts}${monOpts}`;
   }
+  syncSkillElementToCharacter();
 }
 function gmLogin(){const id=document.getElementById("gmLoginSelect").value;const c=characters.find(x=>x.id===id);if(!c||!c.gm)return alert("Essa ficha não é GM.");sessionStorage.setItem("hollow_break_gm_id",id);alert(`Você entrou como GM: ${c.name}`);renderAll()}
 function gmLogout(){sessionStorage.removeItem("hollow_break_gm_id");renderAll()}
 async function setOwnerPassword(){const pass=document.getElementById("ownerPass").value.trim();if(pass.length<4)return alert("Use senha com 4+ caracteres.");const{db,doc,getDoc,setDoc}=fb();const ref=doc(db,"game","owner");const snap=await getDoc(ref);if(snap.exists()&&snap.data().passwordHash)return alert("Já existe senha de Host.");await setDoc(ref,{passwordHash:await simpleHash(pass)});alert("Senha criada.")}
 async function ownerLogin(){const pass=document.getElementById("ownerPass").value.trim();const{db,doc,getDoc}=fb();const snap=await getDoc(doc(db,"game","owner"));if(!snap.exists())return alert("Crie a senha primeiro.");if(await simpleHash(pass)===snap.data().passwordHash){sessionStorage.setItem("hollow_break_owner_logged","true");alert("Você entrou como Host.")}else alert("Senha errada.");renderAll()}
 function ownerLogout(){sessionStorage.removeItem("hollow_break_owner_logged");renderAll()}
-function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[7]);document.getElementById("editSelect").value=id;loadEditCharacter()}
+function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[8]);document.getElementById("editSelect").value=id;loadEditCharacter()}
 function loadEditCharacter(){const id=document.getElementById("editSelect").value,c=characters.find(x=>x.id===id);if(!c)return;setVal("editName",c.name);setVal("editCodename",c.codename);setVal("editPlayer",c.player);setVal("editLevel",c.level||1);setVal("editRace",c.race||"Humano");setVal("editClass",c.className||"Executor");setVal("editEther",c.ether||"Físico");["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].forEach(k=>setVal("edit"+cap(k)+"Base",c.baseStats?.[k]??0));setVal("editWeaponType",c.weaponType||"Espadas");setVal("editWeapon",c.weapon);setVal("editPe",c.pe||5);setVal("editSkills",c.skills);setVal("editPhysical",c.physical);setVal("editUltimate",c.ultimate);setVal("editStory",c.story);updateEditDerived()}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v||""}
@@ -1284,7 +1467,7 @@ async function exportCharacterImage(){await exportImageFromCharacter(makeCharact
 function renderRules(){document.getElementById("raceRules").innerHTML=Object.entries(raceData).map(([r,o])=>`<p><b>${r}</b>: ${o.d}<br>${Object.entries(o.b).map(([k,v])=>`<span class="tag">+${v} ${k}</span>`).join("")}</p>`).join("");document.getElementById("elementRules").innerHTML=Object.entries(elementData).map(([e,d])=>`<p><b>${e}</b>: ${d}</p>`).join("")}
 function escapeHtml(text){return String(text||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
 
-function renderScenario(){
+function renderScenario();renderPersonagemTab(){
   const scene=scenarioData.scene||{};
   setText("sceneTitleView",scene.title||"Sem cenário definido");
   setText("sceneDescView",scene.desc||"Host/GM ainda não descreveu o cenário.");
@@ -1388,7 +1571,7 @@ async function addBattleEvent(){
   await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Evento de batalha: ${text}`});
   setVal("battleEventText","");
 }
-function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();updateGate();renderScenario()}
+function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();updateGate();renderScenario();renderPersonagemTab()}
 updateRaceInfo();updateElementInfo();renderAll();
 </script>
 </body>
