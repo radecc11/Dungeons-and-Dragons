@@ -93,6 +93,13 @@
     .hpfill{height:100%;background:linear-gradient(90deg,#38ff8b,#ffd000,#ff4444);width:100%}
     .monster-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 
+
+    .account-box{border:1px solid rgba(56,255,139,.45);background:rgba(56,255,139,.06);border-radius:18px;padding:12px;margin-top:10px}
+    .skill-card{border:1px solid rgba(255,208,0,.22);background:#090909;border-radius:16px;padding:12px;margin:10px 0}
+    .xp-board{border:1px solid var(--border);border-radius:14px;padding:10px;background:#070707;margin-top:10px}
+    .rank-row{display:grid;grid-template-columns:40px 1fr 90px 90px;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,.08);padding:8px 0}
+    .rank-row:last-child{border-bottom:none}
+
     @media(max-width:900px){.session-layout{grid-template-columns:1fr}.chat-box{height:520px}}
     @media(max-width:900px){.span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:span 12}.stat-list,.def-list{grid-template-columns:repeat(2,1fr)}.character-card{grid-template-columns:70px 1fr}.character-card .row{grid-column:span 2}.hero h2{font-size:28px}}
   </style>
@@ -109,6 +116,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="openTab('home', this)">Início</button>
     <button class="tab-btn" onclick="openTab('creator', this)">Criar Ficha</button>
+    <button class="tab-btn" onclick="openTab('skills', this)">Habilidades</button>
     <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
     <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
     <button class="tab-btn" onclick="openTab('monsters', this)">Monstros</button>
@@ -122,9 +130,24 @@
       <p>Ficha online inspirada no clima urbano futurista: rosto PNG/JPG, raça com bônus automático, elementos, armas, defesas e sessão controlada pelo Host.</p>
       <div class="row" style="margin-top:16px">
         <button class="green-btn" onclick="openTab('creator', document.querySelectorAll('.tab-btn')[1])">Criar ficha</button>
-        <button onclick="openTab('library', document.querySelectorAll('.tab-btn')[2])">Ver fichas</button>
-        <button onclick="openTab('session', document.querySelectorAll('.tab-btn')[3])">Entrar na sessão</button>
+        <button onclick="openTab('library', document.querySelectorAll('.tab-btn')[3])">Ver fichas</button>
+        <button onclick="openTab('session', document.querySelectorAll('.tab-btn')[4])">Entrar na sessão</button>
       </div>
+    </div>
+    
+    <div class="account-box">
+      <h2>Conta do Jogador</h2>
+      <p id="accountStatus">Nenhuma conta logada.</p>
+      <div class="row">
+        <div><label>Usuário</label><input id="accountUser" placeholder="Ex: nicolas"></div>
+        <div><label>Senha / código</label><input id="accountPass" type="password" placeholder="Sua senha"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button onclick="createAccount()">Criar conta</button>
+        <button class="green-btn" onclick="loginAccount()">Entrar</button>
+        <button class="danger-btn" onclick="logoutAccount()">Sair</button>
+      </div>
+      <p><small>A conta é simples e salva no Firestore. Ela serve para bloquear criação de habilidades da ficha de outra pessoa.</small></p>
     </div>
     <div class="grid" style="margin-top:16px">
       <div class="card span-8">
@@ -242,7 +265,47 @@
     </div>
   </section>
 
-  <section id="library" class="tab"><div class="card"><h2>Fichas Online</h2><p>Todo personagem salvo aparece aqui para todos.</p><div class="row"><label class="file-label" for="importJson">Importar JSON</label><input type="file" id="importJson" accept="application/json"><button onclick="renderAll()">Atualizar</button></div><div id="charactersList"></div></div></section>
+  
+  <section id="skills" class="tab">
+    <div class="grid">
+      <div class="card span-5">
+        <h2>Criar Habilidade</h2>
+        <p>Você só pode criar habilidade para ficha que pertence à sua conta. Host pode criar para qualquer ficha.</p>
+        <label>Ficha dona da habilidade</label>
+        <select id="skillCharacter"></select>
+
+        <div class="row">
+          <div><label>Nome da habilidade</label><input id="skillName" placeholder="Ex: Corte Relâmpago"></div>
+          <div><label>Tipo</label><select id="skillType"><option>Ataque</option><option>Defesa</option><option>Suporte</option><option>Combo</option><option>Suprema</option><option>Passiva</option></select></div>
+        </div>
+
+        <div class="row">
+          <div><label>Elemento</label><select id="skillElement"><option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option></select></div>
+          <div><label>Escala com</label><select id="skillScale"><option>forca</option><option>agilidade</option><option>vitalidade</option><option>intelecto</option><option>sensibilidade</option><option>carisma</option></select></div>
+          <div><label>Custo PE</label><input id="skillCost" type="number" value="0" min="0"></div>
+        </div>
+
+        <label>Dano / efeito base</label>
+        <input id="skillBase" placeholder="Ex: 2d6 + Força, cura 1d6, aplica paralisia">
+
+        <label>Descrição</label>
+        <textarea id="skillDesc" placeholder="O que a habilidade faz? Como aparece visualmente?"></textarea>
+
+        <div class="row" style="margin-top:12px">
+          <button class="green-btn" onclick="createSkill()">Salvar habilidade</button>
+          <button onclick="clearSkillForm()">Limpar</button>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <h2>Habilidades Criadas</h2>
+        <p>As habilidades aparecem por ficha e podem ser usadas no log da sessão.</p>
+        <div id="skillsList"></div>
+      </div>
+    </div>
+  </section>
+
+<section id="library" class="tab"><div class="card"><h2>Fichas Online</h2><p>Todo personagem salvo aparece aqui para todos.</p><div class="row"><label class="file-label" for="importJson">Importar JSON</label><input type="file" id="importJson" accept="application/json"><button onclick="renderAll()">Atualizar</button></div><div id="charactersList"></div></div></section>
 
   
   <section id="session" class="tab">
@@ -273,6 +336,7 @@
           <div class="row">
             <button onclick="toggleChat(true)">Abrir chat</button>
             <button class="danger-btn" onclick="toggleChat(false)">Fechar chat</button>
+            <button class="danger-btn" onclick="clearSessionLog()">Apagar log</button>
           </div>
         </div>
 
@@ -363,6 +427,7 @@
           <div><label>PV máximo</label><input id="monsterMaxHp" type="number" value="20" min="1"></div>
           <div><label>Pressão máxima</label><input id="monsterMaxPressure" type="number" value="10" min="0"></div>
           <div><label>Rodada</label><input id="monsterRound" type="number" value="1" min="1"></div>
+          <div><label>XP Total</label><input id="monsterXp" type="number" value="100" min="0"></div>
         </div>
         <label>Descrição / comportamento</label>
         <textarea id="monsterDesc" placeholder="Aparência, ataque especial, fase, comportamento..."></textarea>
@@ -435,7 +500,7 @@
 </script>
 
 <script>
-let faceData="",characters=[],monsters=[],sessionData={open:false,party:[],chatOpen:true},sessionMessages=[],chatImageData="",monsterImageData="",lastChatSentAt=0;
+let faceData="",characters=[],monsters=[],accounts=[],skills=[],sessionData={open:false,party:[],chatOpen:true},sessionMessages=[],chatImageData="",monsterImageData="",lastChatSentAt=0;
 const raceData={
  "Humano":{b:{intelecto:2,vitalidade:1},d:"Normalmente não possuem habilidades sobre-humanas."},
  "Tireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Tireno tem característica única."},
@@ -455,10 +520,53 @@ const elementData={
 function fb(){return window.hbFirebase}
 function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");btn.classList.add("active");renderAll()}
 window.addEventListener("firebase-error",()=>{document.getElementById("firebaseWarning").style.display="block";document.getElementById("homeSessionStatus").textContent="ERRO";document.getElementById("sessionStatus").textContent="ERRO"});
-window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenSessionLog();listenMonsters();renderRules();setupChatImageInput();setupMonsterImageInput();renderAll()});
+window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenSessionLog();listenMonsters();listenAccounts();listenSkills();renderRules();setupChatImageInput();setupMonsterImageInput();renderAll()});
 function listenCharacters(){const{db,collection,onSnapshot}=fb();onSnapshot(collection(db,"characters"),snap=>{characters=snap.docs.map(d=>({id:d.id,...d.data()}));characters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()},err=>alert("Erro ao carregar fichas. Confira as Rules do Firestore."))}
 function listenSession(){const{db,doc,onSnapshot,setDoc}=fb();const ref=doc(db,"game","session");onSnapshot(ref,async snap=>{if(!snap.exists()){await setDoc(ref,{open:false,party:[],chatOpen:true});return}sessionData=snap.data();if(!Array.isArray(sessionData.party))sessionData.party=[];if(typeof sessionData.chatOpen!=="boolean")sessionData.chatOpen=true;renderAll()},err=>alert("Erro ao carregar sessão. Confira as Rules do Firestore."))}
 async function simpleHash(text){const data=new TextEncoder().encode(text);const hash=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("")}
+
+function currentAccount(){
+  const username=sessionStorage.getItem("hb_account_user")||"";
+  return accounts.find(a=>a.username===username)||null;
+}
+function currentAccountName(){
+  return sessionStorage.getItem("hb_account_user")||"";
+}
+async function createAccount(){
+  if(!window.firebaseReady) return alert("Firebase não conectou.");
+  const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
+  const pass=(document.getElementById("accountPass").value||"").trim();
+  if(username.length<3) return alert("Usuário precisa ter pelo menos 3 caracteres.");
+  if(pass.length<4) return alert("Senha/código precisa ter pelo menos 4 caracteres.");
+  if(accounts.some(a=>a.username===username)) return alert("Esse usuário já existe.");
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"accounts")),{username,passwordHash:await simpleHash(pass),createdAt:serverTimestamp()});
+  sessionStorage.setItem("hb_account_user",username);
+  alert("Conta criada e logada.");
+  renderAll();
+}
+async function loginAccount(){
+  const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
+  const pass=(document.getElementById("accountPass").value||"").trim();
+  const acc=accounts.find(a=>a.username===username);
+  if(!acc) return alert("Conta não encontrada.");
+  if(await simpleHash(pass)!==acc.passwordHash) return alert("Senha/código errado.");
+  sessionStorage.setItem("hb_account_user",username);
+  alert("Conta logada.");
+  renderAll();
+}
+function logoutAccount(){
+  sessionStorage.removeItem("hb_account_user");
+  alert("Conta desconectada.");
+  renderAll();
+}
+function updateAccountStatus(){
+  const el=document.getElementById("accountStatus");
+  if(!el) return;
+  const user=currentAccountName();
+  el.textContent=user?`Conta logada: ${user}`:"Nenhuma conta logada.";
+  el.className=user?"ok":"warning";
+}
 function isOwner(){return sessionStorage.getItem("hollow_break_owner_logged")==="true"}function getLoggedGmId(){return sessionStorage.getItem("hollow_break_gm_id")||""}function getLoggedGmCharacter(){return characters.find(c=>c.id===getLoggedGmId()&&c.gm)}function isGmLogged(){return Boolean(getLoggedGmCharacter())}function canEditSheets(){return isOwner()||(isGmLogged()&&sessionData.open)}
 function updateOwnerStatus(){const el=document.getElementById("ownerStatus"),gmAccess=document.getElementById("gmAccess"),gmStatus=document.getElementById("gmLoginStatus"),gmChar=getLoggedGmCharacter();if(isOwner()){el.textContent="Modo HOST ativo";el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent="Acesso liberado. Você é o Host.";gmAccess.className="ok"}}else if(gmChar){el.textContent=`Modo GM: ${gmChar.name}`;el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent=sessionData.open?"Acesso liberado. Você é GM.":"GM edita só com sessão aberta.";gmAccess.className=sessionData.open?"ok":"warning"}}else{el.textContent="Modo visitante";el.style.color="var(--yellow2)";if(gmAccess){gmAccess.textContent="Acesso bloqueado.";gmAccess.className="warning"}}if(gmStatus){gmStatus.textContent=gmChar?`GM logado: ${gmChar.name}`:"GM não logado.";gmStatus.className=gmChar?"ok":"warning"}}
 function raceBonus(race){return {forca:0,agilidade:0,vitalidade:0,intelecto:0,sensibilidade:0,carisma:0,...(raceData[race]?.b||{})}}
@@ -474,13 +582,13 @@ function updateRaceInfo(){const r=document.getElementById("race").value;const b=
 function updateElementInfo(){const e=document.getElementById("ether").value;document.getElementById("elementInfo").innerHTML=`<b>${e}:</b> ${elementData[e]}`}
 document.getElementById("faceInput").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{faceData=reader.result;document.getElementById("facePreview").innerHTML=`<img src="${faceData}" alt="Rosto">`};reader.readAsDataURL(file)});
 function clearFace(){faceData="";document.getElementById("facePreview").textContent="PNG/JPG do rosto";document.getElementById("faceInput").value=""}
-function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:val("skills"),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false}}
+function makeCharacter(){const d=applyDerived("");return {name:val("charName"),codename:val("codename"),player:val("playerName"),faction:val("faction"),race:val("race"),className:val("charClass"),ether:val("ether"),level:num("level",1),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("pe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},iniciativa:num("iniciativa",0),sorte:num("sorte",0),weaponType:val("weaponType"),weapon:val("weapon"),skills:val("skills"),physical:val("physical"),ultimate:val("ultimate"),story:val("story"),bangboo:{name:val("bangbooName"),model:val("bangbooModel"),skill:val("bangbooSkill")},corruption:{level:num("corruptionLevel",0),exposure:val("corruptionExposure"),effects:val("corruptionEffects")},face:faceData,gm:false,ownerAccount:currentAccountName()}}
 function val(id){return document.getElementById(id)?.value?.trim()||""}function num(id,def=0){return Number(document.getElementById(id)?.value||def)}
-async function saveCharacter(){if(!window.firebaseReady)return alert("Firebase não conectou.");const c=makeCharacter();if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Na criação inicial são 10 pontos base. O bônus da raça soma por cima.");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Ficha salva online.")}
+async function saveCharacter(){if(!window.firebaseReady)return alert("Firebase não conectou.");if(!currentAccountName()&&!isOwner())return alert("Crie ou entre em uma conta antes de salvar ficha.");const c=makeCharacter();if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Na criação inicial são 10 pontos base. O bônus da raça soma por cima.");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Ficha salva online.")}
 function downloadFile(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 function downloadCharacterJson(){const c=makeCharacter();if(!c.name)return alert("Coloque o nome.");downloadFile(`${c.name.replaceAll(" ","_")}_hollow_break.json`,JSON.stringify(c,null,2),"application/json")}
 document.getElementById("importJson").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{if(!window.firebaseReady)return alert("Firebase não conectou.");const c=JSON.parse(reader.result);if(!c.name||!c.player)throw new Error();const{db,collection,doc,setDoc,serverTimestamp}=fb();delete c.id;c.gm=false;await setDoc(doc(collection(db,"characters")),{...c,createdAt:serverTimestamp()});alert("Personagem importado.")}catch{alert("Arquivo inválido.")}};reader.readAsText(file)});
-function renderCharacters(){const box=document.getElementById("charactersList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha online ainda.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}" alt="${escapeHtml(c.name)}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.race||"Humano")} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</small><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0} • Resist. Éter ${c.defenses?.resistenciaEter||0}</p><p><b>Arma:</b> ${escapeHtml(c.weaponType||"-")} ${c.weapon?"• "+escapeHtml(c.weapon):""}</p><p><b>Físico:</b> ${escapeHtml(c.physical||"-")}</p></div><div class="row"><button onclick="exportSavedImage('${c.id}')">PNG</button><button onclick="downloadSavedJson('${c.id}')">JSON</button><button onclick="quickLoadEdit('${c.id}')">Editar</button><button class="danger-btn" onclick="deleteCharacter('${c.id}')">Excluir</button></div></div>`).join("")}
+function renderCharacters(){const box=document.getElementById("charactersList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha online ainda.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}" alt="${escapeHtml(c.name)}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.race||"Humano")} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level} • Conta: ${escapeHtml(c.ownerAccount||"-")}</small><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0} • Resist. Éter ${c.defenses?.resistenciaEter||0}</p><p><b>Arma:</b> ${escapeHtml(c.weaponType||"-")} ${c.weapon?"• "+escapeHtml(c.weapon):""}</p><p><b>Físico:</b> ${escapeHtml(c.physical||"-")}</p></div><div class="row"><button onclick="exportSavedImage('${c.id}')">PNG</button><button onclick="downloadSavedJson('${c.id}')">JSON</button><button onclick="quickLoadEdit('${c.id}')">Editar</button><button class="danger-btn" onclick="deleteCharacter('${c.id}')">Excluir</button></div></div>`).join("")}
 async function deleteCharacter(id){if(!isOwner())return alert("Somente o Host pode excluir.");if(!confirm("Excluir ficha?"))return;const{db,doc,deleteDoc,updateDoc}=fb();await deleteDoc(doc(db,"characters",id));await updateDoc(doc(db,"game","session"),{party:(sessionData.party||[]).filter(x=>x!==id)})}
 function downloadSavedJson(id){const c=characters.find(x=>x.id===id);if(c)downloadFile(`${c.name.replaceAll(" ","_")}_hollow_break.json`,JSON.stringify(c,null,2),"application/json")}
 async function startSession(){if(!isOwner())return alert("Somente o Host pode iniciar.");if(!characters.length)return alert("Precisa ter ficha.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:true,party:sessionData.party||[],chatOpen:true});await addSystemLog("Sessão iniciada pelo Host.");alert("Sessão iniciada.")}
@@ -568,6 +676,22 @@ function listenMonsters(){
     monsters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
     renderAll();
   },err=>console.error("Erro nos monstros",err));
+}
+
+function listenAccounts(){
+  const{db,collection,onSnapshot}=fb();
+  onSnapshot(collection(db,"accounts"),snap=>{
+    accounts=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAll();
+  },err=>console.error("Erro em contas",err));
+}
+function listenSkills(){
+  const{db,collection,onSnapshot}=fb();
+  onSnapshot(collection(db,"skills"),snap=>{
+    skills=snap.docs.map(d=>({id:d.id,...d.data()}));
+    skills.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
+    renderAll();
+  },err=>console.error("Erro em habilidades",err));
 }
 function setupMonsterImageInput(){
   const input=document.getElementById("monsterImageInput");
@@ -686,6 +810,16 @@ function clearChatImageSilent(){
   if(input) input.value="";
   const box=document.getElementById("chatImagePreview"); if(box) box.style.display="none";
 }
+
+async function clearSessionLog(){
+  if(!isOwner()&&!isGmLogged()) return alert("Somente Host/GM pode apagar o log.");
+  if(!confirm("Apagar TODO o log da sessão?")) return;
+  const{db,doc,deleteDoc}=fb();
+  for(const m of sessionMessages){
+    await deleteDoc(doc(db,"sessionLog",m.id));
+  }
+  await addSystemLog("Log da sessão foi limpo pelo Host/GM.");
+}
 async function addSystemLog(text){
   if(!window.firebaseReady) return;
   const{db,collection,doc,setDoc,serverTimestamp}=fb();
@@ -711,6 +845,8 @@ async function createMonster(){
     pressure:0,
     maxPressure,
     round:Number(document.getElementById("monsterRound").value||1),
+    xp:Number(document.getElementById("monsterXp").value||0),
+    damageLog:{},
     desc:(document.getElementById("monsterDesc").value||"").trim(),
     image:monsterImageData||"",
     active:true,
@@ -723,7 +859,7 @@ async function createMonster(){
 }
 function clearMonsterForm(){
   ["monsterName","monsterDesc"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
-  setVal("monsterMaxHp",20);setVal("monsterMaxPressure",10);setVal("monsterRound",1);
+  setVal("monsterMaxHp",20);setVal("monsterMaxPressure",10);setVal("monsterRound",1);setVal("monsterXp",100);
   monsterImageData="";
   const input=document.getElementById("monsterImageInput"); if(input) input.value="";
   const box=document.getElementById("monsterImagePreview"); if(box) box.style.display="none";
@@ -745,27 +881,66 @@ function renderMonsters(){
         <div class="hpbar"><div class="hpfill" style="width:${pct}%"></div></div>
         <b>Pressão ${m.pressure||0}/${m.maxPressure||0}</b>
         <div class="hpbar"><div class="hpfill" style="width:${ppct}%"></div></div>
+        <div class="xp-board">${renderDamageRanking(m)}</div>
         <div class="monster-actions">
+          <select id="dealer-${m.id}">${characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select>
           <input id="delta-${m.id}" type="number" value="1" min="0">
-          <button onclick="changeMonsterHp('${m.id}',-Number(document.getElementById('delta-${m.id}').value||0))">Dano</button>
+          <button onclick="changeMonsterHp('${m.id}',-Number(document.getElementById('delta-${m.id}').value||0),document.getElementById('dealer-${m.id}').value)">Dano</button>
           <button onclick="changeMonsterHp('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">Curar</button>
           <button onclick="changeMonsterPressure('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">+Pressão</button>
           <button onclick="nextMonsterRound('${m.id}')">+Rodada</button>
           <button onclick="monsterActionLog('${m.id}')">Ação no log</button>
           <button onclick="toggleMonsterActive('${m.id}')">${m.active===false?"Ativar":"Remover da mesa"}</button>
+          <button class="green-btn" onclick="distributeMonsterXp('${m.id}')">Distribuir XP</button>
           <button class="danger-btn" onclick="deleteMonster('${m.id}')">Excluir</button>
         </div>
       </div>
     </div>`;
   }).join("");
 }
-async function changeMonsterHp(id,delta){
+
+function characterName(id){
+  return characters.find(c=>c.id===id)?.name||"Desconhecido";
+}
+function renderDamageRanking(m){
+  const log=m.damageLog||{};
+  const entries=Object.entries(log).sort((a,b)=>Number(b[1])-Number(a[1]));
+  if(!entries.length) return "<b>Ranking de dano</b><p>Ninguém causou dano ainda.</p>";
+  const total=entries.reduce((s,[,d])=>s+Number(d||0),0)||1;
+  return `<b>Ranking de dano</b>${entries.map(([id,dmg],i)=>`<div class="rank-row"><span>#${i+1}</span><span>${escapeHtml(characterName(id))}</span><span>${dmg} dano</span><span>${Math.round((Number(dmg)/total)*100)}%</span></div>`).join("")}`;
+}
+async function distributeMonsterXp(id){
+  if(!canEditSheets()) return alert("Somente Host/GM pode distribuir XP.");
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const log=m.damageLog||{};
+  const entries=Object.entries(log).filter(([,d])=>Number(d)>0).sort((a,b)=>Number(b[1])-Number(a[1]));
+  if(!entries.length) return alert("Ninguém causou dano nesse monstro.");
+  const totalDamage=entries.reduce((s,[,d])=>s+Number(d),0);
+  const totalXp=Number(m.xp)||0;
+  let text=`XP de ${m.name} (${totalXp} XP) dividido por dano:\\n`;
+  entries.forEach(([cid,dmg])=>{
+    const xp=Math.round((Number(dmg)/totalDamage)*totalXp);
+    text+=`${characterName(cid)}: ${xp} XP (${dmg} dano)\\n`;
+  });
+  await addSessionLogDirect({role:"Sistema",author:"XP",kind:"system",text,element:m.element});
+  alert("XP distribuído no log.");
+}
+async function changeMonsterHp(id,delta,dealerId=""){
   if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
   const m=monsters.find(x=>x.id===id); if(!m) return;
-  const hp=Math.max(0,Math.min(Number(m.maxHp)||1,(Number(m.hp)||0)+delta));
+  const oldHp=Number(m.hp)||0;
+  const hp=Math.max(0,Math.min(Number(m.maxHp)||1,oldHp+delta));
+  const update={hp};
+  if(delta<0 && dealerId){
+    const dealt=Math.abs(delta);
+    const log={...(m.damageLog||{})};
+    log[dealerId]=(Number(log[dealerId])||0)+dealt;
+    update.damageLog=log;
+  }
   const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"monsters",id),{hp});
-  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: PV ${m.hp} → ${hp}`,element:m.element});
+  await updateDoc(doc(db,"monsters",id),update);
+  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: PV ${oldHp} → ${hp}${delta<0&&dealerId?` | dano registrado para ${characterName(dealerId)}`:""}`,element:m.element});
+  if(hp===0 && oldHp>0) await addSessionLogDirect({role:"Sistema",author:"XP",kind:"system",text:`${m.name} caiu! Use Distribuir XP na aba Monstros.`,element:m.element});
 }
 async function changeMonsterPressure(id,delta){
   if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
@@ -811,10 +986,107 @@ async function addSessionLogDirect({role="Sistema",author="Hollow Break",kind="s
 }
 function renderGmManage(){const box=document.getElementById("gmManageList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)}</small></div><div><button onclick="toggleGm('${c.id}')">${c.gm?"Remover GM":"Tornar GM"}</button></div></div>`).join("")}
 async function toggleGm(id){if(!isOwner())return alert("Somente o Host pode transformar alguém em GM.");const c=characters.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),{gm:!c.gm});alert(c.gm?"GM removido.":"Jogador transformado em GM.")}
+
+function canUseCharacter(c){
+  if(!c) return false;
+  if(isOwner()) return true;
+  const user=currentAccountName();
+  return Boolean(user && c.ownerAccount===user);
+}
+async function createSkill(){
+  if(!window.firebaseReady) return alert("Firebase não conectou.");
+  const charId=document.getElementById("skillCharacter").value;
+  const c=characters.find(x=>x.id===charId);
+  if(!c) return alert("Escolha uma ficha.");
+  if(!canUseCharacter(c)) return alert("Você só pode criar habilidade para ficha da sua conta.");
+  const name=val("skillName");
+  if(!name) return alert("Coloque o nome da habilidade.");
+  const skill={
+    characterId:charId,
+    characterName:c.name,
+    ownerAccount:c.ownerAccount||"",
+    name,
+    type:val("skillType"),
+    element:val("skillElement"),
+    scale:val("skillScale"),
+    cost:num("skillCost",0),
+    base:val("skillBase"),
+    desc:val("skillDesc"),
+    createdAtText:new Date().toISOString()
+  };
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"skills")),{...skill,createdAt:serverTimestamp()});
+  alert("Habilidade criada.");
+  clearSkillForm();
+}
+function clearSkillForm(){
+  ["skillName","skillBase","skillDesc"].forEach(id=>setVal(id,""));
+  setVal("skillCost",0);
+}
+function deleteSkill(id){
+  const s=skills.find(x=>x.id===id);
+  const c=characters.find(x=>x.id===s?.characterId);
+  if(!isOwner()&&!canUseCharacter(c)) return alert("Você só pode apagar habilidade da sua ficha.");
+  if(!confirm("Apagar habilidade?")) return;
+  const{db,doc,deleteDoc}=fb();
+  deleteDoc(doc(db,"skills",id));
+}
+function renderSkills(){
+  const box=document.getElementById("skillsList");
+  if(!box) return;
+  if(!skills.length){box.innerHTML="<p>Nenhuma habilidade criada ainda.</p>";return;}
+  box.innerHTML=skills.map(s=>`
+    <div class="skill-card">
+      <h3>${escapeHtml(s.name)} <span class="tag">${escapeHtml(s.element)}</span> <span class="tag">${escapeHtml(s.type)}</span></h3>
+      <small>Dono: ${escapeHtml(s.characterName)} • Escala com ${escapeHtml(s.scale)} • Custo ${s.cost} PE</small>
+      <p><b>Base:</b> ${escapeHtml(s.base||"-")}</p>
+      <p>${escapeHtml(s.desc||"")}</p>
+      <div class="row">
+        <button onclick="sendSkillToLog('${s.id}')">Usar no log</button>
+        <button class="danger-btn" onclick="deleteSkill('${s.id}')">Apagar</button>
+      </div>
+    </div>`).join("");
+}
+async function sendSkillToLog(id){
+  const s=skills.find(x=>x.id===id); if(!s) return;
+  const c=characters.find(x=>x.id===s.characterId);
+  if(!c) return alert("Personagem da habilidade não encontrado.");
+  if(!sessionData.open) return alert("Sessão fechada.");
+  await addSessionLogDirect({role:isOwner()||isGmLogged()?"GM":"Jogador",author:c.name,kind:"skill",move:s.name,target:"",element:s.element,text:`${c.name} usa ${s.name}.\\nBase: ${s.base}\\n${s.desc}`});
+}
+function useSelectedSkillInChat(){
+  const id=document.getElementById("chatSkillSelect")?.value;
+  const s=skills.find(x=>x.id===id);
+  if(!s) return;
+  setVal("chatMoveName",s.name);
+  setVal("chatElement",s.element);
+  const skillChar=document.getElementById("skillCharacter");
+  if(skillChar){
+    skillChar.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ownerAccount||"sem conta")}</option>`).join(""):`<option value="">Nenhuma ficha</option>`;
+  }
+  const chatSkill=document.getElementById("chatSkillSelect");
+  if(chatSkill){
+    chatSkill.innerHTML=`<option value="">Ataque manual</option>`+skills.map(s=>`<option value="${s.id}">${escapeHtml(s.characterName)} - ${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
+  }
+
+  const actor=document.getElementById("chatActor");
+  if(actor) actor.value=s.characterId;
+  const msg=document.getElementById("chatMessage");
+  if(msg&&!msg.value) msg.value=`${s.characterName} usa ${s.name}.\\nBase: ${s.base}\\n${s.desc}`;
+}
 function renderSelects(){
   const gm=document.getElementById("gmLoginSelect"),edit=document.getElementById("editSelect");
   if(gm){const g=characters.filter(c=>c.gm);gm.innerHTML=g.length?g.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha GM</option>`}
   if(edit){edit.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha</option>`}
+  const skillChar=document.getElementById("skillCharacter");
+  if(skillChar){
+    skillChar.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ownerAccount||"sem conta")}</option>`).join(""):`<option value="">Nenhuma ficha</option>`;
+  }
+  const chatSkill=document.getElementById("chatSkillSelect");
+  if(chatSkill){
+    chatSkill.innerHTML=`<option value="">Ataque manual</option>`+skills.map(s=>`<option value="${s.id}">${escapeHtml(s.characterName)} - ${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
+  }
+
   const actor=document.getElementById("chatActor");
   if(actor){actor.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Sem personagens</option>`}
   const target=document.getElementById("chatTarget");
@@ -829,16 +1101,16 @@ function gmLogout(){sessionStorage.removeItem("hollow_break_gm_id");renderAll()}
 async function setOwnerPassword(){const pass=document.getElementById("ownerPass").value.trim();if(pass.length<4)return alert("Use senha com 4+ caracteres.");const{db,doc,getDoc,setDoc}=fb();const ref=doc(db,"game","owner");const snap=await getDoc(ref);if(snap.exists()&&snap.data().passwordHash)return alert("Já existe senha de Host.");await setDoc(ref,{passwordHash:await simpleHash(pass)});alert("Senha criada.")}
 async function ownerLogin(){const pass=document.getElementById("ownerPass").value.trim();const{db,doc,getDoc}=fb();const snap=await getDoc(doc(db,"game","owner"));if(!snap.exists())return alert("Crie a senha primeiro.");if(await simpleHash(pass)===snap.data().passwordHash){sessionStorage.setItem("hollow_break_owner_logged","true");alert("Você entrou como Host.")}else alert("Senha errada.");renderAll()}
 function ownerLogout(){sessionStorage.removeItem("hollow_break_owner_logged");renderAll()}
-function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[5]);document.getElementById("editSelect").value=id;loadEditCharacter()}
+function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[6]);document.getElementById("editSelect").value=id;loadEditCharacter()}
 function loadEditCharacter(){const id=document.getElementById("editSelect").value,c=characters.find(x=>x.id===id);if(!c)return;setVal("editName",c.name);setVal("editCodename",c.codename);setVal("editPlayer",c.player);setVal("editLevel",c.level||1);setVal("editRace",c.race||"Humano");setVal("editClass",c.className||"Executor");setVal("editEther",c.ether||"Físico");["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].forEach(k=>setVal("edit"+cap(k)+"Base",c.baseStats?.[k]??0));setVal("editWeaponType",c.weaponType||"Espadas");setVal("editWeapon",c.weapon);setVal("editPe",c.pe||5);setVal("editSkills",c.skills);setVal("editPhysical",c.physical);setVal("editUltimate",c.ultimate);setVal("editStory",c.story);updateEditDerived()}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v||""}
-async function saveEditedCharacter(){if(!canEditSheets())return alert("Só Host edita sempre. GM edita com sessão aberta.");const id=document.getElementById("editSelect").value,original=characters.find(x=>x.id===id);if(!original)return alert("Escolha ficha.");const d=applyDerived("edit");const updated={name:val("editName"),codename:val("editCodename"),player:val("editPlayer"),level:num("editLevel",1),race:val("editRace"),className:val("editClass"),ether:val("editEther"),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("editPe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},weaponType:val("editWeaponType"),weapon:val("editWeapon"),skills:val("editSkills"),physical:val("editPhysical"),ultimate:val("editUltimate"),story:val("editStory"),gm:original.gm,face:original.face||"",bangboo:original.bangboo||{},corruption:original.corruption||{},editedAt:new Date().toISOString()};if(!updated.name||!updated.player)return alert("Nome e jogador não podem ficar vazios.");const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),updated);alert("Ficha atualizada.")}
+async function saveEditedCharacter(){if(!canEditSheets())return alert("Só Host edita sempre. GM edita com sessão aberta.");const id=document.getElementById("editSelect").value,original=characters.find(x=>x.id===id);if(!original)return alert("Escolha ficha.");const d=applyDerived("edit");const updated={name:val("editName"),codename:val("editCodename"),player:val("editPlayer"),level:num("editLevel",1),race:val("editRace"),className:val("editClass"),ether:val("editEther"),baseStats:d.base,stats:d.total,pointsUsed:d.used,pv:d.pv,pe:num("editPe",5),defenses:{esquiva:d.esquiva,resistenciaEter:d.res,fortitude:d.fort,vontade:d.vontade},weaponType:val("editWeaponType"),weapon:val("editWeapon"),skills:val("editSkills"),physical:val("editPhysical"),ultimate:val("editUltimate"),story:val("editStory"),gm:original.gm,face:original.face||"",ownerAccount:original.ownerAccount||"",bangboo:original.bangboo||{},corruption:original.corruption||{},editedAt:new Date().toISOString()};if(!updated.name||!updated.player)return alert("Nome e jogador não podem ficar vazios.");const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),updated);alert("Ficha atualizada.")}
 function characterCardHtml(c){return `<div class="export-card" id="exportCard"><div class="export-head"><div class="avatar-small" style="width:150px;height:150px;border-radius:22px">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h1>${escapeHtml(c.name||"Agente")}</h1><p>${escapeHtml(c.codename||"")} • Jogador: ${escapeHtml(c.player||"-")}</p><p>${escapeHtml(c.race||"Humano")} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</p></div></div><div class="stat-list">${["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].map(k=>`<div class="stat-card">${k}<strong>${c.stats?.[k]||0}</strong></div>`).join("")}</div><p><b>PV:</b> ${c.pv} • <b>PE:</b> ${c.pe} • <b>Esquiva:</b> ${c.defenses?.esquiva||0} • <b>Resist. Éter:</b> ${c.defenses?.resistenciaEter||0}</p><p><b>Arma:</b> ${escapeHtml(c.weaponType||"-")} • ${escapeHtml(c.weapon||"-")}</p><p><b>Especializações:</b> ${escapeHtml(c.skills||"-")}</p><p><b>Físico:</b> ${escapeHtml(c.physical||"-")}</p><p><b>Suprema:</b> ${escapeHtml(c.ultimate||"-")}</p><p><b>História:</b> ${escapeHtml(c.story||"-")}</p></div>`}
 async function exportCharacterImage(){await exportImageFromCharacter(makeCharacter())}async function exportSavedImage(id){const c=characters.find(x=>x.id===id);if(c)await exportImageFromCharacter(c)}async function exportImageFromCharacter(c){const hidden=document.getElementById("hiddenRender");hidden.innerHTML=characterCardHtml(c);const canvas=await html2canvas(document.getElementById("exportCard"),{backgroundColor:"#050505",scale:2});const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download=`${(c.name||"personagem").replaceAll(" ","_")}_ficha.png`;a.click();hidden.innerHTML=""}
 function renderRules(){document.getElementById("raceRules").innerHTML=Object.entries(raceData).map(([r,o])=>`<p><b>${r}</b>: ${o.d}<br>${Object.entries(o.b).map(([k,v])=>`<span class="tag">+${v} ${k}</span>`).join("")}</p>`).join("");document.getElementById("elementRules").innerHTML=Object.entries(elementData).map(([e,d])=>`<p><b>${e}</b>: ${d}</p>`).join("")}
 function escapeHtml(text){return String(text||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
-function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules()}
+function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus()}
 updateRaceInfo();updateElementInfo();renderAll();
 </script>
 </body>
