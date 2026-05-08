@@ -668,14 +668,18 @@ function updateGate(){
   if(gateStatus){gateStatus.textContent=logged?`Logado como ${currentAccountName()}`:"Você ainda não está logado.";gateStatus.className=logged?"ok":"warning";}
 }
 async function createAccountFromGate(){
-  document.getElementById("accountUser").value=(document.getElementById("gateUser").value||"").trim();
-  document.getElementById("accountPass").value=(document.getElementById("gatePass").value||"").trim();
+  const au=document.getElementById("accountUser");
+  const ap=document.getElementById("accountPass");
+  if(au) au.value=(document.getElementById("gateUser").value||"").trim();
+  if(ap) ap.value=(document.getElementById("gatePass").value||"").trim();
   await createAccount();
   updateGate();
 }
 async function loginAccountFromGate(){
-  document.getElementById("accountUser").value=(document.getElementById("gateUser").value||"").trim();
-  document.getElementById("accountPass").value=(document.getElementById("gatePass").value||"").trim();
+  const au=document.getElementById("accountUser");
+  const ap=document.getElementById("accountPass");
+  if(au) au.value=(document.getElementById("gateUser").value||"").trim();
+  if(ap) ap.value=(document.getElementById("gatePass").value||"").trim();
   await loginAccount();
   updateGate();
 }
@@ -684,20 +688,27 @@ async function createAccount(){
   const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
   const pass=(document.getElementById("accountPass").value||"").trim();
   if(username.length<3) return alert("Usuário precisa ter pelo menos 3 caracteres.");
+  if(!/^[a-z0-9_.-]+$/.test(username)) return alert("Use só letras, números, ponto, traço ou underline no usuário.");
   if(pass.length<4) return alert("Senha/código precisa ter pelo menos 4 caracteres.");
-  if(accounts.some(a=>a.username===username)) return alert("Esse usuário já existe.");
-  const{db,collection,doc,setDoc,serverTimestamp}=fb();
-  await setDoc(doc(collection(db,"accounts")),{username,passwordHash:await simpleHash(pass),createdAt:serverTimestamp()});
+  const{db,doc,getDoc,setDoc,serverTimestamp}=fb();
+  const ref=doc(db,"accounts",username);
+  const snap=await getDoc(ref);
+  if(snap.exists()) return alert("Esse usuário já existe.");
+  await setDoc(ref,{username,passwordHash:await simpleHash(pass),createdAt:serverTimestamp()});
   sessionStorage.setItem("hb_account_user",username);
   alert("Conta criada e logada.");
   renderAll();
   updateGate();
 }
 async function loginAccount(){
+  if(!window.firebaseReady) return alert("Firebase não conectou.");
   const username=(document.getElementById("accountUser").value||"").trim().toLowerCase();
   const pass=(document.getElementById("accountPass").value||"").trim();
-  const acc=accounts.find(a=>a.username===username);
-  if(!acc) return alert("Conta não encontrada.");
+  if(!username||!pass) return alert("Digite usuário e senha/código.");
+  const{db,doc,getDoc}=fb();
+  const snap=await getDoc(doc(db,"accounts",username));
+  if(!snap.exists()) return alert("Conta não encontrada.");
+  const acc=snap.data();
   if(await simpleHash(pass)!==acc.passwordHash) return alert("Senha/código errado.");
   sessionStorage.setItem("hb_account_user",username);
   alert("Conta logada.");
@@ -709,8 +720,7 @@ function logoutAccount(){
   alert("Conta desconectada.");
   renderAll();
   updateGate();
-}
-function updateAccountStatus();updateGate();renderScenario(){
+}function updateAccountStatus();updateGate();renderScenario(){
   const el=document.getElementById("accountStatus");
   if(!el) return;
   const user=currentAccountName();
