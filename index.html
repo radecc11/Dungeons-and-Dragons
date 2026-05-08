@@ -577,7 +577,7 @@
       const c = makeCharacter();
       if (!c.name || !c.player) return alert('Coloque o nome do personagem e do jogador.');
       const total = Object.values(c.stats).reduce((a,b)=>a+b,0);
-      if (total > 14) return alert('Você passou de 10 pontos de atributo.');
+      if (total > 10) return alert('Você passou de 10 pontos de atributo.');
       const { db, collection, doc, setDoc, serverTimestamp } = fb();
       const ref = doc(collection(db, 'characters'));
       await setDoc(ref, { ...c, createdAt: serverTimestamp() });
