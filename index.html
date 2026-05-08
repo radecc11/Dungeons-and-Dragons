@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hollow Break RPG</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: #111111;
+      --panel2: #191919;
+      --yellow: #ffd000;
+      --yellow2: #ffea70;
+      --text: #f4f4f4;
+      --muted: #a8a8a8;
+      --danger: #ff4444;
+      --ok: #38ff8b;
+      --border: rgba(255, 208, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255, 208, 0, 0.18), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(255, 208, 0, 0.08), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.72);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mark {
+      width: 46px;
+      height: 46px;
+      border: 2px solid var(--yellow);
+      background: linear-gradient(135deg, #000, #2a2300);
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--yellow);
+      font-weight: 900;
+      box-shadow: 0 0 18px rgba(255,208,0,.35);
+    }
+
+    h1, h2, h3 { margin: 0; }
+    h1 { color: var(--yellow); letter-spacing: 1px; }
+    small { color: var(--muted); }
+
+    .status-pill {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--yellow2);
+      background: #0d0d0d;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn, button, .file-label {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #201b00, #080808);
+      color: var(--yellow);
+      padding: 12px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.18s;
+    }
+
+    .tab-btn:hover, button:hover, .file-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(255,208,0,.25);
+    }
+
+    .tab-btn.active {
+      background: var(--yellow);
+      color: #050505;
+      box-shadow: 0 0 22px rgba(255,208,0,.45);
+    }
+
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(25,25,25,.96), rgba(9,9,9,.96));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+    }
+
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: var(--yellow2);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #070707;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea { min-height: 100px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(255,208,0,.12);
+    }
+
+    .face-box {
+      width: 220px;
+      height: 220px;
+      border-radius: 24px;
+      border: 2px dashed var(--border);
+      background: #080808;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin: 10px auto;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .face-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    input[type="file"] { display: none; }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .row > * { flex: 1; }
+
+    .stat-list {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: #080808;
+      border: 1px solid rgba(255,208,0,.25);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-card strong {
+      display: block;
+      color: var(--yellow);
+      font-size: 22px;
+    }
+
+    .warning {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .character-card {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(255,208,0,.2);
+      background: #090909;
+      border-radius: 18px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+
+    .avatar-small {
+      width: 90px;
+      height: 90px;
+      border-radius: 16px;
+      background: #1b1b1b;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+
+    .session-panel {
+      border: 2px solid var(--yellow);
+      background: linear-gradient(135deg, #0b0b0b, #231d00);
+    }
+
+    .big-session {
+      font-size: 28px;
+      color: var(--yellow);
+      text-align: center;
+      margin: 12px 0;
+    }
+
+    .rules p, .rules li { color: #ddd; line-height: 1.55; }
+    .rules ul { margin-top: 8px; }
+
+    .export-card {
+      background: #080808;
+      width: 720px;
+      max-width: 100%;
+      border: 3px solid var(--yellow);
+      border-radius: 24px;
+      padding: 22px;
+      color: var(--text);
+    }
+
+    .export-head {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+
+    .hidden-render {
+      position: fixed;
+      left: -99999px;
+      top: 0;
+      background: #050505;
+    }
+
+    .danger-btn { color: #fff; border-color: rgba(255,68,68,.6); background: linear-gradient(180deg, #521010, #090909); }
+    .green-btn { color: #001707; border-color: rgba(56,255,139,.6); background: linear-gradient(180deg, #38ff8b, #caffdd); }
+
+    @media (max-width: 850px) {
+      .span-4, .span-6, .span-8, .span-12 { grid-column: span 12; }
+      .stat-list { grid-template-columns: repeat(2, 1fr); }
+      .character-card { grid-template-columns: 70px 1fr; }
+      .character-card .row { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="logo">
+        <div class="mark">HB</div>
+        <div>
+          <h1>Hollow Break RPG</h1>
+          <small>Fichas, sessão, GM e agentes em clima urbano futurista</small>
+        </div>
+      </div>
+      <div class="status-pill" id="ownerStatus">Modo visitante</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab('home', this)">Início</button>
+      <button class="tab-btn" onclick="openTab('creator', this)">Criar Personagem</button>
+      <button class="tab-btn" onclick="openTab('library', this)">Fichas</button>
+      <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
+      <button class="tab-btn" onclick="openTab('gm', this)">Painel do Dono</button>
+      <button class="tab-btn" onclick="openTab('rules', this)">Regras</button>
+    </div>
+
+    <section id="home" class="tab active">
+      <div class="grid">
+        <div class="card span-8">
+          <h2>Bem-vindo ao Hollow Break</h2>
+          <p>Crie sua ficha, importe o rosto PNG do personagem, salve no navegador e entre na sessão quando o dono liberar.</p>
+          <p><b>Importante:</b> esta versão é 100% gratuita e funciona no GitHub Pages. Ela salva os dados no navegador de cada jogador. Para todo mundo ver tudo em tempo real no mesmo servidor, depois precisa ligar Firebase ou Supabase.</p>
+        </div>
+        <div class="card span-4 session-panel">
+          <h2>Status da Sessão</h2>
+          <div class="big-session" id="homeSessionStatus">FECHADA</div>
+          <p id="homeSessionText">O dono ainda não iniciou a sessão.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="creator" class="tab">
+      <div class="grid">
+        <div class="card span-4">
+          <h2>Face do Personagem</h2>
+          <div class="face-box" id="facePreview">Importe um PNG/JPG do rosto</div>
+          <label class="file-label" for="faceInput">Importar rosto PNG/JPG</label>
+          <input type="file" id="faceInput" accept="image/png,image/jpeg,image/webp" />
+          <button class="danger-btn" onclick="clearFace()">Remover rosto</button>
+        </div>
+
+        <div class="card span-8">
+          <h2>Ficha do Agente</h2>
+          <div class="row">
+            <div><label>Nome</label><input id="charName" placeholder="Ex: Kael Vortex" /></div>
+            <div><label>Jogador</label><input id="playerName" placeholder="Seu nome" /></div>
+          </div>
+          <div class="row">
+            <div><label>Classe</label><select id="charClass"><option>Executor</option><option>Anômalo</option><option>Guardião</option><option>Especialista</option><option>Atirador</option></select></div>
+            <div><label>Afinidade de Éter</label><select id="ether"><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Físico</option><option>Caos</option><option>Vácuo</option></select></div>
+            <div><label>Nível</label><input id="level" type="number" value="1" min="1" /></div>
+          </div>
+
+          <h3 style="margin-top:18px;color:var(--yellow)">Atributos: distribua 14 pontos, máximo inicial 4</h3>
+          <div class="stat-list">
+            <div class="stat-card"><label>Corpo</label><input id="corpo" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Agilidade</label><input id="agilidade" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Fortitude</label><input id="fortitude" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Reflexo</label><input id="reflexo" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Técnica</label><input id="tecnica" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Presença</label><input id="presenca" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+            <div class="stat-card"><label>Éter</label><input id="eterStat" type="number" value="0" min="0" max="5" oninput="updateDerived()" /></div>
+          </div>
+          <p id="pointsInfo">Pontos usados: 0/10</p>
+
+          <div class="row">
+            <div><label>Vida</label><input id="vida" readonly /></div>
+            <div><label>Defesa</label><input id="defesa" readonly /></div>
+            <div><label>PE Máximo</label><input id="pe" type="number" value="5" min="0" /></div>
+          </div>
+
+          <label>Especializações, separe por vírgula</label>
+          <input id="skills" placeholder="Katana, Acrobacia, Intimidação" />
+          <label>Arma principal</label>
+          <input id="weapon" placeholder="Ex: Pistolas duplas, Katana elétrica" />
+          <label>Habilidade Suprema</label>
+          <textarea id="ultimate" placeholder="Descreva a ultimate do personagem"></textarea>
+          <label>História / Aparência</label>
+          <textarea id="story" placeholder="Personalidade, visual, passado e objetivo"></textarea>
+
+          <div class="row" style="margin-top:14px">
+            <button onclick="saveCharacter()">Salvar ficha</button>
+            <button onclick="downloadCharacterJson()">Exportar ficha JSON</button>
+            <button onclick="exportCharacterImage()">Exportar imagem da ficha</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="library" class="tab">
+      <div class="card">
+        <h2>Fichas Salvas / Importadas</h2>
+        <p>Para seus amigos entrarem na sessão, cada um precisa criar ou importar uma ficha neste site.</p>
+        <div class="row">
+          <label class="file-label" for="importJson">Importar ficha JSON</label>
+          <input type="file" id="importJson" accept="application/json" />
+          <button onclick="renderCharacters()">Atualizar lista</button>
+        </div>
+        <div id="charactersList"></div>
+      </div>
+    </section>
+
+    <section id="session" class="tab">
+      <div class="grid">
+        <div class="card span-6 session-panel">
+          <h2>Sessão do RPG</h2>
+          <div class="big-session" id="sessionStatus">FECHADA</div>
+          <p id="sessionMsg">A sessão ainda não foi iniciada pelo dono.</p>
+          <button id="joinBtn" onclick="joinSession()">Entrar na sessão com minha ficha</button>
+        </div>
+        <div class="card span-6">
+          <h2>Participantes</h2>
+          <div id="partyList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gm" class="tab">
+      <div class="grid">
+        <div class="card span-6">
+          <h2>Login do Dono</h2>
+          <p>Defina uma senha de dono na primeira vez. Guarde ela. Só quem tiver essa senha consegue iniciar sessão e promover GM neste navegador.</p>
+          <label>Senha do dono</label>
+          <input id="ownerPass" type="password" placeholder="Digite sua senha de dono" />
+          <div class="row" style="margin-top:12px">
+            <button onclick="setOwnerPassword()">Criar/Salvar senha</button>
+            <button onclick="ownerLogin()">Entrar como dono</button>
+            <button class="danger-btn" onclick="ownerLogout()">Sair</button>
+          </div>
+        </div>
+        <div class="card span-6">
+          <h2>Controle da Sessão</h2>
+          <p id="gmAccess" class="warning">Acesso bloqueado. Entre como dono.</p>
+          <div class="row">
+            <button class="green-btn" onclick="startSession()">Iniciar sessão</button>
+            <button class="danger-btn" onclick="endSession()">Encerrar sessão</button>
+          </div>
+        </div>
+        <div class="card span-12">
+          <h2>Transformar jogador em GM</h2>
+          <p>Somente o dono pode promover ou remover GM.</p>
+          <div id="gmManageList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rules" class="tab rules">
+      <div class="card">
+        <h2>Regras Rápidas do Hollow Break</h2>
+        <p><b>Testes:</b> 2d6 + Atributo + Especialização.</p>
+        <ul>
+          <li>6 ou menos: falha</li>
+          <li>7 a 9: sucesso parcial</li>
+          <li>10 a 13: sucesso</li>
+          <li>14 ou mais: sucesso crítico</li>
+        </ul>
+        <p><b>Vida:</b> 12 + Fortitude × 3 + Corpo. <b>Defesa:</b> 6 + Agilidade + metade do Reflexo arredondada para baixo. <b>PE:</b> máximo padrão 5.</p>
+        <p><b>Combo em cadeia:</b> gaste 1 PE para agir após um aliado, ganhar +2 no ataque e adicionar 1d6 de dano.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="hiddenRender" class="hidden-render"></div>
+
+  <script>
+    const STORAGE_KEYS = {
+      chars: 'hollow_break_characters',
+      session: 'hollow_break_session',
+      ownerHash: 'hollow_break_owner_hash',
+      ownerLogged: 'hollow_break_owner_logged'
+    };
+
+    let faceData = '';
+
+    function openTab(id, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+      renderAll();
+    }
+
+    function getChars() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.chars) || '[]');
+    }
+
+    function setChars(chars) {
+      localStorage.setItem(STORAGE_KEYS.chars, JSON.stringify(chars));
+    }
+
+    function getSession() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || '{"open":false,"party":[]}');
+    }
+
+    function setSession(session) {
+      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
+    }
+
+    async function simpleHash(text) {
+      const data = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function isOwner() {
+      return sessionStorage.getItem(STORAGE_KEYS.ownerLogged) === 'true';
+    }
+
+    function updateOwnerStatus() {
+      const el = document.getElementById('ownerStatus');
+      const gmAccess = document.getElementById('gmAccess');
+      if (isOwner()) {
+        el.textContent = 'Modo DONO ativo';
+        el.style.color = 'var(--ok)';
+        gmAccess.textContent = 'Acesso liberado. Você é o dono.';
+        gmAccess.className = 'ok';
+      } else {
+        el.textContent = 'Modo visitante';
+        el.style.color = 'var(--yellow2)';
+        gmAccess.textContent = 'Acesso bloqueado. Entre como dono.';
+        gmAccess.className = 'warning';
+      }
+    }
+
+    async function setOwnerPassword() {
+      const pass = document.getElementById('ownerPass').value.trim();
+      if (localStorage.getItem(STORAGE_KEYS.ownerHash)) return alert('Já existe uma senha de dono neste navegador.');
+      if (pass.length < 4) return alert('Use uma senha com pelo menos 4 caracteres.');
+      localStorage.setItem(STORAGE_KEYS.ownerHash, await simpleHash(pass));
+      alert('Senha do dono criada.');
+    }
+
+    async function ownerLogin() {
+      const pass = document.getElementById('ownerPass').value.trim();
+      const saved = localStorage.getItem(STORAGE_KEYS.ownerHash);
+      if (!saved) return alert('Crie a senha do dono primeiro.');
+      if (await simpleHash(pass) === saved) {
+        sessionStorage.setItem(STORAGE_KEYS.ownerLogged, 'true');
+        alert('Você entrou como dono.');
+      } else {
+        alert('Senha errada.');
+      }
+      renderAll();
+    }
+
+    function ownerLogout() {
+      sessionStorage.removeItem(STORAGE_KEYS.ownerLogged);
+      renderAll();
+    }
+
+    function updateDerived() {
+      const corpo = Number(document.getElementById('corpo').value || 0);
+      const agilidade = Number(document.getElementById('agilidade').value || 0);
+      const fortitude = Number(document.getElementById('fortitude').value || 0);
+      const reflexo = Number(document.getElementById('reflexo').value || 0);
+      const tecnica = Number(document.getElementById('tecnica').value || 0);
+      const presenca = Number(document.getElementById('presenca').value || 0);
+      const eter = Number(document.getElementById('eterStat').value || 0);
+      const total = corpo + agilidade + fortitude + reflexo + tecnica + presenca + eter;
+      document.getElementById('vida').value = 12 + fortitude * 3 + corpo;
+      document.getElementById('defesa').value = 6 + agilidade + Math.floor(reflexo / 2);
+      const p = document.getElementById('pointsInfo');
+      p.textContent = `Pontos usados: ${total}/14`;
+      p.className = total > 14 ? 'warning' : 'ok';
+    }
+
+    document.getElementById('faceInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        faceData = reader.result;
+        document.getElementById('facePreview').innerHTML = `<img src="${faceData}" alt="Rosto do personagem">`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function clearFace() {
+      faceData = '';
+      document.getElementById('facePreview').textContent = 'Importe um PNG/JPG do rosto';
+      document.getElementById('faceInput').value = '';
+    }
+
+    function makeCharacter() {
+      return {
+        id: crypto.randomUUID(),
+        name: document.getElementById('charName').value.trim(),
+        player: document.getElementById('playerName').value.trim(),
+        className: document.getElementById('charClass').value,
+        ether: document.getElementById('ether').value,
+        level: Number(document.getElementById('level').value || 1),
+        stats: {
+          corpo: Number(document.getElementById('corpo').value || 0),
+          agilidade: Number(document.getElementById('agilidade').value || 0),
+          fortitude: Number(document.getElementById('fortitude').value || 0),
+          reflexo: Number(document.getElementById('reflexo').value || 0),
+          tecnica: Number(document.getElementById('tecnica').value || 0),
+          presenca: Number(document.getElementById('presenca').value || 0),
+          eter: Number(document.getElementById('eterStat').value || 0)
+        },
+        vida: Number(document.getElementById('vida').value || 10),
+        defesa: Number(document.getElementById('defesa').value || 5),
+        pe: Number(document.getElementById('pe').value || 5),
+        skills: document.getElementById('skills').value.trim(),
+        weapon: document.getElementById('weapon').value.trim(),
+        ultimate: document.getElementById('ultimate').value.trim(),
+        story: document.getElementById('story').value.trim(),
+        face: faceData,
+        gm: false,
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function saveCharacter() {
+      updateDerived();
+      const c = makeCharacter();
+      if (!c.name || !c.player) return alert('Coloque o nome do personagem e do jogador.');
+      const total = Object.values(c.stats).reduce((a,b)=>a+b,0);
+      if (total > 14) return alert('Você passou de 14 pontos de atributo.');
+      const chars = getChars();
+      chars.push(c);
+      setChars(chars);
+      alert('Ficha salva.');
+      renderAll();
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadCharacterJson() {
+      const c = makeCharacter();
+      if (!c.name) return alert('Coloque o nome do personagem antes.');
+      downloadFile(`${c.name.replaceAll(' ', '_')}_hollow_break.json`, JSON.stringify(c, null, 2), 'application/json');
+    }
+
+    document.getElementById('importJson').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const c = JSON.parse(reader.result);
+          if (!c.name || !c.player) throw new Error('Ficha inválida');
+          c.id = crypto.randomUUID();
+          c.gm = false;
+          const chars = getChars();
+          chars.push(c);
+          setChars(chars);
+          alert('Ficha importada.');
+          renderAll();
+        } catch(err) {
+          alert('Arquivo inválido.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function renderCharacters() {
+      const chars = getChars();
+      const box = document.getElementById('charactersList');
+      if (!chars.length) {
+        box.innerHTML = '<p>Nenhuma ficha salva ainda.</p>';
+        return;
+      }
+      box.innerHTML = chars.map(c => `
+        <div class="character-card">
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div>
+            <h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3>
+            <small>Jogador: ${escapeHtml(c.player)} • ${escapeHtml(c.className)} • ${escapeHtml(c.ether)} • Nível ${c.level}</small>
+            <p>Vida ${c.vida} • Defesa ${c.defesa} • PE ${c.pe}</p>
+          </div>
+          <div class="row">
+            <button onclick="exportSavedImage('${c.id}')">Imagem</button>
+            <button onclick="downloadSavedJson('${c.id}')">JSON</button>
+            <button class="danger-btn" onclick="deleteCharacter('${c.id}')">Excluir</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function deleteCharacter(id) {
+      if (!confirm('Excluir esta ficha?')) return;
+      setChars(getChars().filter(c => c.id !== id));
+      const s = getSession();
+      s.party = s.party.filter(pid => pid !== id);
+      setSession(s);
+      renderAll();
+    }
+
+    function downloadSavedJson(id) {
+      const c = getChars().find(x => x.id === id);
+      if (!c) return;
+      downloadFile(`${c.name.replaceAll(' ', '_')}_hollow_break.json`, JSON.stringify(c, null, 2), 'application/json');
+    }
+
+    function startSession() {
+      if (!isOwner()) return alert('Somente o dono pode iniciar.');
+      const chars = getChars();
+      if (!chars.length) return alert('Precisa ter pelo menos uma ficha salva/importada.');
+      const s = getSession();
+      s.open = true;
+      setSession(s);
+      alert('Sessão iniciada.');
+      renderAll();
+    }
+
+    function endSession() {
+      if (!isOwner()) return alert('Somente o dono pode encerrar.');
+      setSession({ open: false, party: [] });
+      alert('Sessão encerrada.');
+      renderAll();
+    }
+
+    function joinSession() {
+      const chars = getChars();
+      const s = getSession();
+      if (!s.open) return alert('A sessão ainda está fechada.');
+      if (!chars.length) return alert('Você precisa criar ou importar uma ficha antes de entrar.');
+      const choice = prompt('Digite o número da ficha para entrar:\n' + chars.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join('\n'));
+      const index = Number(choice) - 1;
+      if (!chars[index]) return alert('Ficha inválida.');
+      if (!s.party.includes(chars[index].id)) s.party.push(chars[index].id);
+      setSession(s);
+      alert('Você entrou na sessão.');
+      renderAll();
+    }
+
+    function renderSession() {
+      const s = getSession();
+      const chars = getChars();
+      document.getElementById('sessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
+      document.getElementById('homeSessionStatus').textContent = s.open ? 'ABERTA' : 'FECHADA';
+      document.getElementById('sessionMsg').textContent = s.open ? 'A sessão começou. Entre com uma ficha salva/importada.' : 'A sessão ainda não foi iniciada pelo dono.';
+      document.getElementById('homeSessionText').textContent = s.open ? 'A mesa está aberta. Prepare os dados.' : 'O dono ainda não iniciou a sessão.';
+      const party = chars.filter(c => s.party.includes(c.id));
+      document.getElementById('partyList').innerHTML = party.length ? party.map(c => `
+        <div class="character-card">
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>${escapeHtml(c.player)} • ${escapeHtml(c.className)}</small></div>
+        </div>
+      `).join('') : '<p>Ninguém entrou ainda.</p>';
+    }
+
+    function renderGmManage() {
+      const chars = getChars();
+      const box = document.getElementById('gmManageList');
+      if (!chars.length) {
+        box.innerHTML = '<p>Nenhuma ficha para gerenciar.</p>';
+        return;
+      }
+      box.innerHTML = chars.map(c => `
+        <div class="character-card">
+          <div class="avatar-small">${c.face ? `<img src="${c.face}" alt="${c.name}">` : 'Sem rosto'}</div>
+          <div><h3>${escapeHtml(c.name)} ${c.gm ? '<span class="ok">[GM]</span>' : ''}</h3><small>Jogador: ${escapeHtml(c.player)}</small></div>
+          <div class="row">
+            <button onclick="toggleGm('${c.id}')">${c.gm ? 'Remover GM' : 'Tornar GM'}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleGm(id) {
+      if (!isOwner()) return alert('Somente o dono pode mexer em GM.');
+      const chars = getChars();
+      const c = chars.find(x => x.id === id);
+      if (!c) return;
+      c.gm = !c.gm;
+      setChars(chars);
+      renderAll();
+    }
+
+    function characterCardHtml(c) {
+      return `
+        <div class="export-card" id="exportCard">
+          <div class="export-head">
+            <div class="avatar-small" style="width:140px;height:140px;border-radius:22px">${c.face ? `<img src="${c.face}">` : 'Sem rosto'}</div>
+            <div>
+              <h1>${escapeHtml(c.name || 'Agente sem nome')}</h1>
+              <p>Jogador: ${escapeHtml(c.player || '-')}</p>
+              <p>${escapeHtml(c.className)} • Éter ${escapeHtml(c.ether)} • Nível ${c.level}</p>
+            </div>
+          </div>
+          <div class="stat-list">
+            <div class="stat-card">Corpo<strong>${c.stats.corpo}</strong></div>
+            <div class="stat-card">Agilidade<strong>${c.stats.agilidade || 0}</strong></div>
+            <div class="stat-card">Fortitude<strong>${c.stats.fortitude || 0}</strong></div>
+            <div class="stat-card">Reflexo<strong>${c.stats.reflexo}</strong></div>
+            <div class="stat-card">Técnica<strong>${c.stats.tecnica}</strong></div>
+            <div class="stat-card">Presença<strong>${c.stats.presenca}</strong></div>
+            <div class="stat-card">Éter<strong>${c.stats.eter}</strong></div>
+          </div>
+          <p><b>Vida:</b> ${c.vida} • <b>Defesa:</b> ${c.defesa} • <b>PE:</b> ${c.pe}</p>
+          <p><b>Especializações:</b> ${escapeHtml(c.skills || '-')}</p>
+          <p><b>Arma:</b> ${escapeHtml(c.weapon || '-')}</p>
+          <p><b>Suprema:</b> ${escapeHtml(c.ultimate || '-')}</p>
+          <p><b>História:</b> ${escapeHtml(c.story || '-')}</p>
+        </div>
+      `;
+    }
+
+    async function exportCharacterImage() {
+      const c = makeCharacter();
+      await exportImageFromCharacter(c);
+    }
+
+    async function exportSavedImage(id) {
+      const c = getChars().find(x => x.id === id);
+      if (c) await exportImageFromCharacter(c);
+    }
+
+    async function exportImageFromCharacter(c) {
+      const hidden = document.getElementById('hiddenRender');
+      hidden.innerHTML = characterCardHtml(c);
+      const card = document.getElementById('exportCard');
+      const canvas = await html2canvas(card, { backgroundColor: '#050505', scale: 2 });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `${(c.name || 'personagem').replaceAll(' ', '_')}_ficha.png`;
+      a.click();
+      hidden.innerHTML = '';
+    }
+
+    function escapeHtml(text) {
+      return String(text || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+    function renderAll() {
+      updateDerived();
+      updateOwnerStatus();
+      renderCharacters();
+      renderSession();
+      renderGmManage();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
