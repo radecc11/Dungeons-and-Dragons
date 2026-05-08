@@ -20,7 +20,7 @@
     .topbar{max-width:1240px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:12px}.mark{width:48px;height:48px;border:2px solid var(--yellow);border-radius:15px;display:grid;place-items:center;color:var(--yellow);font-weight:900;box-shadow:var(--glow);background:linear-gradient(135deg,#000,#2a2300)}
     h1,h2,h3{margin:0}h1{color:var(--yellow);letter-spacing:1px}p,small{color:var(--muted);line-height:1.45}
-    main{max-width:1240px;margin:24px auto;padding:0 16px 44px}.pill{border:1px solid var(--border);border-radius:999px;padding:10px 14px;color:var(--yellow2);background:#0d0d0d}
+    main{max-width:1440px;margin:24px auto;padding:0 16px 44px}.pill{border:1px solid var(--border);border-radius:999px;padding:10px 14px;color:var(--yellow2);background:#0d0d0d}
     .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
     button,.tab-btn,.file-label{border:1px solid var(--border);background:linear-gradient(180deg,#201b00,#080808);color:var(--yellow);padding:12px 16px;border-radius:14px;cursor:pointer;font-weight:800;transition:.18s;display:inline-block;text-align:center}
     button:hover,.tab-btn:hover,.file-label:hover{transform:translateY(-2px);box-shadow:var(--glow)}.tab-btn.active{background:var(--yellow);color:#050505;box-shadow:var(--glow)}
@@ -64,14 +64,36 @@
     .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
     .mini-stat{background:#050505;border:1px solid rgba(255,208,0,.2);border-radius:12px;padding:8px;text-align:center;font-size:12px}
     .mini-stat strong{display:block;color:var(--yellow);font-size:18px}
-    .chat-box{height:520px;overflow:auto;background:#060606;border:1px solid rgba(255,208,0,.25);border-radius:18px;padding:12px}
+    .chat-box{height:760px;overflow:auto;background:#060606;border:1px solid rgba(255,208,0,.25);border-radius:18px;padding:12px}
     .log-msg{border:1px solid rgba(255,255,255,.08);border-left:4px solid var(--yellow);background:#0d0d0d;border-radius:14px;padding:10px;margin:10px 0}
     .log-msg.gm{border-left-color:var(--purple);background:linear-gradient(90deg,rgba(139,53,255,.14),#0d0d0d)}
     .log-msg.system{border-left-color:var(--ok);background:rgba(56,255,139,.06)}
     .log-msg small{display:block;margin-bottom:6px;color:var(--yellow2)}
     .log-img{max-width:100%;border-radius:14px;border:1px solid var(--border);margin-top:8px}
     .chat-closed{border:1px solid rgba(255,68,68,.6);background:rgba(255,68,68,.08);border-radius:14px;padding:10px;color:#fff}
-    @media(max-width:900px){.session-layout{grid-template-columns:1fr}.chat-box{height:420px}}
+
+    .session-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start}
+    .chat-box{min-height:760px}
+    .log-msg.attack{border-left-color:#b36b32;background:linear-gradient(90deg,rgba(179,107,50,.16),#0d0d0d)}
+    .log-msg.skill{border-left-color:#ffd000;background:linear-gradient(90deg,rgba(255,208,0,.12),#0d0d0d)}
+    .log-msg.fogo{border-left-color:#ff3b30;background:linear-gradient(90deg,rgba(255,59,48,.18),#0d0d0d)}
+    .log-msg.gelo{border-left-color:#3aa7ff;background:linear-gradient(90deg,rgba(58,167,255,.18),#0d0d0d)}
+    .log-msg.eletrico{border-left-color:#ffe14a;background:linear-gradient(90deg,rgba(255,225,74,.18),#0d0d0d)}
+    .log-msg.fisico{border-left-color:#9b6b43;background:linear-gradient(90deg,rgba(155,107,67,.2),#0d0d0d)}
+    .log-msg.eter{border-left-color:#8b35ff;background:linear-gradient(90deg,rgba(139,53,255,.2),#0d0d0d)}
+    .log-msg.corrupto{border-left-color:#ff2ca8;background:linear-gradient(90deg,rgba(255,44,168,.18),#0d0d0d)}
+    .log-msg.void{border-left-color:#bd8cff;background:linear-gradient(90deg,rgba(189,140,255,.2),#0d0d0d)}
+    .log-img{width:min(100%,520px);max-height:360px;object-fit:cover;display:block}
+    .image-preview{display:none;margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:10px;background:#080808}
+    .image-preview img{width:130px;height:90px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,208,0,.35)}
+    .monster-card{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;border:1px solid var(--pborder);background:linear-gradient(135deg,rgba(139,53,255,.12),#090909);border-radius:18px;padding:12px;margin:10px 0}
+    .monster-img{width:110px;height:110px;border-radius:18px;border:1px solid var(--pborder);background:#050505;display:grid;place-items:center;overflow:hidden;color:var(--purple2)}
+    .monster-img img{width:100%;height:100%;object-fit:cover}
+    .hpbar{height:12px;background:#240909;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.1);margin:8px 0}
+    .hpfill{height:100%;background:linear-gradient(90deg,#38ff8b,#ffd000,#ff4444);width:100%}
+    .monster-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+    @media(max-width:900px){.session-layout{grid-template-columns:1fr}.chat-box{height:520px}}
     @media(max-width:900px){.span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:span 12}.stat-list,.def-list{grid-template-columns:repeat(2,1fr)}.character-card{grid-template-columns:70px 1fr}.character-card .row{grid-column:span 2}.hero h2{font-size:28px}}
   </style>
 </head>
@@ -89,6 +111,7 @@
     <button class="tab-btn" onclick="openTab('creator', this)">Criar Ficha</button>
     <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
     <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
+    <button class="tab-btn" onclick="openTab('monsters', this)">Monstros</button>
     <button class="tab-btn" onclick="openTab('host', this)">Host / GM</button>
     <button class="tab-btn" onclick="openTab('rules', this)">Sistema</button>
   </div>
@@ -263,7 +286,7 @@
           <div class="row">
             <div>
               <label>Tipo de log</label>
-              <select id="chatType">
+              <select id="chatType" onchange="updateAttackControls()">
                 <option value="player">Jogador: fala/ação</option>
                 <option value="attack">Ataque</option>
                 <option value="skill">Habilidade</option>
@@ -272,9 +295,42 @@
               </select>
             </div>
             <div>
+              <label>Personagem que agiu</label>
+              <select id="chatActor"></select>
+            </div>
+            <div>
+              <label>Elemento do ataque</label>
+              <select id="chatElement">
+                <option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Ataque / habilidade usada</label>
+              <input id="chatMoveName" placeholder="Ex: Corte Relâmpago, disparo, magia, suprema">
+            </div>
+            <div>
+              <label>Alvo</label>
+              <select id="chatTarget"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
               <label>Imagem PNG/JPG para aparecer no log</label>
               <label class="file-label" for="chatImageInput">Importar imagem</label>
               <input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp">
+              <div id="chatImagePreview" class="image-preview">
+                <div class="row">
+                  <img id="chatImagePreviewImg" alt="Preview da imagem">
+                  <div>
+                    <b style="color:var(--yellow)">Preview anexado</b>
+                    <p>Essa imagem aparece no próximo log.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -292,7 +348,45 @@
     </div>
   </section>
 
-  <section id="host" class="tab">
+  <section id="monsters" class="tab">
+    <div class="grid">
+      <div class="card span-5 void-card">
+        <h2 class="void-title">Criar / Spawnar Monstro</h2>
+        <p>Área do Host/GM para colocar inimigos na mesa e controlar round por round.</p>
+        <label>Nome do monstro</label>
+        <input id="monsterName" placeholder="Ex: Etéreo de Fissura">
+        <div class="row">
+          <div><label>Tipo</label><select id="monsterType"><option>Etéreo</option><option>Corrompido</option><option>Colosso</option><option>Aberração</option><option>Caçador Rival</option><option>Boss</option></select></div>
+          <div><label>Elemento</label><select id="monsterElement"><option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>PV máximo</label><input id="monsterMaxHp" type="number" value="20" min="1"></div>
+          <div><label>Pressão máxima</label><input id="monsterMaxPressure" type="number" value="10" min="0"></div>
+          <div><label>Rodada</label><input id="monsterRound" type="number" value="1" min="1"></div>
+        </div>
+        <label>Descrição / comportamento</label>
+        <textarea id="monsterDesc" placeholder="Aparência, ataque especial, fase, comportamento..."></textarea>
+        <label>Imagem do monstro PNG/JPG</label>
+        <label class="file-label" for="monsterImageInput">Importar imagem do monstro</label>
+        <input id="monsterImageInput" type="file" accept="image/png,image/jpeg,image/webp">
+        <div id="monsterImagePreview" class="image-preview">
+          <div class="row"><img id="monsterImagePreviewImg" alt="Preview monstro"><div><b style="color:var(--purple2)">Preview do monstro</b><p>Imagem pronta para spawnar.</p></div></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="green-btn" onclick="createMonster()">Spawnar monstro</button>
+          <button onclick="clearMonsterForm()">Limpar</button>
+        </div>
+      </div>
+
+      <div class="card span-7">
+        <h2>Mesa de Monstros</h2>
+        <p>Host/GM pode diminuir PV, curar, aumentar pressão, avançar rodada e mandar ações para o log.</p>
+        <div id="monsterList"></div>
+      </div>
+    </div>
+  </section>
+
+    <section id="host" class="tab">
     <div class="grid">
       <div class="card span-6"><h2>Login do Host</h2><p>Só o Host cria sessão e transforma/remove GMs.</p><label>Senha do Host</label><input id="ownerPass" type="password"><div class="row" style="margin-top:12px"><button onclick="setOwnerPassword()">Criar senha</button><button onclick="ownerLogin()">Entrar como Host</button><button class="danger-btn" onclick="ownerLogout()">Sair</button></div></div>
       <div class="card span-6"><h2>Login de GM</h2><p>Somente quem o Host transformar em GM consegue entrar aqui.</p><label>Ficha GM</label><select id="gmLoginSelect"></select><div class="row" style="margin-top:12px"><button onclick="gmLogin()">Entrar como GM</button><button class="danger-btn" onclick="gmLogout()">Sair do GM</button></div><p id="gmLoginStatus" class="warning">GM não logado.</p></div>
@@ -341,7 +435,7 @@
 </script>
 
 <script>
-let faceData="",characters=[],sessionData={open:false,party:[],chatOpen:true},sessionMessages=[],chatImageData="",lastChatSentAt=0;
+let faceData="",characters=[],monsters=[],sessionData={open:false,party:[],chatOpen:true},sessionMessages=[],chatImageData="",monsterImageData="",lastChatSentAt=0;
 const raceData={
  "Humano":{b:{intelecto:2,vitalidade:1},d:"Normalmente não possuem habilidades sobre-humanas."},
  "Tireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Tireno tem característica única."},
@@ -361,7 +455,7 @@ const elementData={
 function fb(){return window.hbFirebase}
 function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");btn.classList.add("active");renderAll()}
 window.addEventListener("firebase-error",()=>{document.getElementById("firebaseWarning").style.display="block";document.getElementById("homeSessionStatus").textContent="ERRO";document.getElementById("sessionStatus").textContent="ERRO"});
-window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenSessionLog();renderRules();setupChatImageInput();renderAll()});
+window.addEventListener("firebase-ready",()=>{listenCharacters();listenSession();listenSessionLog();listenMonsters();renderRules();setupChatImageInput();setupMonsterImageInput();renderAll()});
 function listenCharacters(){const{db,collection,onSnapshot}=fb();onSnapshot(collection(db,"characters"),snap=>{characters=snap.docs.map(d=>({id:d.id,...d.data()}));characters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()},err=>alert("Erro ao carregar fichas. Confira as Rules do Firestore."))}
 function listenSession(){const{db,doc,onSnapshot,setDoc}=fb();const ref=doc(db,"game","session");onSnapshot(ref,async snap=>{if(!snap.exists()){await setDoc(ref,{open:false,party:[],chatOpen:true});return}sessionData=snap.data();if(!Array.isArray(sessionData.party))sessionData.party=[];if(typeof sessionData.chatOpen!=="boolean")sessionData.chatOpen=true;renderAll()},err=>alert("Erro ao carregar sessão. Confira as Rules do Firestore."))}
 async function simpleHash(text){const data=new TextEncoder().encode(text);const hash=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("")}
@@ -462,7 +556,32 @@ function setupChatImageInput(){
     const file=e.target.files[0];
     if(!file) return;
     const reader=new FileReader();
-    reader.onload=()=>{chatImageData=reader.result; alert("Imagem anexada ao próximo log.");};
+    reader.onload=()=>{chatImageData=reader.result; const box=document.getElementById("chatImagePreview"); const img=document.getElementById("chatImagePreviewImg"); if(box&&img){img.src=chatImageData;box.style.display="block";} };
+    reader.readAsDataURL(file);
+  });
+}
+
+function listenMonsters(){
+  const{db,collection,onSnapshot}=fb();
+  onSnapshot(collection(db,"monsters"),snap=>{
+    monsters=snap.docs.map(d=>({id:d.id,...d.data()}));
+    monsters.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)||String(a.createdAtText||"").localeCompare(String(b.createdAtText||"")));
+    renderAll();
+  },err=>console.error("Erro nos monstros",err));
+}
+function setupMonsterImageInput(){
+  const input=document.getElementById("monsterImageInput");
+  if(!input) return;
+  input.addEventListener("change",e=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      monsterImageData=reader.result;
+      const box=document.getElementById("monsterImagePreview");
+      const img=document.getElementById("monsterImagePreviewImg");
+      if(box&&img){img.src=monsterImageData;box.style.display="block";}
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -470,8 +589,9 @@ function clearChatImage(){
   chatImageData="";
   const input=document.getElementById("chatImageInput");
   if(input) input.value="";
-  alert("Imagem removida do próximo log.");
+  const box=document.getElementById("chatImagePreview"); if(box) box.style.display="none";
 }
+
 function renderChat(){
   const box=document.getElementById("sessionChat");
   const status=document.getElementById("chatStatusText");
@@ -480,14 +600,34 @@ function renderChat(){
   const open=sessionData.chatOpen!==false;
   if(status) status.textContent=open?"Chat aberto para a sessão.":"Chat fechado pelo Host/GM.";
   if(warn) warn.style.display=open?"none":"block";
-  box.innerHTML=sessionMessages.length?sessionMessages.map(m=>`
-    <div class="log-msg ${m.role==='GM'?'gm':m.role==='Sistema'?'system':''}">
-      <small>${escapeHtml(m.role||"Log")} • ${escapeHtml(m.author||"Anônimo")} • ${escapeHtml(m.kind||"ação")} • ${escapeHtml(m.time||"")}</small>
+  box.innerHTML=sessionMessages.length?sessionMessages.map(m=>{
+    const elementClass=elementClassName(m.element||"");
+    const kindClass=m.kind==="attack"?"attack":m.kind==="skill"?"skill":m.role==="GM"?"gm":m.role==="Sistema"?"system":"";
+    return `
+    <div class="log-msg ${kindClass} ${elementClass}">
+      <small>${escapeHtml(m.role||"Log")} • ${escapeHtml(m.author||"Anônimo")} • ${escapeHtml(m.kind||"ação")} ${m.element?`• ${escapeHtml(m.element)}`:""} • ${escapeHtml(m.time||"")}</small>
+      ${m.move?`<b style="color:var(--yellow)">${escapeHtml(m.move)}</b>${m.target?` <span class="tag">Alvo: ${escapeHtml(m.target)}</span>`:""}`:""}
       <div>${escapeHtml(m.text||"").replaceAll("\n","<br>")}</div>
       ${m.image?`<img class="log-img" src="${m.image}" alt="Imagem do log">`:""}
-    </div>
-  `).join(""):"<p>Nenhuma ação no log ainda.</p>";
+    </div>`;
+  }).join(""):"<p>Nenhuma ação no log ainda.</p>";
   box.scrollTop=box.scrollHeight;
+}
+function elementClassName(el){
+  const e=String(el||"").toLowerCase();
+  if(e.includes("fogo")) return "fogo";
+  if(e.includes("gelo")) return "gelo";
+  if(e.includes("elétr")||e.includes("eletr")) return "eletrico";
+  if(e.includes("fís")||e.includes("fis")) return "fisico";
+  if(e.includes("éter")||e.includes("eter")) return "eter";
+  if(e.includes("corrupt")) return "corrupto";
+  if(e.includes("void")) return "void";
+  return "";
+}
+function updateAttackControls(){
+  const type=document.getElementById("chatType")?.value;
+  const move=document.getElementById("chatMoveName");
+  if(move && type==="attack" && !move.value) move.placeholder="Ex: ataque básico, tiro, corte, mordida";
 }
 function currentChatAuthor(){
   if(isOwner()) return {role:"GM",author:"Host"};
@@ -503,7 +643,7 @@ async function toggleChat(open){
   await updateDoc(doc(db,"game","session"),{chatOpen:open});
   await addSystemLog(open?"Chat aberto pelo GM/Host.":"Chat fechado pelo GM/Host.");
 }
-async function sendSessionMessage(){
+async async function sendSessionMessage(){
   if(!sessionData.open) return alert("A sessão ainda está fechada.");
   const open=sessionData.chatOpen!==false;
   if(!open && !isOwner() && !isGmLogged()) return alert("O chat está fechado para jogadores.");
@@ -513,8 +653,14 @@ async function sendSessionMessage(){
   const kind=document.getElementById("chatType").value;
   if(!text && !chatImageData) return alert("Digite uma mensagem ou anexe uma imagem.");
   if(text.length>700) return alert("Mensagem muito grande. Resume um pouco.");
-  const who=currentChatAuthor();
+  let who=currentChatAuthor();
+  const actorId=document.getElementById("chatActor")?.value||"";
+  const actor=characters.find(c=>c.id===actorId);
+  if(actor && (kind==="attack" || kind==="skill")) who={role:isOwner()||isGmLogged()?"GM":"Jogador",author:actor.name};
   const finalRole=(kind==="gm"||kind==="system"||isOwner()||isGmLogged())?(kind==="system"?"Sistema":who.role):"Jogador";
+  const element=document.getElementById("chatElement")?.value||"";
+  const move=(document.getElementById("chatMoveName")?.value||"").trim();
+  const target=(document.getElementById("chatTarget")?.value||"").trim();
   const{db,collection,doc,setDoc,serverTimestamp}=fb();
   await setDoc(doc(collection(db,"sessionLog")),{
     role:finalRole,
@@ -522,18 +668,23 @@ async function sendSessionMessage(){
     kind,
     text,
     image:chatImageData||"",
+    element,
+    move,
+    target,
     time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
     createdAt:serverTimestamp(),
     createdAtText:new Date().toISOString()
   });
   lastChatSentAt=now;
   document.getElementById("chatMessage").value="";
+  const mv=document.getElementById("chatMoveName"); if(mv) mv.value="";
   clearChatImageSilent();
 }
 function clearChatImageSilent(){
   chatImageData="";
   const input=document.getElementById("chatImageInput");
   if(input) input.value="";
+  const box=document.getElementById("chatImagePreview"); if(box) box.style.display="none";
 }
 async function addSystemLog(text){
   if(!window.firebaseReady) return;
@@ -544,15 +695,141 @@ async function addSystemLog(text){
     createdAt:serverTimestamp(),createdAtText:new Date().toISOString()
   });
 }
+
+async function createMonster(){
+  if(!canEditSheets()) return alert("Somente Host ou GM pode spawnar monstros.");
+  const name=(document.getElementById("monsterName").value||"").trim();
+  if(!name) return alert("Coloque o nome do monstro.");
+  const maxHp=Number(document.getElementById("monsterMaxHp").value||1);
+  const maxPressure=Number(document.getElementById("monsterMaxPressure").value||0);
+  const monster={
+    name,
+    type:document.getElementById("monsterType").value,
+    element:document.getElementById("monsterElement").value,
+    hp:maxHp,
+    maxHp,
+    pressure:0,
+    maxPressure,
+    round:Number(document.getElementById("monsterRound").value||1),
+    desc:(document.getElementById("monsterDesc").value||"").trim(),
+    image:monsterImageData||"",
+    active:true,
+    createdAtText:new Date().toISOString()
+  };
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"monsters")),{...monster,createdAt:serverTimestamp()});
+  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Spawnou monstro: ${monster.name} (${monster.type} • ${monster.element})`,image:monster.image,element:monster.element});
+  clearMonsterForm();
+}
+function clearMonsterForm(){
+  ["monsterName","monsterDesc"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
+  setVal("monsterMaxHp",20);setVal("monsterMaxPressure",10);setVal("monsterRound",1);
+  monsterImageData="";
+  const input=document.getElementById("monsterImageInput"); if(input) input.value="";
+  const box=document.getElementById("monsterImagePreview"); if(box) box.style.display="none";
+}
+function renderMonsters(){
+  const box=document.getElementById("monsterList");
+  if(!box) return;
+  if(!monsters.length){box.innerHTML="<p>Nenhum monstro spawnado ainda.</p>";return;}
+  box.innerHTML=monsters.map(m=>{
+    const pct=Math.max(0,Math.min(100,((Number(m.hp)||0)/(Number(m.maxHp)||1))*100));
+    const ppct=Math.max(0,Math.min(100,((Number(m.pressure)||0)/(Number(m.maxPressure)||1))*100));
+    return `<div class="monster-card">
+      <div class="monster-img">${m.image?`<img src="${m.image}" alt="${escapeHtml(m.name)}">`:"MONSTRO"}</div>
+      <div>
+        <h3>${escapeHtml(m.name)} ${m.active===false?'<span class="warning">[fora]</span>':'<span class="ok">[ativo]</span>'}</h3>
+        <small>${escapeHtml(m.type||"-")} • ${escapeHtml(m.element||"-")} • Rodada ${m.round||1}</small>
+        <p>${escapeHtml(m.desc||"Sem descrição.")}</p>
+        <b>PV ${m.hp||0}/${m.maxHp||0}</b>
+        <div class="hpbar"><div class="hpfill" style="width:${pct}%"></div></div>
+        <b>Pressão ${m.pressure||0}/${m.maxPressure||0}</b>
+        <div class="hpbar"><div class="hpfill" style="width:${ppct}%"></div></div>
+        <div class="monster-actions">
+          <input id="delta-${m.id}" type="number" value="1" min="0">
+          <button onclick="changeMonsterHp('${m.id}',-Number(document.getElementById('delta-${m.id}').value||0))">Dano</button>
+          <button onclick="changeMonsterHp('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">Curar</button>
+          <button onclick="changeMonsterPressure('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">+Pressão</button>
+          <button onclick="nextMonsterRound('${m.id}')">+Rodada</button>
+          <button onclick="monsterActionLog('${m.id}')">Ação no log</button>
+          <button onclick="toggleMonsterActive('${m.id}')">${m.active===false?"Ativar":"Remover da mesa"}</button>
+          <button class="danger-btn" onclick="deleteMonster('${m.id}')">Excluir</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function changeMonsterHp(id,delta){
+  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const hp=Math.max(0,Math.min(Number(m.maxHp)||1,(Number(m.hp)||0)+delta));
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"monsters",id),{hp});
+  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: PV ${m.hp} → ${hp}`,element:m.element});
+}
+async function changeMonsterPressure(id,delta){
+  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const pressure=Math.max(0,Math.min(Number(m.maxPressure)||0,(Number(m.pressure)||0)+delta));
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"monsters",id),{pressure});
+  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: Pressão ${m.pressure||0} → ${pressure}`,element:m.element});
+}
+async function nextMonsterRound(id){
+  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const round=(Number(m.round)||1)+1;
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"monsters",id),{round});
+  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`${m.name} avançou para a rodada ${round}.`,element:m.element});
+}
+async function monsterActionLog(id){
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const text=prompt("O que o monstro fez?",`${m.name} prepara uma ação ameaçadora.`);
+  if(!text) return;
+  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"attack",text,move:`Ação de ${m.name}`,target:"Jogadores",element:m.element,image:m.image||""});
+}
+async function toggleMonsterActive(id){
+  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
+  const m=monsters.find(x=>x.id===id); if(!m) return;
+  const{db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"monsters",id),{active:!(m.active!==false)});
+}
+async function deleteMonster(id){
+  if(!canEditSheets()) return alert("Somente Host/GM pode excluir monstro.");
+  if(!confirm("Excluir monstro da mesa?")) return;
+  const{db,doc,deleteDoc}=fb();
+  await deleteDoc(doc(db,"monsters",id));
+}
+async function addSessionLogDirect({role="Sistema",author="Hollow Break",kind="system",text="",image="",element="",move="",target=""}){
+  const{db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"sessionLog")),{
+    role,author,kind,text,image,element,move,target,
+    time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+    createdAt:serverTimestamp(),createdAtText:new Date().toISOString()
+  });
+}
 function renderGmManage(){const box=document.getElementById("gmManageList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)}</small></div><div><button onclick="toggleGm('${c.id}')">${c.gm?"Remover GM":"Tornar GM"}</button></div></div>`).join("")}
 async function toggleGm(id){if(!isOwner())return alert("Somente o Host pode transformar alguém em GM.");const c=characters.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),{gm:!c.gm});alert(c.gm?"GM removido.":"Jogador transformado em GM.")}
-function renderSelects(){const gm=document.getElementById("gmLoginSelect"),edit=document.getElementById("editSelect");if(gm){const g=characters.filter(c=>c.gm);gm.innerHTML=g.length?g.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha GM</option>`}if(edit){edit.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha</option>`}}
+function renderSelects(){
+  const gm=document.getElementById("gmLoginSelect"),edit=document.getElementById("editSelect");
+  if(gm){const g=characters.filter(c=>c.gm);gm.innerHTML=g.length?g.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha GM</option>`}
+  if(edit){edit.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Nenhuma ficha</option>`}
+  const actor=document.getElementById("chatActor");
+  if(actor){actor.innerHTML=characters.length?characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.player)}</option>`).join(""):`<option value="">Sem personagens</option>`}
+  const target=document.getElementById("chatTarget");
+  if(target){
+    const charOpts=characters.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join("");
+    const monOpts=monsters.map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} [monstro]</option>`).join("");
+    target.innerHTML=`<option value="">Sem alvo</option>${charOpts}${monOpts}`;
+  }
+}
 function gmLogin(){const id=document.getElementById("gmLoginSelect").value;const c=characters.find(x=>x.id===id);if(!c||!c.gm)return alert("Essa ficha não é GM.");sessionStorage.setItem("hollow_break_gm_id",id);alert(`Você entrou como GM: ${c.name}`);renderAll()}
 function gmLogout(){sessionStorage.removeItem("hollow_break_gm_id");renderAll()}
 async function setOwnerPassword(){const pass=document.getElementById("ownerPass").value.trim();if(pass.length<4)return alert("Use senha com 4+ caracteres.");const{db,doc,getDoc,setDoc}=fb();const ref=doc(db,"game","owner");const snap=await getDoc(ref);if(snap.exists()&&snap.data().passwordHash)return alert("Já existe senha de Host.");await setDoc(ref,{passwordHash:await simpleHash(pass)});alert("Senha criada.")}
 async function ownerLogin(){const pass=document.getElementById("ownerPass").value.trim();const{db,doc,getDoc}=fb();const snap=await getDoc(doc(db,"game","owner"));if(!snap.exists())return alert("Crie a senha primeiro.");if(await simpleHash(pass)===snap.data().passwordHash){sessionStorage.setItem("hollow_break_owner_logged","true");alert("Você entrou como Host.")}else alert("Senha errada.");renderAll()}
 function ownerLogout(){sessionStorage.removeItem("hollow_break_owner_logged");renderAll()}
-function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[4]);document.getElementById("editSelect").value=id;loadEditCharacter()}
+function quickLoadEdit(id){openTab("host",document.querySelectorAll(".tab-btn")[5]);document.getElementById("editSelect").value=id;loadEditCharacter()}
 function loadEditCharacter(){const id=document.getElementById("editSelect").value,c=characters.find(x=>x.id===id);if(!c)return;setVal("editName",c.name);setVal("editCodename",c.codename);setVal("editPlayer",c.player);setVal("editLevel",c.level||1);setVal("editRace",c.race||"Humano");setVal("editClass",c.className||"Executor");setVal("editEther",c.ether||"Físico");["forca","agilidade","vitalidade","intelecto","sensibilidade","carisma"].forEach(k=>setVal("edit"+cap(k)+"Base",c.baseStats?.[k]??0));setVal("editWeaponType",c.weaponType||"Espadas");setVal("editWeapon",c.weapon);setVal("editPe",c.pe||5);setVal("editSkills",c.skills);setVal("editPhysical",c.physical);setVal("editUltimate",c.ultimate);setVal("editStory",c.story);updateEditDerived()}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v||""}
@@ -561,7 +838,7 @@ function characterCardHtml(c){return `<div class="export-card" id="exportCard"><
 async function exportCharacterImage(){await exportImageFromCharacter(makeCharacter())}async function exportSavedImage(id){const c=characters.find(x=>x.id===id);if(c)await exportImageFromCharacter(c)}async function exportImageFromCharacter(c){const hidden=document.getElementById("hiddenRender");hidden.innerHTML=characterCardHtml(c);const canvas=await html2canvas(document.getElementById("exportCard"),{backgroundColor:"#050505",scale:2});const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download=`${(c.name||"personagem").replaceAll(" ","_")}_ficha.png`;a.click();hidden.innerHTML=""}
 function renderRules(){document.getElementById("raceRules").innerHTML=Object.entries(raceData).map(([r,o])=>`<p><b>${r}</b>: ${o.d}<br>${Object.entries(o.b).map(([k,v])=>`<span class="tag">+${v} ${k}</span>`).join("")}</p>`).join("");document.getElementById("elementRules").innerHTML=Object.entries(elementData).map(([e,d])=>`<p><b>${e}</b>: ${d}</p>`).join("")}
 function escapeHtml(text){return String(text||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
-function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderRules()}
+function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules()}
 updateRaceInfo();updateElementInfo();renderAll();
 </script>
 </body>
