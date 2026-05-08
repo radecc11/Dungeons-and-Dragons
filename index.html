@@ -104,8 +104,8 @@
     .locked-screen{min-height:70vh;display:grid;place-items:center}
     .login-card{width:min(720px,100%);border:1px solid var(--border);border-radius:28px;padding:24px;background:linear-gradient(135deg,rgba(57,255,136,.10),rgba(0,0,0,.86));box-shadow:var(--glow)}
     .app-shell.locked{display:none}
-    .scene-board{border:1px solid var(--border);border-radius:22px;padding:18px;background:linear-gradient(135deg,rgba(57,255,136,.08),#080808);min-height:260px}
-    .battle-board{border:1px solid var(--pborder);border-radius:22px;padding:18px;background:linear-gradient(135deg,rgba(139,53,255,.10),#080808);min-height:260px}
+    .scene-board{border:1px solid var(--border);border-radius:28px;padding:26px;background:linear-gradient(135deg,rgba(57,255,136,.12),#080808);min-height:520px;box-shadow:0 0 30px rgba(57,255,136,.18)}
+    .battle-board{border:1px solid var(--pborder);border-radius:28px;padding:24px;background:linear-gradient(135deg,rgba(139,53,255,.14),#080808);min-height:520px}
     .turn-pill{display:inline-block;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:#06110b;color:var(--yellow2);font-weight:800;margin:4px}
     .item-secret{border:1px dashed rgba(57,255,136,.45);border-radius:14px;padding:10px;margin:8px 0;background:rgba(57,255,136,.06)}
     .account-required{border:1px solid rgba(255,68,68,.6);background:rgba(255,68,68,.08);border-radius:18px;padding:12px;margin:10px 0}
@@ -151,8 +151,7 @@
     <button class="tab-btn" onclick="openTab('skills', this)">Habilidades</button>
     <button class="tab-btn" onclick="openTab('library', this)">Fichas Online</button>
     <button class="tab-btn" onclick="openTab('personagem', this)">Personagem</button>
-    <button class="tab-btn" onclick="openTab('session', this)">Sessão</button>
-    <button class="tab-btn" onclick="openTab('scenario', this)">Cenário/Batalha</button>
+    <button class="tab-btn" onclick="openTab('scenario', this)">Batalha Online</button>
     <button class="tab-btn" onclick="openTab('monsters', this)">Monstros</button>
     <button class="tab-btn" onclick="openTab('host', this)">Host / GM</button>
     <button class="tab-btn" onclick="openTab('rules', this)">Sistema</button>
@@ -165,7 +164,7 @@
       <div class="row" style="margin-top:16px">
         <button class="green-btn" onclick="openTab('creator', document.querySelectorAll('.tab-btn')[1])">Criar ficha</button>
         <button onclick="openTab('library', document.querySelectorAll('.tab-btn')[3])">Ver fichas</button>
-        <button onclick="openTab('session', document.querySelectorAll('.tab-btn')[5])">Entrar na sessão</button>
+        <button onclick="openTab('scenario', document.querySelectorAll('.tab-btn')[5])">Entrar na sessão</button>
       </div>
     </div>
     
@@ -386,112 +385,7 @@
     </div>
   </section>
 
-<section id="session" class="tab">
-    <div class="session-layout">
-      <div class="card">
-        <h2>Sessão do RPG</h2>
-        <div class="big-session" id="sessionStatus">CARREGANDO</div>
-        <p id="sessionMsg">Conectando...</p>
-        <button onclick="joinSession()">Entrar com minha ficha</button>
-
-        <label>Minha ficha em jogo</label>
-        <select id="mySessionCharacter" onchange="setMySessionCharacter(this.value)"></select>
-
-        <div id="mySheetSummary" class="sheet-mini" style="margin-top:12px">
-          <p>Entre na sessão para ver sua ficha aqui.</p>
-        </div>
-
-        <h3 style="margin-top:16px;color:var(--yellow)">Participantes</h3>
-        <div id="partyList"></div>
-      </div>
-
-      <div class="card">
-        <div class="row">
-          <div>
-            <h2>Log da Sessão</h2>
-            <p id="chatStatusText">Chat carregando...</p>
-          </div>
-          <div class="row">
-            <button onclick="toggleChat(true)">Abrir chat</button>
-            <button class="danger-btn" onclick="toggleChat(false)">Fechar chat</button>
-            <button class="danger-btn" onclick="clearSessionLog()">Apagar log</button>
-          </div>
-        </div>
-
-        <div id="chatClosedWarning" class="chat-closed" style="display:none">
-          O chat está fechado pelo Host/GM. Jogadores não podem enviar mensagens agora.
-        </div>
-
-        <div id="sessionChat" class="chat-box"></div>
-
-        <div style="margin-top:12px">
-          <div class="row">
-            <div>
-              <label>Tipo de log</label>
-              <select id="chatType" onchange="updateAttackControls()">
-                <option value="player">Jogador: fala/ação</option>
-                <option value="attack">Ataque</option>
-                <option value="skill">Habilidade</option>
-                <option value="gm">GM: cenário/aparição</option>
-                <option value="system">Sistema</option>
-              </select>
-            </div>
-            <div>
-              <label>Personagem que agiu</label>
-              <select id="chatActor"></select>
-            </div>
-            <div>
-              <label>Elemento do ataque</label>
-              <select id="chatElement">
-                <option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Ataque / habilidade usada</label>
-              <input id="chatMoveName" placeholder="Ex: Corte Relâmpago, disparo, magia, suprema">
-            </div>
-            <div>
-              <label>Alvo</label>
-              <select id="chatTarget"></select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Imagem PNG/JPG para aparecer no log</label>
-              <label class="file-label" for="chatImageInput">Importar imagem</label>
-              <input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/webp">
-              <div id="chatImagePreview" class="image-preview">
-                <div class="row">
-                  <img id="chatImagePreviewImg" alt="Preview da imagem">
-                  <div>
-                    <b style="color:var(--yellow)">Preview anexado</b>
-                    <p>Essa imagem aparece no próximo log.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <label>Mensagem</label>
-          <textarea id="chatMessage" placeholder="Ex: GM: uma criatura saiu da Hollow... / Kael usa Corte Relâmpago..."></textarea>
-
-          <div class="row" style="margin-top:10px">
-            <button class="green-btn" onclick="sendSessionMessage()">Enviar para o log</button>
-            <button onclick="clearChatImage()">Remover imagem anexada</button>
-          </div>
-
-          <p><small>Anti-spam: espere alguns segundos entre mensagens.</small></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <section id="scenario" class="tab">
+<section id="scenario" class="tab">
     <div class="grid">
       <div class="card span-6">
         <h2>Cenário Atual</h2>
@@ -520,12 +414,12 @@
       </div>
 
       <div class="card span-6">
-        <h2>Batalha por Rounds</h2>
+        <h2>Batalha Online em Tempo Real</h2><p>Todos os ataques, monstros, rounds e eventos aparecem aqui.</p>
         <div class="battle-board">
           <h3>Round <span id="battleRoundView">1</span></h3>
           <p>Turno atual: <b id="currentTurnView">Aguardando ordem</b></p>
           <div id="turnOrderView"></div>
-          <div id="battleEventsView"></div>
+          <div id="battleEventsView"></div><div id="liveBattleMonsters" class="battle-creatures" style="margin-top:18px"></div>
         </div>
 
         <div style="margin-top:16px">
@@ -1463,6 +1357,44 @@ async function removeSecretItem(index){
   items.splice(index,1);
   const{db,doc,updateDoc}=fb();
   await updateDoc(doc(db,"game","scenario"),{secretItems:items});
+}
+
+function renderLiveBattle(){
+  const box=document.getElementById("liveBattleMonsters");
+  if(!box) return;
+  const active=monsters.filter(m=>m.active!==false && Number(m.hp)>0);
+  box.innerHTML=active.length?active.map(m=>`
+    <div class="battle-monster">
+      ${m.image?`<img src="${m.image}" alt="${escapeHtml(m.name)}">`:""}
+      <h3>${escapeHtml(m.name)}</h3>
+      <small>${escapeHtml(m.type||"-")} • ${escapeHtml(m.element||"-")}</small>
+      <div class="hpbar" style="margin-top:10px"><div class="hpfill" style="width:${Math.max(0,Math.min(100,((Number(m.hp)||0)/(Number(m.maxHp)||1))*100))}%"></div></div>
+      <p><b>PV:</b> ${m.hp}/${m.maxHp}</p>
+      <p><b>Pressão:</b> ${m.pressure||0}/${m.maxPressure||0}</p>
+      <div class="row">
+        <button onclick="quickAttackMonster('${m.id}')">Atacar</button>
+        <button onclick="monsterAutoTurn()">Forçar ataque do monstro</button>
+      </div>
+    </div>
+  `).join(""):"<p>Nenhum monstro ativo na batalha.</p>";
+}
+async function quickAttackMonster(id){
+  const m=monsters.find(x=>x.id===id);
+  if(!m) return;
+  const charId=getMySessionCharacterId();
+  const c=characters.find(x=>x.id===charId);
+  if(!c) return alert("Escolha seu personagem na aba Personagem.");
+  const dmg=Math.max(1,Math.floor((Number(c.force)||0)+(Number(c.agility)||0)/2));
+  await changeMonsterHp(id,-dmg,charId);
+  await addSessionLogDirect({
+    role:"Jogador",
+    author:c.name,
+    kind:"attack",
+    move:"Ataque rápido",
+    target:m.name,
+    element:c.ether,
+    text:`${c.name} atacou ${m.name} causando ${dmg} de dano.`
+  });
 }
 function renderBattle(){
   const b=scenarioData.battle||{round:1,turnOrder:[],turnIndex:0,events:[]};
