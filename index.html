@@ -719,51 +719,84 @@ function updateGate(){
   if(gate) gate.style.display=logged?"none":"grid";
   if(app) app.classList.toggle("locked",!logged);
   const gateStatus=document.getElementById("gateStatus");
-  if(gateStatus){gateStatus.textContent=logged?`Logado como ${currentAccountName()}`:"Você ainda não está logado.";gateStatus.className=logged?"ok":"warning";}
+  if(gateStatus){
+    gateStatus.textContent=logged?`Logado como ${currentAccountName()}`:"Você ainda não está logado.";
+    gateStatus.className=logged?"ok":"warning";
+  }
+}
+function getGateCredentials(){
+  const username=((document.getElementById("gateUser")?.value || document.getElementById("accountUser")?.value || "")).trim().toLowerCase();
+  const pass=((document.getElementById("gatePass")?.value || document.getElementById("accountPass")?.value || "")).trim();
+  return {username,pass};
+}
+function saveLocalAccount(username,passHash){
+  const local=JSON.parse(localStorage.getItem("hb_accounts_local")||"{}");
+  local[username]={username,passwordHash:passHash};
+  localStorage.setItem("hb_accounts_local",JSON.stringify(local));
+}
+function getLocalAccount(username){
+  const local=JSON.parse(localStorage.getItem("hb_accounts_local")||"{}");
+  return local[username]||null;
 }
 async function createAccountFromGate(){
-  const au=document.getElementById("accountUser");
-  const ap=document.getElementById("accountPass");
-  if(au) au.value=(document.getElementById("gateUser").value||"").trim();
-  if(ap) ap.value=(document.getElementById("gatePass").value||"").trim();
   await createAccount();
-  updateGate();
 }
 async function loginAccountFromGate(){
-  const au=document.getElementById("accountUser");
-  const ap=document.getElementById("accountPass");
-  if(au) au.value=(document.getElementById("gateUser").value||"").trim();
-  if(ap) ap.value=(document.getElementById("gatePass").value||"").trim();
   await loginAccount();
-  updateGate();
 }
 async function createAccount(){
-  if(!window.firebaseReady) return alert("Firebase não conectou.");
-  const username=((document.getElementById("accountUser")?.value || document.getElementById("gateUser")?.value || "")).trim().toLowerCase();
-  const pass=((document.getElementById("accountPass")?.value || document.getElementById("gatePass")?.value || "")).trim();
+  const {username,pass}=getGateCredentials();
   if(username.length<3) return alert("Usuário precisa ter pelo menos 3 caracteres.");
   if(!/^[a-z0-9_.-]+$/.test(username)) return alert("Use só letras, números, ponto, traço ou underline no usuário.");
   if(pass.length<4) return alert("Senha/código precisa ter pelo menos 4 caracteres.");
-  const{db,doc,getDoc,setDoc,serverTimestamp}=fb();
-  const ref=doc(db,"accounts",username);
-  const snap=await getDoc(ref);
-  if(snap.exists()) return alert("Esse usuário já existe.");
-  await setDoc(ref,{username,passwordHash:await simpleHash(pass),createdAt:serverTimestamp()});
+
+  const passwordHash=await simpleHash(pass);
+
+  if(window.firebaseReady && fb()){
+    try{
+      const{db,doc,getDoc,setDoc,serverTimestamp}=fb();
+      const ref=doc(db,"accounts",username);
+      const snap=await getDoc(ref);
+      if(snap.exists()) return alert("Esse usuário já existe. Clique em Entrar.");
+      await setDoc(ref,{username,passwordHash,createdAt:serverTimestamp()});
+    }catch(err){
+      console.warn("Firebase falhou, salvando conta local:",err);
+    }
+  }
+
+  saveLocalAccount(username,passwordHash);
   sessionStorage.setItem("hb_account_user",username);
   alert("Conta criada e logada.");
   renderAll();
   updateGate();
 }
 async function loginAccount(){
-  if(!window.firebaseReady) return alert("Firebase não conectou.");
-  const username=((document.getElementById("accountUser")?.value || document.getElementById("gateUser")?.value || "")).trim().toLowerCase();
-  const pass=((document.getElementById("accountPass")?.value || document.getElementById("gatePass")?.value || "")).trim();
+  const {username,pass}=getGateCredentials();
   if(!username||!pass) return alert("Digite usuário e senha/código.");
-  const{db,doc,getDoc}=fb();
-  const snap=await getDoc(doc(db,"accounts",username));
-  if(!snap.exists()) return alert("Conta não encontrada.");
-  const acc=snap.data();
-  if(await simpleHash(pass)!==acc.passwordHash) return alert("Senha/código errado.");
+  const passwordHash=await simpleHash(pass);
+
+  let ok=false;
+
+  if(window.firebaseReady && fb()){
+    try{
+      const{db,doc,getDoc}=fb();
+      const snap=await getDoc(doc(db,"accounts",username));
+      if(snap.exists()){
+        ok=(snap.data().passwordHash===passwordHash);
+      }
+    }catch(err){
+      console.warn("Firebase falhou no login, tentando local:",err);
+    }
+  }
+
+  if(!ok){
+    const local=getLocalAccount(username);
+    if(local) ok=(local.passwordHash===passwordHash);
+  }
+
+  if(!ok) return alert("Conta não encontrada ou senha/código errado.");
+
+  saveLocalAccount(username,passwordHash);
   sessionStorage.setItem("hb_account_user",username);
   alert("Conta logada.");
   renderAll();
@@ -774,12 +807,6 @@ function logoutAccount(){
   alert("Conta desconectada.");
   renderAll();
   updateGate();
-}function updateAccountStatus(){
-  const el=document.getElementById("accountStatus");
-  if(!el) return;
-  const user=currentAccountName();
-  el.textContent=user?`Conta logada: ${user}`:"Nenhuma conta logada.";
-  el.className=user?"ok":"warning";
 }
 function isOwner(){return sessionStorage.getItem("hollow_break_owner_logged")==="true"}function getLoggedGmId(){return sessionStorage.getItem("hollow_break_gm_id")||""}function getLoggedGmCharacter(){return characters.find(c=>c.id===getLoggedGmId()&&c.gm)}function isGmLogged(){return Boolean(getLoggedGmCharacter())}function canEditSheets(){return isOwner()||(isGmLogged()&&sessionData.open)}
 function updateOwnerStatus(){const el=document.getElementById("ownerStatus"),gmAccess=document.getElementById("gmAccess"),gmStatus=document.getElementById("gmLoginStatus"),gmChar=getLoggedGmCharacter();if(isOwner()){el.textContent="Modo HOST ativo";el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent="Acesso liberado. Você é o Host.";gmAccess.className="ok"}}else if(gmChar){el.textContent=`Modo GM: ${gmChar.name}`;el.style.color="var(--ok)";if(gmAccess){gmAccess.textContent=sessionData.open?"Acesso liberado. Você é GM.":"GM edita só com sessão aberta.";gmAccess.className=sessionData.open?"ok":"warning"}}else{el.textContent="Modo visitante";el.style.color="var(--yellow2)";if(gmAccess){gmAccess.textContent="Acesso bloqueado.";gmAccess.className="warning"}}if(gmStatus){gmStatus.textContent=gmChar?`GM logado: ${gmChar.name}`:"GM não logado.";gmStatus.className=gmChar?"ok":"warning"}}
