@@ -369,7 +369,7 @@
         <h2>Meus Personagens</h2>
         <p>Escolha uma ficha da sua código para ver o resumo e entrar na batalha.</p>
         <label>Personagem ativo</label>
-        <select id="activeCharacterSelect" onchange="setMySessionCharacter(this.value); renderPersonagemTab();"></select>
+        <select id="activeCharacterSelect" onchange="setMySessionCharacter(this.value)"></select>
         <div id="activeCharacterSheet" class="pcard"><p>Nenhum personagem selecionado.</p></div>
         <div class="row" style="margin-top:12px">
           <button onclick="joinSessionFromPersonagem()">Entrar na sessão com este personagem</button>
@@ -387,20 +387,7 @@
         <h3 style="margin-top:16px;color:var(--yellow)">Monstros no cenário</h3>
         <div id="personagemMonsters" class="battle-creatures"></div>
       </div>
-      <div class="card span-12">
-        <h2>Solicitar Ação ao Host/GM</h2>
-        <p>Escolha uma habilidade ou ataque básico e envie o pedido. O Host/GM aprova no log.</p>
-        <div class="row">
-          <div><label>Habilidade / ataque</label><select id="actionSkillSelect"></select></div>
-          <div><label>Alvo</label><select id="actionTargetSelect"></select></div>
-        </div>
-        <label>Descrição da ação</label>
-        <textarea id="actionRequestText" placeholder="Ex: quero usar Corte Relâmpago no Etéreo da frente"></textarea>
-        <button class="green-btn" onclick="requestAction()">Pedir ação ao Host/GM</button>
-        <h3 style="margin-top:16px;color:var(--yellow)">Pedidos pendentes</h3>
-        <div id="actionRequestsList"></div>
-      </div>
-    </div>
+          </div>
   </section>
 
 <section id="scenario" class="tab">
@@ -484,19 +471,7 @@
         <button class="green-btn" onclick="saveScene()">Atualizar cenário</button>
       </div>
 
-      <div class="card span-12">
-        <h2>Itens Ocultos do Host</h2>
-        <p>Somente Host vê e edita.</p>
-        <div id="hostOnlyItems"></div>
-        <div id="hostItemEditor">
-          <label>Nome do item secreto</label>
-          <input id="secretItemName" placeholder="Ex: Núcleo Éter instável">
-          <label>Descrição secreta</label>
-          <textarea id="secretItemDesc" placeholder="O que só o Host sabe sobre esse item"></textarea>
-          <button onclick="addSecretItem()">Adicionar item secreto</button>
-        </div>
-      </div>
-    </div>
+          </div>
   </section>
 
 <section id="monsters" class="tab"><div class="card span-12" id="monsterPermissionWarning"><h2>Área de Monstros</h2><p>Somente Host ou GM pode criar, spawnar e controlar monstros.</p></div>
@@ -718,9 +693,16 @@ async function startSession(){if(!isOwner())return alert("Somente o Host pode in
 async function endSession(){if(!isOwner())return alert("Somente o Host pode encerrar.");const{db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),{open:false,party:[],chatOpen:false});await addSystemLog("Sessão encerrada pelo Host.");alert("Sessão encerrada.")}
 async function joinSession(){if(!sessionData.open)return alert("Sessão fechada.");const own=characters.filter(c=>c.ownerAccount===currentAccountName()); if(!own.length)return alert("Você não tem ficha nessa código."); const choice=prompt("Digite o número da sua ficha:\n"+own.map((c,i)=>`${i+1} - ${c.name} (${c.player})`).join("\n"));const c=own[Number(choice)-1];if(!c)return alert("Ficha inválida.");const party=sessionData.party||[];if(!party.includes(c.id))party.push(c.id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"game","session"),{party});sessionStorage.setItem("hollow_break_player_id",c.id);await addSystemLog(`${c.name} entrou na sessão.`);alert("Você entrou na sessão.")}
 function getMySessionCharacterId(){
-  return sessionStorage.getItem("hollow_break_player_id") || "";
+  return sessionStorage.getItem("hb_my_character") || sessionStorage.getItem("hollow_break_player_id") || "";
 }
-function setMySessionCharacter(id){if(id){sessionStorage.setItem("hb_my_character",id);}renderAll();}
+function setMySessionCharacter(id){
+  if(id){
+    sessionStorage.setItem("hb_my_character",id);
+    sessionStorage.setItem("hollow_break_player_id",id);
+  }
+  renderPersonagemTab();
+  renderBattleActionSelects();
+}
 
 function renderSession(){
   document.getElementById("sessionStatus").textContent=sessionData.open?"ABERTA":"FECHADA";
@@ -1448,7 +1430,7 @@ async function removeSecretItem(index){
 
 
 function renderBattleActionSelects(){
-  const c=ensureSelectedCharacter();
+  const c=selectedCharacter();
   const skillSel=document.getElementById("battleActionSkillSelect");
   const targetSel=document.getElementById("battleActionTargetSelect");
 
@@ -1456,64 +1438,47 @@ function renderBattleActionSelects(){
     const ownSkills=c?skills.filter(s=>s.characterId===c.id):[];
     skillSel.innerHTML=c
       ? `<option value="basic">Ataque básico (${escapeHtml(c.ether||"")})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("")
-      : `<option value="">Escolha um personagem</option>`;
+      : `<option value="">Escolha um personagem na aba Personagem</option>`;
   }
 
   if(targetSel){
-    const active=monsters.filter(m=>m.active!==false&&Number(m.hp)>0);
+    const active=battleMonsters();
     targetSel.innerHTML=active.length
       ? active.map(m=>`<option value="${m.id}">${escapeHtml(m.name)} - PV ${m.hp}/${m.maxHp}</option>`).join("")
       : `<option value="">Nenhum monstro ativo</option>`;
   }
-
-  const oldActionSkill=document.getElementById("actionSkillSelect");
-  if(oldActionSkill && c){
-    const ownSkills=skills.filter(s=>s.characterId===c.id);
-    oldActionSkill.innerHTML=`<option value="basic">Ataque básico (${escapeHtml(c.ether||"")})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
-  }
-  const oldActionTarget=document.getElementById("actionTargetSelect");
-  if(oldActionTarget){
-    oldActionTarget.innerHTML=monsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`).join("") || `<option value="">Nenhum monstro ativo</option>`;
-  }
-}
-async function requestBattleAction(){
-  const c=ensureSelectedCharacter();
-  if(!c) return alert("Escolha ou crie seu personagem na aba Personagem.");
-  if(!sessionData.open) return alert("A sessão precisa estar aberta.");
+}async function requestBattleAction(){
+  const c=selectedCharacter();
+  if(!c) return alert("Escolha seu personagem na aba Personagem.");
+  if(!sessionData.open) return alert("A sessão precisa estar aberta. Host deve iniciar.");
   const skillId=document.getElementById("battleActionSkillSelect")?.value||"basic";
   const targetId=document.getElementById("battleActionTargetSelect")?.value||"";
-  const m=monsters.find(x=>x.id===targetId);
+  const m=battleMonsters().find(x=>x.id===targetId);
+  if(!m) return alert("Escolha um monstro ativo como alvo.");
   const skill=skills.find(s=>s.id===skillId);
-  const text=(document.getElementById("battleActionText")?.value||"").trim() || `${c.name} quer usar ${skill?skill.name:"Ataque básico"} em ${m?m.name:"um alvo"}.`;
+  const text=(document.getElementById("battleActionText")?.value||"").trim() || `${c.name} quer usar ${skill?skill.name:"Ataque básico"} em ${m.name}.`;
   const req={
-    characterId:c.id,
-    characterName:c.name,
-    ownerAccount:c.ownerAccount||"visitante",
-    skillId,
-    skillName:skill?skill.name:"Ataque básico",
-    element:skill?skill.element:c.ether,
-    target:m?m.name:"",
-    text,
-    status:"pending",
-    createdAtText:new Date().toISOString()
+    characterId:c.id, characterName:c.name, ownerAccount:c.ownerAccount||"visitante",
+    skillId, skillName:skill?skill.name:"Ataque básico", element:skill?skill.element:c.ether,
+    target:m.name, targetId:m.id, text, status:"pending", createdAtText:new Date().toISOString()
   };
   const{db,collection,doc,setDoc,serverTimestamp}=fb();
   await setDoc(doc(collection(db,"actionRequests")),{...req,createdAt:serverTimestamp()});
-  await addSessionLogDirect({role:"Sistema",author:"Pedido de ação",kind:"system",text:`${c.name} pediu ação: ${req.skillName} em ${req.target||"sem alvo"}. Aguardando Host/GM.`,element:req.element});
+  await addSessionLogDirect({role:"Sistema",author:"Pedido de ação",kind:"system",text:`${c.name} pediu ação: ${req.skillName} em ${m.name}. Aguardando Host/GM.`,element:req.element});
   setVal("battleActionText","");
   alert("Pedido enviado para o Host/GM.");
 }
-async function directBattleAttack(){
-  const c=ensureSelectedCharacter();
+async function directBattleAttack(forcedTargetId=""){
+  const c=selectedCharacter();
   if(!c) return alert("Escolha seu personagem na aba Personagem.");
-  const targetId=document.getElementById("battleActionTargetSelect")?.value||"";
+  const targetId=forcedTargetId || document.getElementById("battleActionTargetSelect")?.value || "";
   if(!targetId) return alert("Escolha um monstro ativo.");
   await quickAttackMonster(targetId);
 }
 function renderLiveBattle(){
   const box=document.getElementById("liveBattleMonsters");
   if(!box) return;
-  const active=monsters.filter(m=>m.active!==false && Number(m.hp)>0);
+  const active=battleMonsters();
   box.innerHTML=active.length?active.map(m=>`
     <div class="battle-monster big-monster-card ${getMonsterClass(m.element)}">
       ${m.image?`<img src="${m.image}" alt="${escapeHtml(m.name)}">`:""}
@@ -1523,13 +1488,12 @@ function renderLiveBattle(){
       <p><b>PV:</b> ${m.hp}/${m.maxHp}</p>
       <p><b>Pressão:</b> ${m.pressure||0}/${m.maxPressure||0}</p>
       <div class="row">
-        <button onclick="quickAttackMonster('${m.id}')">Atacar</button>
-        ${isHostOrGm()?`<button onclick="monsterAutoTurn()">Forçar ataque do monstro</button>`:""}
+        <button onclick="directBattleAttack('${m.id}')">Atacar este</button>
+        ${isHostOrGm()?`<button onclick="monsterAutoTurn()">Monstro age</button>`:""}
       </div>
     </div>
-  `).join(""):"<p>Nenhum monstro ativo na batalha.</p>";
-}
-async function quickAttackMonster(id){
+  `).join(""):"<p>Nenhum monstro ativo na batalha. Host/GM pode spawnar usando o bloco acima.</p>";
+}async function quickAttackMonster(id){
   const m=monsters.find(x=>x.id===id);
   if(!m) return;
   const charId=getMySessionCharacterId();
@@ -1611,7 +1575,7 @@ async function addBattleEvent(){
   await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Evento de batalha: ${text}`});
   setVal("battleEventText","");
 }
-function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderSession();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();renderScenario();renderPersonagemTab();renderLiveBattle();renderBattleActionSelects();updateMonsterSelects();updateGmOnlyControls();updateGate()}
+function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();renderScenario();renderPersonagemTab();renderLiveBattle();renderBattleActionSelects();updateMonsterSelects();updateGmOnlyControls();updateGate()}
 updateRaceInfo();updateElementInfo();renderAll();
 updateGate();
 </script>
