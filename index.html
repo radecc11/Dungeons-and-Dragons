@@ -233,6 +233,7 @@
     <button class="tab-btn active" onclick="openTab('home',this)">Início</button>
     <button class="tab-btn" onclick="openTab('creator',this)">Criar Ficha</button>
     <button class="tab-btn" onclick="openTab('personagem',this)">Personagem</button>
+    <button class="tab-btn" onclick="openTab('session',this)">Sessão</button>
     <button class="tab-btn" onclick="openTab('battle',this)">Batalha Online</button>
     <button class="tab-btn" onclick="openTab('skills',this)">Habilidades</button>
     <button class="tab-btn" onclick="openTab('library',this)">Fichas Online</button>
@@ -244,11 +245,12 @@
   <section id="home" class="tab active">
     <div class="card">
       <h2>Bem-vindo ao Hollow Break</h2>
-      <p>Coloque seu código, crie sua ficha, escolha seu personagem e jogue pela aba Batalha Online.</p>
+      <p>Coloque seu código, crie sua ficha, entre na sessão e jogue pela aba Batalha Online.</p>
       <div class="row">
         <button class="okbtn" onclick="openTab('creator',document.querySelectorAll('.tab-btn')[1])">Criar Ficha</button>
         <button onclick="openTab('personagem',document.querySelectorAll('.tab-btn')[2])">Escolher Personagem</button>
-        <button onclick="openTab('battle',document.querySelectorAll('.tab-btn')[3])">Ir para Batalha</button>
+        <button onclick="openTab('session',document.querySelectorAll('.tab-btn')[3])">Ver Sessão</button>
+        <button onclick="openTab('battle',document.querySelectorAll('.tab-btn')[4])">Ir para Batalha</button>
       </div>
     </div>
   </section>
@@ -316,6 +318,7 @@
         <div id="characterBio" style="margin-top:14px"><p>Nenhum personagem selecionado.</p></div>
         <div class="row">
           <button onclick="joinBattle()">Entrar na sessão</button>
+          <button class="danger" onclick="leaveBattle()">Sair da sessão</button>
           <button class="okbtn" onclick="startSession()">Iniciar sessão</button>
         </div>
       </div>
@@ -325,6 +328,44 @@
           <h3 id="smallSceneTitle">Sem cenário</h3>
           <p id="smallSceneDesc">Aguardando Host/GM.</p>
           <div id="smallSceneImage"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="session" class="tab">
+    <div class="grid">
+      <div class="card span-5">
+        <h2>Sessão Online</h2>
+        <p id="sessionStatusBig">Carregando sessão...</p>
+        <div class="row">
+          <button onclick="joinBattle()">Entrar com meu personagem</button>
+          <button class="danger" onclick="leaveBattle()">Sair da sessão</button>
+        </div>
+        <div class="row gm-only" style="margin-top:10px">
+          <button class="okbtn" onclick="startSession()">Abrir sessão</button>
+          <button class="danger" onclick="closeSession()">Fechar sessão</button>
+          <button onclick="buildTurns()">Montar turnos</button>
+        </div>
+        <hr style="border-color:var(--line);margin:18px 0">
+        <h3>Meu personagem ativo</h3>
+        <div id="sessionMyCharacter"><p>Nenhum personagem selecionado.</p></div>
+      </div>
+      <div class="card span-7">
+        <h2>Quem está na sessão</h2>
+        <p>Essa lista fica online pelo Firestore. Quando alguém entra, aparece aqui para todo mundo.</p>
+        <div id="sessionPlayersList"></div>
+      </div>
+      <div class="card span-12">
+        <h2>Resumo da sessão</h2>
+        <div class="stats">
+          <div class="stat"><label>Status</label><strong id="sessionStatOpen">-</strong></div>
+          <div class="stat"><label>Jogadores</label><strong id="sessionStatPlayers">0</strong></div>
+          <div class="stat"><label>Monstros</label><strong id="sessionStatMonsters">0</strong></div>
+          <div class="stat"><label>Round</label><strong id="sessionStatRound">1</strong></div>
+          <div class="stat"><label>Turno</label><strong id="sessionStatTurn">-</strong></div>
+          <div class="stat"><label>Host</label><strong id="sessionStatHost">-</strong></div>
         </div>
       </div>
     </div>
@@ -531,7 +572,7 @@
 
 <script>
 let faceData="",sceneImage="",monsterImage="";
-let characters=[],skills=[],monsterTemplates=[],battleMonsters=[],logs=[];
+let characters=[],skills=[],monsterTemplates=[],battleMonsters=[],logs=[],sessionPlayers=[];
 let sessionData={open:false,party:[],round:1,turnOrder:[],turnIndex:0,scene:{title:"",desc:"",image:""}};
 const DEFAULT_HOST_CODE="HOLLOW2026";
 
@@ -547,7 +588,7 @@ function fb(){return window.hbFirebase}
 function code(){return localStorage.getItem("hb_player_code")||"visitante"}
 function setPlayerCode(){const v=document.getElementById("playerCodeInput").value.trim().toLowerCase();if(v.length<2)return alert("Digite um código.");localStorage.setItem("hb_player_code",v);updateCode();renderAll()}
 function updateCode(){const c=code();document.getElementById("playerCodeStatus").textContent="Código ativo: "+c;document.getElementById("playerCodeInput").value=c}
-function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");btn.classList.add("active");renderAll()}
+function openTab(id,btn){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");if(btn)btn.classList.add("active");renderAll()}
 function isOwner(){return sessionStorage.getItem("hb_owner")==="true"}
 function isGmLogged(){return Boolean(getGmChar())}
 function canGM(){return isOwner()||isGmLogged()}
@@ -559,6 +600,7 @@ window.addEventListener("firebase-ready",()=>{
   listen("monsterTemplates",d=>{monsterTemplates=d;renderAll()});
   listen("battleMonsters",d=>{battleMonsters=d;renderAll()});
   listen("battleLogs",d=>{logs=d.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()});
+  listen("sessionPlayers",d=>{sessionPlayers=d;renderAll()});
   const {db,doc,onSnapshot,setDoc}=fb();
   const ref=doc(db,"game","session");
   onSnapshot(ref,async snap=>{
@@ -611,8 +653,44 @@ function renderBio(){
   box.innerHTML=`<div class="bio-card"><div class="bio-img">${c.face?`<img src="${c.face}">`:"Sem imagem"}</div><div><h2>${escape(c.name)}</h2><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)} • Nível ${c.level}</p><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0}</p><p><b>Especializações:</b> ${escape(c.skills||"-")}</p><p><b>Arma:</b> ${escape(c.weapon||"-")}</p><p><b>Bio:</b> ${escape(c.story||"Sem bio.")}</p></div></div>`
 }
 
-async function startSession(){if(!isOwner())return alert("Só Host inicia sessão.");const {db,doc,setDoc}=fb();sessionData.open=true;await setDoc(doc(db,"game","session"),sessionData);await log("Sistema","Sessão iniciada.","system")}
-async function joinBattle(){const c=currentChar();if(!c)return alert("Escolha personagem.");if(!sessionData.open)return alert("Sessão fechada.");const party=sessionData.party||[];if(!party.includes(c.id))party.push(c.id);const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"game","session"),{party});alert(c.name+" entrou na sessão.")}
+async function startSession(){
+  if(!canGM())return alert("Só Host/GM inicia sessão. Use o código HOLLOW2026 na aba Host / GM.");
+  const {db,doc,setDoc}=fb();
+  sessionData.open=true;sessionData.startedAt=new Date().toLocaleString("pt-BR");
+  await setDoc(doc(db,"game","session"),sessionData);
+  await log("Sistema","Sessão online aberta.","system");
+}
+async function closeSession(){
+  if(!canGM())return alert("Só Host/GM fecha sessão.");
+  const {db,doc,setDoc}=fb();
+  sessionData.open=false;sessionData.party=[];sessionData.turnOrder=[];sessionData.turnIndex=0;
+  await setDoc(doc(db,"game","session"),sessionData);
+  await log("Sistema","Sessão fechada pelo Host/GM.","system");
+}
+async function joinBattle(){
+  const c=currentChar();if(!c)return alert("Escolha personagem.");
+  if(!sessionData.open)return alert("Sessão fechada. O Host/GM precisa abrir a sessão.");
+  const party=sessionData.party||[];if(!party.includes(c.id))party.push(c.id);
+  const {db,doc,setDoc,updateDoc,serverTimestamp}=fb();
+  await updateDoc(doc(db,"game","session"),{party});
+  await setDoc(doc(db,"sessionPlayers",c.id),{characterId:c.id,name:c.name,player:c.player||c.ownerAccount||code(),playerCode:code(),element:c.ether||"",className:c.className||"",face:c.face||"",online:true,lastSeen:serverTimestamp(),joinedAt:serverTimestamp()});
+  await log("Sistema",`${c.name} entrou na sessão.`,"system","",c.ether);
+  alert(c.name+" entrou na sessão.");
+}
+async function leaveBattle(){
+  const c=currentChar();if(!c)return alert("Escolha personagem.");
+  const party=(sessionData.party||[]).filter(id=>id!==c.id);
+  const {db,doc,updateDoc,deleteDoc}=fb();
+  await updateDoc(doc(db,"game","session"),{party});
+  await deleteDoc(doc(db,"sessionPlayers",c.id));
+  await log("Sistema",`${c.name} saiu da sessão.`,"system");
+}
+async function touchSessionPlayer(){
+  const c=currentChar();
+  if(!c||!sessionData.open||!(sessionData.party||[]).includes(c.id))return;
+  const {db,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(db,"sessionPlayers",c.id),{characterId:c.id,name:c.name,player:c.player||c.ownerAccount||code(),playerCode:code(),element:c.ether||"",className:c.className||"",face:c.face||"",online:true,lastSeen:serverTimestamp()},{merge:true});
+}
 async function saveScene(){if(!canGM())return alert("Só Host/GM.");sessionData.scene={title:val("sceneTitle"),desc:val("sceneDesc"),image:sceneImage||sessionData.scene?.image||""};const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"game","session"),{scene:sessionData.scene});await log("GM","Cenário atualizado.","gm",sessionData.scene.image)}
 function renderScene(){
   const s=sessionData.scene||{};["sceneTitleView","smallSceneTitle"].forEach(id=>setText(id,s.title||"Sem cenário"));["sceneDescView","smallSceneDesc"].forEach(id=>setText(id,s.desc||"Aguardando Host/GM."));
@@ -712,6 +790,45 @@ function nextTurn(){if(!canGM())return alert("Só Host/GM.");if(!sessionData.tur
 async function saveSession(){const {db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),sessionData)}
 function renderRound(){setText("roundView",sessionData.round||1);const id=sessionData.turnOrder?.[sessionData.turnIndex];const c=characters.find(x=>x.id===id);const m=battleMonsters.find(x=>x.id===id);setText("turnView",c?.name||m?.name||"Aguardando")}
 
+function renderSessionTab(){
+  const open=Boolean(sessionData.open);
+  setText("sessionStatusBig",open?"Sessão aberta: jogadores podem entrar." : "Sessão fechada: aguarde o Host/GM abrir.");
+  setText("sessionStatOpen",open?"Aberta":"Fechada");
+  setText("sessionStatPlayers",sessionPlayers.length);
+  setText("sessionStatMonsters",battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).length);
+  setText("sessionStatRound",sessionData.round||1);
+  const turnId=sessionData.turnOrder?.[sessionData.turnIndex];
+  const turnChar=characters.find(c=>c.id===turnId);
+  const turnMon=battleMonsters.find(m=>m.id===turnId);
+  setText("sessionStatTurn",turnChar?.name||turnMon?.name||"-");
+  setText("sessionStatHost",canGM()?"Você":"Online pelo Firestore");
+
+  const c=currentChar();
+  const my=document.getElementById("sessionMyCharacter");
+  if(my){
+    my.innerHTML=c?`<div class="char-card"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${escape(c.name)}</h3><p>${escape(c.className)} • ${escape(c.ether)}</p><p>Código: ${escape(c.ownerAccount||code())}</p></div></div>`:"<p>Nenhum personagem selecionado.</p>";
+  }
+
+  const box=document.getElementById("sessionPlayersList");
+  if(!box)return;
+  if(!sessionPlayers.length){box.innerHTML="<p>Ninguém entrou na sessão ainda.</p>";return}
+  box.innerHTML=sessionPlayers.map(p=>{
+    const inTurn=(sessionData.turnOrder||[]).includes(p.characterId);
+    const isCurrent=sessionData.turnOrder?.[sessionData.turnIndex]===p.characterId;
+    return `<div class="char-card ${isCurrent?"eletrico":""}"><div class="avatar">${p.face?`<img src="${p.face}">`:"ON"}</div><div><h3>${escape(p.name)} ${isCurrent?"<span class='pill'>Turno atual</span>":""}</h3><p>${escape(p.className||"Sem classe")} • ${escape(p.element||"Sem elemento")}</p><p>Jogador: ${escape(p.player||p.playerCode||"-")} ${inTurn?"• nos turnos":""}</p></div><div class="row gm-only"><button class="danger" onclick="kickSessionPlayer('${p.characterId}')">Remover</button></div></div>`
+  }).join("");
+}
+async function kickSessionPlayer(characterId){
+  if(!canGM())return alert("Só Host/GM remove jogador da sessão.");
+  const party=(sessionData.party||[]).filter(id=>id!==characterId);
+  const turnOrder=(sessionData.turnOrder||[]).filter(id=>id!==characterId);
+  const {db,doc,updateDoc,deleteDoc}=fb();
+  await updateDoc(doc(db,"game","session"),{party,turnOrder});
+  await deleteDoc(doc(db,"sessionPlayers",characterId));
+  await log("Sistema","Um jogador foi removido da sessão pelo Host/GM.","system");
+}
+
+
 async function setOwnerPassword(){const pass=val("ownerPass");if(pass.length<4)return alert("Senha curta.");const {db,doc,setDoc,getDoc}=fb();const ref=doc(db,"game","owner");const snap=await getDoc(ref);if(snap.exists())return alert("Senha já criada.");await setDoc(ref,{hash:await hash(pass)})}
 async function ownerLogin(){
   const pass=val("ownerPass");
@@ -767,7 +884,7 @@ function renderCharacters(){
   document.getElementById("charactersList").innerHTML=visibleChars().map(c=>`<div class="char-card" id="char-card-${c.id}"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${escape(c.name)} ${c.gm?"[GM]":""}</h3><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)}</p><p>Código: ${escape(c.ownerAccount)}</p><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0}</p></div><div class="row"><button onclick="selectCharacter('${c.id}');openTab('personagem',document.querySelectorAll('.tab-btn')[2])">Usar</button><button onclick="exportCharacterCard('${c.id}')">Exportar</button><button class="danger" onclick="deleteCharacter('${c.id}')">Apagar</button></div></div>`).join("")||"<p>Nenhuma ficha.</p>"
 }
 function updateGmOnly(){document.querySelectorAll(".gm-only").forEach(e=>e.style.display=canGM()?"":"none")}
-function renderAll(){updateCode();updateDerived();renderCharacterSelects();renderBio();renderScene();renderMonsterTemplates();renderBattleMonsters();renderSkills();renderLog();renderRound();renderGm();renderCharacters();updateGmOnly()}
+function renderAll(){updateCode();updateDerived();renderCharacterSelects();renderBio();renderScene();renderMonsterTemplates();renderBattleMonsters();renderSkills();renderLog();renderRound();renderSessionTab();renderGm();renderCharacters();updateGmOnly()}
 function val(id){return document.getElementById(id)?.value?.trim()||""}
 function num(id,d=0){return Number(document.getElementById(id)?.value||d)}
 function setVal(id,v){const e=document.getElementById(id);if(e)e.value=v}
@@ -775,6 +892,7 @@ function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
 function escape(t){return String(t||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
 async function hash(t){const d=new TextEncoder().encode(t);const h=await crypto.subtle.digest("SHA-256",d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("")}
 updateCode();updateDerived();renderAll();
+setInterval(()=>touchSessionPlayer().catch(()=>{}),30000);
 </script>
 </body>
 </html>
