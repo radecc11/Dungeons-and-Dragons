@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hollow Break RPG Online - Corrigido</title>
+  <title>Hollow Break RPG Online - Sistema V2</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root{
@@ -194,6 +194,14 @@
     .bio-img{height:180px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#090909;display:grid;place-items:center;color:#aaa}
     .hidden{display:none!important}
     .warning{color:var(--danger);font-weight:800}.success{color:var(--ok);font-weight:800}
+
+    .system-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+    .rule-card{border:1px solid var(--line);border-radius:20px;padding:16px;background:linear-gradient(180deg,#141414,#070707)}
+    .rule-card h3{margin-bottom:8px;color:#fff}
+    .formula{display:block;padding:10px 12px;border-radius:14px;background:#000;border:1px solid rgba(245,215,66,.35);color:var(--yellow);font-weight:900;margin:8px 0}
+    .bonus-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .bonus{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 10px;background:#0b0b0b;font-size:13px;color:#eee}
+    .calc-preview{margin-top:14px;border:1px solid rgba(245,215,66,.28);border-radius:20px;padding:14px;background:rgba(245,215,66,.06)}
     @media(max-width:1000px){
       main{display:block}
       nav{position:static;flex-direction:row;flex-wrap:wrap;margin-bottom:16px}
@@ -289,9 +297,16 @@
         <p id="pointsInfo">Pontos usados: 0/10</p>
         <div class="row">
           <div><label>PV</label><input id="pv" readonly></div>
-          <div><label>PE</label><input id="pe" type="number" value="5"></div>
+          <div><label>PE</label><input id="pe" readonly></div>
           <div><label>Esquiva</label><input id="esquiva" readonly></div>
         </div>
+        <div class="row">
+          <div><label>Defesa</label><input id="defesa" readonly></div>
+          <div><label>Iniciativa</label><input id="iniciativa" readonly></div>
+          <div><label>Dano Base</label><input id="danoBase" readonly></div>
+          <div><label>Carga</label><input id="carga" readonly></div>
+        </div>
+        <div id="calcPreview" class="calc-preview">Escolha raça e atributos para ver os cálculos.</div>
         <label>Especializações, escolha 3</label>
         <div class="row">
           <select id="esp1"><option>Espadas</option><option>Pistolas</option><option>Acrobacia</option><option>Hacking</option><option>Medicina</option><option>Furtividade</option><option>Mecânica</option><option>Intimidação</option></select>
@@ -541,9 +556,47 @@
 
   <section id="rules" class="tab">
     <div class="card">
-      <h2>Sistema Rápido</h2>
-      <p><b>Teste:</b> 2d6 + atributo + especialização.</p>
+      <h2>Sistema Hollow Break</h2>
+      <p>Esse sistema usa os atributos da ficha, bônus de raça e nível para calcular tudo sozinho. A ideia é ser rápido de jogar, mas com gosto de ficha de RPG de verdade.</p>
+      <div class="system-grid">
+        <div class="rule-card">
+          <h3>Criação de ficha</h3>
+          <span class="formula">10 pontos base para distribuir</span>
+          <p>Depois disso, a raça soma bônus automáticos. O total final aparece embaixo de cada atributo.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Testes</h3>
+          <span class="formula">2d6 + atributo + especialização</span>
+          <p>Use para hackear, convencer, atacar em cena narrativa, investigar, escapar e fazer manobras.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Combate</h3>
+          <span class="formula">Dano = dano da habilidade + atributo de escala</span>
+          <p>Habilidade pode escalar com Força, Agilidade, Intelecto, Sensibilidade, Vitalidade ou Carisma.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Defesa</h3>
+          <span class="formula">Esquiva = 8 + Agilidade + metade do nível</span>
+          <span class="formula">Defesa = 10 + Vitalidade + metade da Força</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Raças e bônus</h2>
+      <div class="system-grid">
+        <div class="rule-card"><h3>Humano</h3><p>Equilibrado, bom para agente técnico ou líder.</p><div class="bonus-list"><span class="bonus">+2 Intelecto</span><span class="bonus">+1 Vitalidade</span></div></div>
+        <div class="rule-card"><h3>Thireno</h3><p>Instinto, força física e leitura de perigo.</p><div class="bonus-list"><span class="bonus">+2 Força</span><span class="bonus">+2 Sensibilidade</span></div></div>
+        <div class="rule-card"><h3>Oni</h3><p>Brutal, resistente e ótimo para linha de frente.</p><div class="bonus-list"><span class="bonus">+3 Força</span><span class="bonus">+2 Sensibilidade</span></div></div>
+        <div class="rule-card"><h3>Vampiro/Banshee</h3><p>Rápido, estiloso, ameaçador e bom socialmente.</p><div class="bonus-list"><span class="bonus">+3 Carisma</span><span class="bonus">+2 Agilidade</span></div></div>
+        <div class="rule-card"><h3>Construto Inteligente</h3><p>Máquina esperta, precisa e boa para suporte/hacking.</p><div class="bonus-list"><span class="bonus">+3 Intelecto</span><span class="bonus">+2 Sensibilidade</span><span class="bonus">+1 Agilidade</span></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Elementos</h2>
       <p><b>Fogo:</b> vermelho. <b>Gelo:</b> azul. <b>Corrupção/Void/Éter:</b> roxo. <b>Físico:</b> marrom. <b>Elétrico:</b> amarelo.</p>
+      <p>Regra prática: a habilidade precisa ter o mesmo elemento principal da ficha, para não bagunçar o balanceamento.</p>
     </div>
   </section>
 </main>
@@ -611,23 +664,42 @@ window.addEventListener("firebase-ready",()=>{
 });
 function listen(col,cb){const {db,collection,onSnapshot}=fb();onSnapshot(collection(db,col),snap=>cb(snap.docs.map(d=>({id:d.id,...d.data()}))))}
 
-function updateDerived(){
-  const base={forca:num("forca"),agilidade:num("agilidade"),vitalidade:num("vitalidade"),intelecto:num("intelecto"),sensibilidade:num("sensibilidade"),carisma:num("carisma")};
+function calcularFichaAtual(){
+  const level=Math.max(1,num("level",1));
+  const base={
+    forca:num("forca"),agilidade:num("agilidade"),vitalidade:num("vitalidade"),
+    intelecto:num("intelecto"),sensibilidade:num("sensibilidade"),carisma:num("carisma")
+  };
   const bonus=raceBonus[val("race")]||{};
-  const t={};Object.keys(base).forEach(k=>t[k]=base[k]+(bonus[k]||0));
-  setText("tForca",t.forca);setText("tAgilidade",t.agilidade);setText("tVitalidade",t.vitalidade);setText("tIntelecto",t.intelecto);setText("tSensibilidade",t.sensibilidade);setText("tCarisma",t.carisma);
+  const t={};
+  Object.keys(base).forEach(k=>t[k]=base[k]+(bonus[k]||0));
   const used=Object.values(base).reduce((a,b)=>a+b,0);
-  setText("pointsInfo","Pontos usados: "+used+"/10");
-  document.getElementById("pointsInfo").className=used>10?"warning":"success";
-  setVal("pv",10+t.vitalidade*2);setVal("esquiva",5+t.agilidade);
+  const metadeNivel=Math.floor(level/2);
+  const derived={
+    pv:20+(t.vitalidade*4)+(level*3),
+    pe:8+(t.sensibilidade*2)+t.intelecto+level,
+    esquiva:8+t.agilidade+metadeNivel,
+    defesa:10+t.vitalidade+Math.floor(t.forca/2),
+    iniciativa:t.agilidade+t.sensibilidade+metadeNivel,
+    danoBase:2+Math.floor(t.forca/2)+Math.floor(t.agilidade/3),
+    carga:(t.forca*5)+(t.vitalidade*2)
+  };
+  return {base,t,used,level,bonus,derived};
 }
-function getTotals(){
-  const base={forca:num("forca"),agilidade:num("agilidade"),vitalidade:num("vitalidade"),intelecto:num("intelecto"),sensibilidade:num("sensibilidade"),carisma:num("carisma")};
-  const bonus=raceBonus[val("race")]||{};const t={};Object.keys(base).forEach(k=>t[k]=base[k]+(bonus[k]||0));return {base,t,used:Object.values(base).reduce((a,b)=>a+b,0)}
+function updateDerived(){
+  const g=calcularFichaAtual();
+  setText("tForca",g.t.forca);setText("tAgilidade",g.t.agilidade);setText("tVitalidade",g.t.vitalidade);setText("tIntelecto",g.t.intelecto);setText("tSensibilidade",g.t.sensibilidade);setText("tCarisma",g.t.carisma);
+  setText("pointsInfo","Pontos usados: "+g.used+"/10");
+  document.getElementById("pointsInfo").className=g.used>10?"warning":"success";
+  setVal("pv",g.derived.pv);setVal("pe",g.derived.pe);setVal("esquiva",g.derived.esquiva);setVal("defesa",g.derived.defesa);setVal("iniciativa",g.derived.iniciativa);setVal("danoBase",g.derived.danoBase);setVal("carga",g.derived.carga);
+  const bonusTxt=Object.entries(g.bonus).map(([k,v])=>`+${v} ${k}`).join(" • ")||"sem bônus";
+  const preview=document.getElementById("calcPreview");
+  if(preview)preview.innerHTML=`<b>Cálculo ativo:</b> ${escape(val("race"))} dá ${escape(bonusTxt)}.<br>PV ${g.derived.pv} • PE ${g.derived.pe} • Defesa ${g.derived.defesa} • Esquiva ${g.derived.esquiva} • Iniciativa ${g.derived.iniciativa} • Dano base ${g.derived.danoBase}.`;
 }
+function getTotals(){return calcularFichaAtual()}
 function makeCharacter(){
   const g=getTotals();
-  return {name:val("charName"),player:val("playerName"),level:num("level",1),race:val("race"),className:val("charClass"),ether:val("element"),baseStats:g.base,stats:g.t,pointsUsed:g.used,pv:num("pv"),pe:num("pe",5),defenses:{esquiva:num("esquiva")},skills:[val("esp1"),val("esp2"),val("esp3")].join(", "),weaponType:val("weaponType"),weapon:val("weapon"),story:val("story"),ultimate:val("ultimate"),face:faceData,ownerAccount:code(),gm:false}
+  return {name:val("charName"),player:val("playerName"),level:g.level,race:val("race"),className:val("charClass"),ether:val("element"),baseStats:g.base,stats:g.t,pointsUsed:g.used,pv:g.derived.pv,maxPv:g.derived.pv,pe:g.derived.pe,maxPe:g.derived.pe,derived:g.derived,defenses:{esquiva:g.derived.esquiva,defesa:g.derived.defesa,iniciativa:g.derived.iniciativa},skills:[val("esp1"),val("esp2"),val("esp3")].join(", "),weaponType:val("weaponType"),weapon:val("weapon"),story:val("story"),ultimate:val("ultimate"),face:faceData,ownerAccount:code(),gm:false}
 }
 async function saveCharacter(){
   const c=makeCharacter();if(!c.name||!c.player)return alert("Coloque nome e jogador.");if(c.pointsUsed>10)return alert("Passei de 10 pontos base.");
@@ -650,7 +722,7 @@ function renderCharacterSelects(){
 function renderBio(){
   const c=currentChar();const box=document.getElementById("characterBio");
   if(!c){box.innerHTML="<p>Nenhum personagem selecionado.</p>";return}
-  box.innerHTML=`<div class="bio-card"><div class="bio-img">${c.face?`<img src="${c.face}">`:"Sem imagem"}</div><div><h2>${escape(c.name)}</h2><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)} • Nível ${c.level}</p><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0}</p><p><b>Especializações:</b> ${escape(c.skills||"-")}</p><p><b>Arma:</b> ${escape(c.weapon||"-")}</p><p><b>Bio:</b> ${escape(c.story||"Sem bio.")}</p></div></div>`
+  box.innerHTML=`<div class="bio-card"><div class="bio-img">${c.face?`<img src="${c.face}">`:"Sem imagem"}</div><div><h2>${escape(c.name)}</h2><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)} • Nível ${c.level}</p><p>PV ${c.pv}/${c.maxPv||c.pv} • PE ${c.pe}/${c.maxPe||c.pe} • Defesa ${c.defenses?.defesa||0} • Esquiva ${c.defenses?.esquiva||0} • Iniciativa ${c.defenses?.iniciativa||0}</p><p><b>Especializações:</b> ${escape(c.skills||"-")}</p><p><b>Arma:</b> ${escape(c.weapon||"-")}</p><p><b>Bio:</b> ${escape(c.story||"Sem bio.")}</p></div></div>`
 }
 
 async function startSession(){
@@ -735,6 +807,13 @@ function renderBattleSelects(){
   skillSel.innerHTML=c?`<option value="basic">Ataque básico (${escape(c.ether)})</option>`+skills.filter(s=>s.characterId===c.id).map(s=>`<option value="${s.id}">${escape(s.name)} • ${escape(s.element)}</option>`).join(""):`<option>Escolha personagem</option>`;
   targetSel.innerHTML=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${m.id}">${escape(m.name)} • PV ${m.hp}/${m.maxHp}</option>`).join("")||`<option value="">Nenhum alvo</option>`;
 }
+function calcularDano(c,skill){
+  const scale=skill?.scale||"forca";
+  const atributo=Number(c.stats?.[scale]||0);
+  const base=skill?Number(skill.damage||12):Number(c.derived?.danoBase||8);
+  const nivelBonus=Math.floor(Number(c.level||1)/3);
+  return Math.max(1,Math.floor(base+atributo+nivelBonus));
+}
 async function quickAttack(){
   const c=currentChar();
   if(!c)return alert("Escolha personagem.");
@@ -747,10 +826,7 @@ async function quickAttack(){
   const cost=Number(skill?.cost||0);
   const currentPe=Number(c.pe||0);
   if(cost>currentPe)return alert("PE insuficiente para usar essa habilidade.");
-  const baseDmg=skill?Number(skill.damage||12):8;
-  const scale=skill?.scale||"forca";
-  const statBonus=Number(c.stats?.[scale]||c.stats?.forca||0);
-  const dmg=Math.max(1,Math.floor(baseDmg+statBonus));
+  const dmg=calcularDano(c,skill);
   await applyDamage(id,dmg,c.id);
   if(cost>0){
     const {db,doc,updateDoc}=fb();
@@ -881,7 +957,7 @@ function exportCharacterCard(id){
 }
 
 function renderCharacters(){
-  document.getElementById("charactersList").innerHTML=visibleChars().map(c=>`<div class="char-card" id="char-card-${c.id}"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${escape(c.name)} ${c.gm?"[GM]":""}</h3><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)}</p><p>Código: ${escape(c.ownerAccount)}</p><p>PV ${c.pv} • PE ${c.pe} • Esquiva ${c.defenses?.esquiva||0}</p></div><div class="row"><button onclick="selectCharacter('${c.id}');openTab('personagem',document.querySelectorAll('.tab-btn')[2])">Usar</button><button onclick="exportCharacterCard('${c.id}')">Exportar</button><button class="danger" onclick="deleteCharacter('${c.id}')">Apagar</button></div></div>`).join("")||"<p>Nenhuma ficha.</p>"
+  document.getElementById("charactersList").innerHTML=visibleChars().map(c=>`<div class="char-card" id="char-card-${c.id}"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${escape(c.name)} ${c.gm?"[GM]":""}</h3><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)}</p><p>Código: ${escape(c.ownerAccount)}</p><p>PV ${c.pv}/${c.maxPv||c.pv} • PE ${c.pe}/${c.maxPe||c.pe} • Defesa ${c.defenses?.defesa||0} • Esquiva ${c.defenses?.esquiva||0}</p></div><div class="row"><button onclick="selectCharacter('${c.id}');openTab('personagem',document.querySelectorAll('.tab-btn')[2])">Usar</button><button onclick="exportCharacterCard('${c.id}')">Exportar</button><button class="danger" onclick="deleteCharacter('${c.id}')">Apagar</button></div></div>`).join("")||"<p>Nenhuma ficha.</p>"
 }
 function updateGmOnly(){document.querySelectorAll(".gm-only").forEach(e=>e.style.display=canGM()?"":"none")}
 function renderAll(){updateCode();updateDerived();renderCharacterSelects();renderBio();renderScene();renderMonsterTemplates();renderBattleMonsters();renderSkills();renderLog();renderRound();renderSessionTab();renderGm();renderCharacters();updateGmOnly()}
