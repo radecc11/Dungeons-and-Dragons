@@ -942,9 +942,41 @@ async function requestAction(){
   await log("Pedido de ação",`${c.name} pediu para usar ${move} em ${m.name}. Aguardando aprovação do Host/GM.`,"system","",skill?skill.element:c.ether);
   setVal("battleText","");
 }
-async function applyDamage(id,dmg,who){const m=battleMonsters.find(x=>x.id===id);if(!m)return;const hp=Math.max(0,m.hp-dmg);const logd={...(m.damageLog||{})};logd[who]=(logd[who]||0)+dmg;const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"battleMonsters",id),{hp,damageLog:logd})}
-async function damageMonster(id,d){await applyDamage(id,d,"GM")}
-async function healMonster(id,d){const m=battleMonsters.find(x=>x.id===id);const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"battleMonsters",id),{hp:Math.min(m.maxHp,m.hp+d)})}
+function safeNumber(v, fallback=0){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+async function applyDamage(id,dmg,who){
+  const m=battleMonsters.find(x=>x.id===id);
+  if(!m){alert("Monstro não encontrado. Atualize a página e tente de novo.");return;}
+  const currentHp=safeNumber(m.hp, safeNumber(m.maxHp, 0));
+  const maxHp=safeNumber(m.maxHp, currentHp);
+  const damage=Math.max(0, safeNumber(dmg, 0));
+  const hp=Math.max(0, currentHp-damage);
+  const logd={...(m.damageLog||{})};
+  logd[who]=(safeNumber(logd[who],0))+damage;
+  const {db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"battleMonsters",id),{hp:Number(hp),maxHp:Number(maxHp),damageLog:logd});
+  return hp;
+}
+async function damageMonster(id,d){
+  if(!canGM())return alert("Só Host/GM mexe no PV do monstro.");
+  const m=battleMonsters.find(x=>x.id===id);
+  const newHp=await applyDamage(id,d,"GM");
+  if(m)await log("Host/GM",`removeu ${Math.max(0,safeNumber(d,0))} PV de ${m.name}. PV agora: ${newHp}/${safeNumber(m.maxHp,0)}.`,"attack",m.image,m.element);
+}
+async function healMonster(id,d){
+  if(!canGM())return alert("Só Host/GM mexe no PV do monstro.");
+  const m=battleMonsters.find(x=>x.id===id);
+  if(!m){alert("Monstro não encontrado. Atualize a página e tente de novo.");return;}
+  const currentHp=safeNumber(m.hp, safeNumber(m.maxHp, 0));
+  const maxHp=safeNumber(m.maxHp, currentHp);
+  const heal=Math.max(0, safeNumber(d, 0));
+  const hp=Math.min(maxHp, currentHp+heal);
+  const {db,doc,updateDoc}=fb();
+  await updateDoc(doc(db,"battleMonsters",id),{hp:Number(hp),maxHp:Number(maxHp)});
+  return hp;
+}
 async function monsterAttack(id){const m=battleMonsters.find(x=>x.id===id);if(m)await log(m.name,"O monstro realizou uma ação no round.","attack",m.image,m.element)}
 async function monsterTurn(){
   if(!canGM())return alert("Só Host/GM controla monstro.");
@@ -964,7 +996,7 @@ async function executeApprovedAction(req, passTurn=false){
   await applyDamage(req.targetId,dmg,req.characterId);
   if(cost>0){const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",c.id),{pe:Math.max(0,currentPe-cost)});}
   await log("Host/GM",`Aprovou: ${req.actorName} usou ${req.moveName} em ${req.targetName}, causando ${dmg} de dano.`,"attack","",req.element);
-  if(m.hp-dmg<=0)await log("Sistema",`${m.name} foi derrotado!`,"system",m.image,m.element);
+  if(safeNumber(m.hp,0)-dmg<=0)await log("Sistema",`${m.name} foi derrotado!`,"system",m.image,m.element);
   if(passTurn)nextTurn();
 }
 async function approveActionRequest(id,passTurn=false){
@@ -983,12 +1015,12 @@ async function rejectActionRequest(id){
 async function applyManualDamage(){
   if(!canGM())return alert("Só Host/GM mexe no PV manualmente.");
   const id=val("gmDamageTarget");const dmg=Math.max(0,num("gmDamageValue",0));const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
-  await applyDamage(id,dmg,"GM");await log("Host/GM",`removeu ${dmg} PV de ${m.name}.`,"attack",m.image,m.element);
+  const newHp=await applyDamage(id,dmg,"GM");await log("Host/GM",`removeu ${dmg} PV de ${m.name}. PV agora: ${newHp}/${safeNumber(m.maxHp,0)}.`,"attack",m.image,m.element);
 }
 async function applyManualHeal(){
   if(!canGM())return alert("Só Host/GM mexe no PV manualmente.");
   const id=val("gmDamageTarget");const heal=Math.max(0,num("gmDamageValue",0));const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
-  await healMonster(id,heal);await log("Host/GM",`curou ${heal} PV de ${m.name}.`,"system",m.image,m.element);
+  const newHp=await healMonster(id,heal);await log("Host/GM",`curou ${heal} PV de ${m.name}. PV agora: ${newHp}/${safeNumber(m.maxHp,0)}.`,"system",m.image,m.element);
 }
 function renderActionRequests(){
   const box=document.getElementById("actionRequestsList");if(!box)return;
