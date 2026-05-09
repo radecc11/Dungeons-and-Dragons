@@ -202,6 +202,13 @@
     .bonus-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .bonus{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 10px;background:#0b0b0b;font-size:13px;color:#eee}
     .calc-preview{margin-top:14px;border:1px solid rgba(245,215,66,.28);border-radius:20px;padding:14px;background:rgba(245,215,66,.06)}
+
+    .turn-tools{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+    .turn-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:230px;overflow:auto}
+    .turn-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:14px;background:#090909;padding:9px 10px}
+    .turn-item.current{border-color:var(--yellow);box-shadow:0 0 18px rgba(245,215,66,.22);background:#151300}
+    .turn-item small{color:var(--muted)}
+    .mini-title{margin-top:14px;margin-bottom:6px;color:#fff}
     @media(max-width:1000px){
       main{display:block}
       nav{position:static;flex-direction:row;flex-wrap:wrap;margin-bottom:16px}
@@ -420,9 +427,20 @@
               <p>Turno atual: <b id="turnView">Aguardando</b></p>
               <div class="row gm-only">
                 <button onclick="buildTurns()">Montar turnos</button>
+                <button onclick="previousTurn()">Voltar turno</button>
                 <button onclick="nextTurn()">Próximo turno</button>
-                <button onclick="monsterTurn()">Monstro age</button>
               </div>
+              <div class="turn-tools gm-only">
+                <label>Decidir quem vai agir agora</label>
+                <select id="turnChooser"></select>
+                <div class="row">
+                  <button class="okbtn" onclick="setCurrentTurnFromSelect()">Definir turno</button>
+                  <button onclick="resetRound()">Resetar round</button>
+                  <button onclick="monsterTurn()">Monstro age</button>
+                </div>
+              </div>
+              <h3 class="mini-title">Ordem de turno</h3>
+              <div id="turnOrderList" class="turn-list"></div>
               <h3 style="margin-top:16px">Log</h3>
               <div id="battleLog" class="log-box"></div>
               <div class="row gm-only">
@@ -455,6 +473,21 @@
           <div><label>Modelo de monstro</label><select id="spawnMonsterSelect"></select></div>
           <div><label>Quantidade</label><input id="spawnQty" type="number" value="1" min="1" max="6"></div>
           <button onclick="spawnMonster()">Spawnar</button>
+        </div>
+        <hr style="border-color:var(--line);margin:18px 0">
+        <h3>Criar monstro rápido</h3>
+        <p>Cria o modelo e já coloca no campo. Use isso quando a aba Monstros não estiver ajudando.</p>
+        <div class="row">
+          <div><label>Nome</label><input id="quickMonsterName" placeholder="Ex: Etéreo Brutal"></div>
+          <div><label>Elemento</label><select id="quickMonsterElement"><option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option></select></div>
+          <div><label>PV</label><input id="quickMonsterHp" type="number" value="30" min="1"></div>
+          <div><label>Qtd.</label><input id="quickMonsterQty" type="number" value="1" min="1" max="6"></div>
+        </div>
+        <div class="row">
+          <div><label>Tipo</label><select id="quickMonsterType"><option>Etéreo</option><option>Corrompido</option><option>Colosso</option><option>Boss</option></select></div>
+          <div><label>Pressão</label><input id="quickMonsterPressure" type="number" value="10" min="0"></div>
+          <div><label>XP</label><input id="quickMonsterXp" type="number" value="100" min="0"></div>
+          <button class="okbtn" onclick="createAndSpawnQuickMonster()">Criar e spawnar</button>
         </div>
       </div>
 
@@ -771,17 +804,52 @@ function renderScene(){
 }
 
 async function createMonsterTemplate(){
-  if(!canGM())return alert("Só Host/GM cria monstro.");
+  if(!canGM())return alert("Só Host/GM cria monstro. Entre na aba Host / GM com HOLLOW2026.");
   const m={name:val("monsterName"),type:val("monsterType"),element:val("monsterElement"),maxHp:num("monsterHp",30),hp:num("monsterHp",30),maxPressure:num("monsterPressure",10),pressure:0,xp:num("monsterXp",100),image:monsterImage,desc:val("monsterDesc")};
   if(!m.name)return alert("Coloque nome do monstro.");
-  const {db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"monsterTemplates")),{...m,createdAt:serverTimestamp()});alert("Modelo salvo.")
+  try{
+    const {db,collection,doc,setDoc,serverTimestamp}=fb();
+    await setDoc(doc(collection(db,"monsterTemplates")),{...m,createdAt:serverTimestamp()});
+    setVal("monsterName","");setVal("monsterDesc","");monsterImage="";
+    const prev=document.getElementById("monsterPreview");if(prev)prev.innerHTML="Sem imagem";
+    await log("GM",`Modelo de monstro criado: ${m.name}.`,"gm",m.image,m.element);
+    alert("Modelo salvo. Agora dá para spawnar ele na Batalha Online.");
+  }catch(e){console.error(e);alert("Não consegui salvar no Firestore. Confere as regras/permissões do Firebase ou a conexão.")}
 }
 async function spawnMonster(){
-  if(!canGM())return alert("Só Host/GM spawna.");
-  const sel=document.getElementById("spawnMonsterSelect");const base=monsterTemplates.find(m=>m.id===sel.value);if(!base)return alert("Escolha um modelo.");
-  const qty=num("spawnQty",1);const {db,collection,doc,setDoc,serverTimestamp}=fb();
-  for(let i=0;i<qty;i++){await setDoc(doc(collection(db,"battleMonsters")),{...base,templateId:base.id,hp:base.maxHp,pressure:0,active:true,damageLog:{},createdAt:serverTimestamp()})}
-  await log("GM",`${qty}x ${base.name} apareceu no campo.`, "gm", base.image, base.element);
+  if(!canGM())return alert("Só Host/GM spawna. Entre na aba Host / GM com HOLLOW2026.");
+  const sel=document.getElementById("spawnMonsterSelect");
+  const base=monsterTemplates.find(m=>m.id===sel?.value);
+  if(!base)return alert("Escolha um modelo. Se não tiver modelo, use Criar monstro rápido logo abaixo.");
+  const qty=Math.max(1,Math.min(6,num("spawnQty",1)));
+  try{
+    const {db,collection,doc,setDoc,serverTimestamp}=fb();
+    for(let i=0;i<qty;i++){await setDoc(doc(collection(db,"battleMonsters")),{...base,templateId:base.id,hp:base.maxHp,pressure:0,active:true,damageLog:{},createdAt:serverTimestamp()})}
+    await log("GM",`${qty}x ${base.name} apareceu no campo.`, "gm", base.image, base.element);
+  }catch(e){console.error(e);alert("Não consegui spawnar no Firestore. Confere conexão/regras do Firebase.")}
+}
+async function createAndSpawnQuickMonster(){
+  if(!canGM())return alert("Só Host/GM cria monstro. Entre na aba Host / GM com HOLLOW2026.");
+  const base={
+    name:val("quickMonsterName")||"Etéreo Sem Nome",
+    type:val("quickMonsterType")||"Etéreo",
+    element:val("quickMonsterElement")||"Físico",
+    maxHp:num("quickMonsterHp",30),hp:num("quickMonsterHp",30),
+    maxPressure:num("quickMonsterPressure",10),pressure:0,
+    xp:num("quickMonsterXp",100),image:"",desc:"Criado rápido pelo Host/GM."
+  };
+  const qty=Math.max(1,Math.min(6,num("quickMonsterQty",1)));
+  try{
+    const {db,collection,doc,setDoc,serverTimestamp}=fb();
+    const templateRef=doc(collection(db,"monsterTemplates"));
+    await setDoc(templateRef,{...base,createdAt:serverTimestamp()});
+    for(let i=0;i<qty;i++){
+      await setDoc(doc(collection(db,"battleMonsters")),{...base,templateId:templateRef.id,hp:base.maxHp,pressure:0,active:true,damageLog:{},createdAt:serverTimestamp()});
+    }
+    setVal("quickMonsterName","");
+    await log("GM",`${qty}x ${base.name} foi criado e apareceu no campo.`,"gm","",base.element);
+    alert("Monstro criado e spawnado no campo.");
+  }catch(e){console.error(e);alert("Não consegui criar/spawnar no Firestore. Confere as regras do Firebase.")}
 }
 async function spawnMonsterFromTemplate(id){
   if(!canGM())return alert("Só Host/GM spawna.");
@@ -844,6 +912,13 @@ async function applyDamage(id,dmg,who){const m=battleMonsters.find(x=>x.id===id)
 async function damageMonster(id,d){await applyDamage(id,d,"GM")}
 async function healMonster(id,d){const m=battleMonsters.find(x=>x.id===id);const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"battleMonsters",id),{hp:Math.min(m.maxHp,m.hp+d)})}
 async function monsterAttack(id){const m=battleMonsters.find(x=>x.id===id);if(m)await log(m.name,"O monstro realizou uma ação no round.","attack",m.image,m.element)}
+async function monsterTurn(){
+  if(!canGM())return alert("Só Host/GM controla monstro.");
+  const id=sessionData.turnOrder?.[sessionData.turnIndex];
+  const m=battleMonsters.find(x=>x.id===id);
+  if(!m)return alert("O turno atual não é de um monstro. Escolha um monstro no seletor de turno.");
+  await monsterAttack(id);
+}
 
 function syncSkillElement(){const c=characters.find(x=>x.id===val("skillCharacter"));if(c)setVal("skillElement",c.ether)}
 async function createSkill(){
@@ -861,10 +936,64 @@ async function log(author,text,kind="system",image="",element=""){const {db,coll
 function renderLog(){document.getElementById("battleLog").innerHTML=logs.map(l=>`<div class="log-msg ${elementClass(l.element)}"><small>${escape(l.author)} • ${escape(l.time||"")}</small><p>${escape(l.text)}</p>${l.image?`<img src="${l.image}">`:""}</div>`).join("")||"<p>Nenhum log ainda.</p>"}
 async function clearLog(){if(!canGM())return alert("Só Host/GM.");const {db,doc,deleteDoc}=fb();for(const l of logs)await deleteDoc(doc(db,"battleLogs",l.id))}
 
-function buildTurns(){if(!canGM())return alert("Só Host/GM.");sessionData.turnOrder=[...(sessionData.party||[]),...battleMonsters.filter(m=>m.active!==false&&m.hp>0).map(m=>m.id)];sessionData.turnIndex=0;saveSession()}
-function nextTurn(){if(!canGM())return alert("Só Host/GM.");if(!sessionData.turnOrder?.length)return alert("Monte os turnos.");sessionData.turnIndex++;if(sessionData.turnIndex>=sessionData.turnOrder.length){sessionData.turnIndex=0;sessionData.round=(sessionData.round||1)+1}saveSession()}
+function buildTurns(){
+  if(!canGM())return alert("Só Host/GM.");
+  const players=(sessionData.party||[]).filter(id=>characters.some(c=>c.id===id));
+  const monsters=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>m.id);
+  sessionData.turnOrder=[...players,...monsters];
+  sessionData.turnIndex=0;
+  if(!sessionData.round)sessionData.round=1;
+  saveSession();
+  log("Sistema","Ordem de turno montada pelo Host/GM.","system").catch(()=>{});
+}
+function nextTurn(){
+  if(!canGM())return alert("Só Host/GM.");
+  if(!sessionData.turnOrder?.length)return alert("Monte os turnos primeiro.");
+  sessionData.turnIndex++;
+  if(sessionData.turnIndex>=sessionData.turnOrder.length){sessionData.turnIndex=0;sessionData.round=(sessionData.round||1)+1}
+  saveSession();
+}
+function previousTurn(){
+  if(!canGM())return alert("Só Host/GM.");
+  if(!sessionData.turnOrder?.length)return alert("Monte os turnos primeiro.");
+  sessionData.turnIndex--;
+  if(sessionData.turnIndex<0){sessionData.turnIndex=sessionData.turnOrder.length-1;sessionData.round=Math.max(1,(sessionData.round||1)-1)}
+  saveSession();
+}
+function resetRound(){
+  if(!canGM())return alert("Só Host/GM.");
+  sessionData.round=1;sessionData.turnIndex=0;saveSession();
+}
+function setCurrentTurnFromSelect(){
+  if(!canGM())return alert("Só Host/GM.");
+  const id=val("turnChooser");
+  const idx=(sessionData.turnOrder||[]).indexOf(id);
+  if(idx<0)return alert("Esse alvo ainda não está na ordem. Clique em Montar turnos primeiro.");
+  sessionData.turnIndex=idx;saveSession();
+}
 async function saveSession(){const {db,doc,setDoc}=fb();await setDoc(doc(db,"game","session"),sessionData)}
-function renderRound(){setText("roundView",sessionData.round||1);const id=sessionData.turnOrder?.[sessionData.turnIndex];const c=characters.find(x=>x.id===id);const m=battleMonsters.find(x=>x.id===id);setText("turnView",c?.name||m?.name||"Aguardando")}
+function turnName(id){const c=characters.find(x=>x.id===id);const m=battleMonsters.find(x=>x.id===id);return c?.name||m?.name||"Removido"}
+function turnKind(id){if(characters.some(x=>x.id===id))return "Personagem";if(battleMonsters.some(x=>x.id===id))return "Monstro";return "?"}
+function renderRound(){
+  setText("roundView",sessionData.round||1);
+  const id=sessionData.turnOrder?.[sessionData.turnIndex];
+  setText("turnView",id?turnName(id):"Aguardando");
+  renderTurnControls();
+}
+function renderTurnControls(){
+  const order=sessionData.turnOrder||[];
+  const chooser=document.getElementById("turnChooser");
+  if(chooser){
+    const current=order[sessionData.turnIndex]||"";
+    chooser.innerHTML=order.map((id,i)=>`<option value="${id}">${i+1}. ${escape(turnName(id))} - ${turnKind(id)}</option>`).join("")||`<option value="">Sem turnos montados</option>`;
+    chooser.value=current;
+  }
+  const list=document.getElementById("turnOrderList");
+  if(list){
+    if(!order.length){list.innerHTML="<p>Sem ordem de turno. Host/GM precisa clicar em Montar turnos.</p>";return}
+    list.innerHTML=order.map((id,i)=>`<div class="turn-item ${i===(sessionData.turnIndex||0)?"current":""}"><div><b>${i+1}. ${escape(turnName(id))}</b><br><small>${turnKind(id)} ${i===(sessionData.turnIndex||0)?"• AGORA":""}</small></div><button class="gm-only" onclick="sessionData.turnIndex=${i};saveSession()">Escolher</button></div>`).join("");
+  }
+}
 
 function renderSessionTab(){
   const open=Boolean(sessionData.open);
