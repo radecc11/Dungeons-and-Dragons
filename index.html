@@ -7,7 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root{
-      --bg:#050505;--panel:#111;--panel2:#191919;--yellow:#39ff88;--yellow2:#b8ffd2;
+      --bg:#050505;--panel:#111;--panel2:#191919;--yellow:#ffffff;--yellow2:#e6e6e6;
       --orange:#00d46a;--purple:#8b35ff;--purple2:#d7bcff;--text:#f4f4f4;--muted:#a8a8a8;
       --danger:#ff4444;--ok:#38ff8b;--border:rgba(57,255,136,.35);--pborder:rgba(139,53,255,.55);
       --glow:0 0 24px rgba(57,255,136,.28);--pglow:0 0 25px rgba(139,53,255,.32);
@@ -120,9 +120,14 @@
 
     #appShell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start}
     .tabs{position:sticky!important;top:18px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;margin:0!important;padding:14px!important;border-radius:24px!important;background:rgba(0,0,0,.72)!important;border:1px solid rgba(57,255,136,.22)!important;box-shadow:0 0 22px rgba(57,255,136,.12)}
-    .tab-btn{width:100%;text-align:left}
+    .tab-btn{width:100%;text-align:left;padding:10px 12px;font-size:14px}
     .tab{min-width:0}
-    @media(max-width:900px){#appShell{display:block}.tabs{position:static!important;flex-direction:row!important;margin-bottom:18px!important}.tab-btn{width:auto;text-align:center}}
+    
+.monster-fire{border-color:#ff4444!important;box-shadow:0 0 18px rgba(255,68,68,.2)}
+.monster-ice{border-color:#4da6ff!important;box-shadow:0 0 18px rgba(77,166,255,.2)}
+.monster-corrupt{border-color:#a855f7!important;box-shadow:0 0 18px rgba(168,85,247,.2)}
+
+@media(max-width:900px){#appShell{display:block}.tabs{position:static!important;flex-direction:row!important;margin-bottom:18px!important}.tab-btn{width:auto;text-align:center}}
     .battle-hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
     .battle-action-panel{border:1px solid var(--border);border-radius:20px;background:#07110b;padding:14px;margin-top:14px}
     .big-monster-card{border:1px solid var(--pborder);border-radius:22px;background:linear-gradient(135deg,rgba(139,53,255,.14),#070707);padding:14px}
@@ -218,7 +223,7 @@
         <h3 class="step-title">Raça, classe e elemento</h3>
         <div class="row">
           <div><label>Raça</label><select id="race" onchange="updateDerived(); updateRaceInfo();">
-            <option>Humano</option><option>Tireno</option><option>Oni</option><option>Vampiro/Banshee</option><option>Construto Inteligente</option>
+            <option>Humano</option><option>Thireno</option><option>Oni</option><option>Vampiro/Banshee</option><option>Construto Inteligente</option>
           </select></div>
           <div><label>Classe / Função</label><select id="charClass">
             <option>Executor</option><option>Anômalo</option><option>Guardião</option><option>Especialista</option><option>Atirador</option>
@@ -420,7 +425,17 @@
         <div id="liveBattleMonsters" class="battle-creatures"></div>
       </div>
 
-      <div class="card span-6">
+      
+<div class="battle-action-panel">
+<h3>Spawnar Monstro na Batalha</h3>
+<div class="row">
+<div><label>Monstro salvo</label><select id="spawnMonsterSelect"></select></div>
+<div><label>Quantidade</label><input id="spawnMonsterQty" type="number" value="1" min="1" max="5"></div>
+</div>
+<button onclick="spawnSelectedMonster()">Spawnar na batalha</button>
+</div>
+
+<div class="card span-6">
         <h2>Controle Host/GM</h2>
         <p>Host/GM controla rounds, turnos e cenário.</p>
         <div class="row">
@@ -515,7 +530,7 @@
         <h2>Editor de Ficha do Host / GM</h2><p>Host edita sempre. GM edita com sessão aberta.</p>
         <label>Ficha para editar</label><select id="editSelect" onchange="loadEditCharacter()"></select>
         <div class="row"><div><label>Nome</label><input id="editName"></div><div><label>Codinome</label><input id="editCodename"></div><div><label>Jogador</label><input id="editPlayer"></div><div><label>Nível</label><input id="editLevel" type="number" min="1"></div></div>
-        <div class="row"><div><label>Raça</label><select id="editRace" onchange="updateEditDerived()"><option>Humano</option><option>Tireno</option><option>Oni</option><option>Vampiro/Banshee</option><option>Construto Inteligente</option></select></div><div><label>Classe</label><select id="editClass"><option>Executor</option><option>Anômalo</option><option>Guardião</option><option>Especialista</option><option>Atirador</option></select></div><div><label>Elemento</label><select id="editEther"><option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option></select></div></div>
+        <div class="row"><div><label>Raça</label><select id="editRace" onchange="updateEditDerived()"><option>Humano</option><option>Thireno</option><option>Oni</option><option>Vampiro/Banshee</option><option>Construto Inteligente</option></select></div><div><label>Classe</label><select id="editClass"><option>Executor</option><option>Anômalo</option><option>Guardião</option><option>Especialista</option><option>Atirador</option></select></div><div><label>Elemento</label><select id="editEther"><option>Físico</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Éter</option><option>Corrupto</option><option>Void</option></select></div></div>
         <h3 class="step-title">Atributos base</h3>
         <div class="stat-list">
           <div class="stat-card"><label>FOR</label><input id="editForcaBase" type="number" min="0" oninput="updateEditDerived()"><strong id="editForcaTotal">0</strong></div>
@@ -556,7 +571,7 @@
 let faceData="",characters=[],monsters=[],accounts=[],skills=[],actionRequests=[],sessionData={open:false,party:[],chatOpen:true},scenarioData={scene:{},battle:{round:1,turnOrder:[],turnIndex:0,events:[]},secretItems:[]},sessionMessages=[],chatImageData="",monsterImageData="",sceneImageData="",lastChatSentAt=0;
 const raceData={
  "Humano":{b:{intelecto:2,vitalidade:1},d:"Normalmente não possuem habilidades sobre-humanas."},
- "Tireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Tireno tem característica única."},
+ "Thireno":{b:{forca:2,sensibilidade:2},d:"Meio humano e meio animal, comumente mais forte que humanos normais. Cada Thireno tem característica única."},
  "Oni":{b:{forca:3,sensibilidade:2},d:"Espécie rara. Costumam ter muita fome e ficam mais fracos quando famintos."},
  "Vampiro/Banshee":{b:{carisma:3,agilidade:2},d:"Linhagem antiga, pele clara e olhos vermelhos. Sensíveis à luz solar forte."},
  "Construto Inteligente":{b:{intelecto:3,sensibilidade:2,agilidade:1},d:"Máquinas com inteligência e vontade próprias. Mais resistentes à corrupção, mas precisam de reparos."}
@@ -952,7 +967,7 @@ async function createMonster(){
   };
   const{db,collection,doc,setDoc,serverTimestamp}=fb();
   await setDoc(doc(collection(db,"monsters")),{...monster,createdAt:serverTimestamp()});
-  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Spawnou monstro: ${monster.name} (${monster.type} • ${monster.element})`,image:monster.image,element:monster.element});
+  saveMonsterTemplate(monster); await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Spawnou monstro: ${monster.name} (${monster.type} • ${monster.element})`,image:monster.image,element:monster.element});
   clearMonsterForm();
 }
 function clearMonsterForm(){
@@ -1210,7 +1225,7 @@ function renderPersonagemTab(){
   if(select){
     const current=getMySessionCharacterId();
     select.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ether)}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
-    if(current) select.value=current;
+    if(current && [...select.options].some(o=>o.value===current)) select.value=current;
   }
   const c=characters.find(x=>x.id===getMySessionCharacterId()) || mine[0];
   if(c && !getMySessionCharacterId()) setMySessionCharacter(c.id);
@@ -1233,7 +1248,7 @@ function renderPersonagemTab(){
   const mons=document.getElementById("personagemMonsters");
   if(mons){
     const active=monsters.filter(m=>m.active!==false&&Number(m.hp)>0);
-    mons.innerHTML=active.length?active.map(m=>`<div class="battle-monster big-monster-card">${m.image?`<img src="${m.image}">`:""}<h3>${escapeHtml(m.name)}</h3><small>${escapeHtml(m.type)} • ${escapeHtml(m.element)}</small><p>PV ${m.hp}/${m.maxHp} • Pressão ${m.pressure||0}/${m.maxPressure||0}</p></div>`).join(""):"<p>Nenhum monstro ativo no cenário.</p>";
+    mons.innerHTML=active.length?active.map(m=>`<div class="battle-monster big-monster-card ${getMonsterClass(m.element)}">${m.image?`<img src="${m.image}">`:""}<h3>${escapeHtml(m.name)}</h3><small>${escapeHtml(m.type)} • ${escapeHtml(m.element)}</small><p>PV ${m.hp}/${m.maxHp} • Pressão ${m.pressure||0}/${m.maxPressure||0}</p></div>`).join(""):"<p>Nenhum monstro ativo no cenário.</p>";
   }
   renderActionRequests();
 }
@@ -1419,12 +1434,45 @@ async function directBattleAttack(){
   if(!targetId) return alert("Escolha um monstro.");
   await quickAttackMonster(targetId);
 }
+
+let monsterTemplates=[];
+
+function updateMonsterSelects(){
+  const sel=document.getElementById("spawnMonsterSelect");
+  if(sel){
+    sel.innerHTML=monsterTemplates.map((m,i)=>`<option value="${i}">${m.name}</option>`).join("");
+  }
+}
+
+function saveMonsterTemplate(monster){
+  monsterTemplates.push(monster);
+  updateMonsterSelects();
+}
+
+function spawnSelectedMonster(){
+  const sel=document.getElementById("spawnMonsterSelect");
+  if(!sel || !monsterTemplates.length) return alert("Crie um monstro primeiro.");
+  const qty=Number(document.getElementById("spawnMonsterQty")?.value||1);
+  const base=monsterTemplates[Number(sel.value)];
+  for(let i=0;i<qty;i++){
+    monsters.push({...base,id:"spawn_"+Date.now()+"_"+i,hp:base.maxHp,active:true});
+  }
+  renderAll();
+}
+
+function getMonsterClass(element){
+  const e=(element||"").toLowerCase();
+  if(e.includes("fogo")) return "monster-fire";
+  if(e.includes("gelo")) return "monster-ice";
+  if(e.includes("corrupt")) return "monster-corrupt";
+  return "";
+}
 function renderLiveBattle(){
   const box=document.getElementById("liveBattleMonsters");
   if(!box) return;
   const active=monsters.filter(m=>m.active!==false && Number(m.hp)>0);
   box.innerHTML=active.length?active.map(m=>`
-    <div class="battle-monster big-monster-card">
+    <div class="battle-monster big-monster-card ${getMonsterClass(m.element)}">
       ${m.image?`<img src="${m.image}" alt="${escapeHtml(m.name)}">`:""}
       <h3>${escapeHtml(m.name)}</h3>
       <small>${escapeHtml(m.type||"-")} • ${escapeHtml(m.element||"-")}</small>
