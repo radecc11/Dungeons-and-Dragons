@@ -194,6 +194,35 @@
     .bio-img{height:180px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#090909;display:grid;place-items:center;color:#aaa}
     .hidden{display:none!important}
     .warning{color:var(--danger);font-weight:800}.success{color:var(--ok);font-weight:800}
+    .gm-alert{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      width:min(420px,calc(100vw - 36px));
+      border:2px solid rgba(245,215,66,.75);
+      border-radius:24px;
+      background:linear-gradient(180deg,rgba(28,24,6,.98),rgba(5,5,5,.98));
+      box-shadow:0 0 35px rgba(245,215,66,.22),0 18px 60px rgba(0,0,0,.65);
+      padding:16px;
+      z-index:9999;
+      display:none;
+      animation:gmPop .18s ease-out;
+    }
+    .gm-alert.show{display:block}
+    .gm-alert h3{color:var(--yellow);margin-bottom:6px}
+    .gm-alert .pulsebar{height:8px;border-radius:999px;background:#1b1b1b;overflow:hidden;border:1px solid var(--line);margin:10px 0}
+    .gm-alert .pulsebar span{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--yellow),#fff,var(--danger));animation:gmTimer 8s linear infinite;transform-origin:left}
+    .gm-alert small{display:block;color:#ddd;margin-bottom:8px}
+    .gm-alert-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .gm-alert-actions button{width:100%}
+    .request-highlight{
+      border:2px solid rgba(245,215,66,.6)!important;
+      box-shadow:0 0 20px rgba(245,215,66,.15);
+      background:linear-gradient(180deg,#181406,#070707)!important;
+    }
+    @keyframes gmTimer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+    @keyframes gmPop{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
 
     .system-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
     .rule-card{border:1px solid var(--line);border-radius:20px;padding:16px;background:linear-gradient(180deg,#141414,#070707)}
@@ -442,8 +471,9 @@
               </div>
               <h3 class="mini-title">Ordem de turno</h3>
               <div id="turnOrderList" class="turn-list"></div>
-              <h3 class="mini-title">Ações pendentes</h3>
-              <div id="actionRequestsList" class="log-box" style="height:240px"></div>
+              <h3 class="mini-title">Ações pendentes do Host/GM</h3>
+              <p class="pill">Quando jogador pedir ação, o Host/GM aprova aqui ou pela notificação.</p>
+              <div id="actionRequestsList" class="log-box request-highlight" style="height:260px"></div>
               <div class="gm-only" style="margin-top:12px">
                 <h3 class="mini-title">Dano manual do GM</h3>
                 <div class="row">
@@ -647,6 +677,19 @@
     </div>
   </section>
 </main>
+
+<div id="gmActionAlert" class="gm-alert">
+  <h3>⚠️ Pedido de ação pendente</h3>
+  <small id="gmAlertMeta">Aguardando Host/GM</small>
+  <p id="gmAlertText">Um jogador pediu uma ação.</p>
+  <div class="pulsebar"><span></span></div>
+  <div class="gm-alert-actions">
+    <button class="okbtn" id="gmAlertApproveBtn">Aprovar</button>
+    <button id="gmAlertApprovePassBtn">Aprovar + turno</button>
+    <button class="danger" id="gmAlertRejectBtn">Recusar</button>
+    <button onclick="openTab('battle',document.querySelectorAll('.tab-btn')[4])">Ver painel</button>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -1025,10 +1068,10 @@ async function applyManualHeal(){
 function renderActionRequests(){
   const box=document.getElementById("actionRequestsList");if(!box)return;
   const pending=actionRequests.filter(r=>r.status==="pending");
-  if(!pending.length){box.innerHTML="<p>Nenhuma ação pendente. Quando for o turno de alguém, o pedido aparece aqui.</p>";return}
+  if(!pending.length){box.innerHTML="<p>Nenhuma ação pendente. Quando for o turno de alguém, o pedido aparece aqui e também vira notificação para o Host/GM.</p>";return}
   box.innerHTML=pending.map(r=>{
     const isTurn=currentTurnId()===r.characterId;
-    return `<div class="log-msg ${elementClass(r.element)}"><small>Round ${r.round||"?"} • ${isTurn?"TURNO CERTO":"fora do turno atual"}</small><p><b>${escape(r.actorName)}</b> quer usar <b>${escape(r.moveName)}</b> em <b>${escape(r.targetName)}</b>.</p><p>${escape(r.text||"")}</p><p>Dano previsto: <b>${Number(r.damage||0)}</b> • Custo: <b>${Number(r.cost||0)} PE</b></p><div class="row gm-only"><button class="okbtn" onclick="approveActionRequest('${r.id}',false)">Aprovar</button><button onclick="approveActionRequest('${r.id}',true)">Aprovar e passar turno</button><button class="danger" onclick="rejectActionRequest('${r.id}')">Negar</button></div></div>`
+    return `<div class="log-msg ${elementClass(r.element)} request-highlight"><small>Round ${r.round||"?"} • ${isTurn?"✅ TURNO CERTO":"⚠️ fora do turno atual"}</small><p><b>${escape(r.actorName)}</b> quer usar <b>${escape(r.moveName)}</b> em <b>${escape(r.targetName)}</b>.</p><p>${escape(r.text||"")}</p><p>Dano previsto: <b>${Number(r.damage||0)}</b> • Custo: <b>${Number(r.cost||0)} PE</b></p><div class="row gm-only"><button class="okbtn" onclick="approveActionRequest('${r.id}',false)">Aprovar ataque</button><button onclick="approveActionRequest('${r.id}',true)">Aprovar e passar turno</button><button class="danger" onclick="rejectActionRequest('${r.id}')">Recusar</button></div></div>`
   }).join("");
 }
 
@@ -1201,7 +1244,23 @@ function renderCharacters(){
   document.getElementById("charactersList").innerHTML=visibleChars().map(c=>`<div class="char-card" id="char-card-${c.id}"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${escape(c.name)} ${c.gm?"[GM]":""}</h3><p>${escape(c.race)} • ${escape(c.className)} • ${escape(c.ether)}</p><p>Código: ${escape(c.ownerAccount)}</p><p>PV ${c.pv}/${c.maxPv||c.pv} • PE ${c.pe}/${c.maxPe||c.pe} • Defesa ${c.defenses?.defesa||0} • Esquiva ${c.defenses?.esquiva||0}</p></div><div class="row"><button onclick="selectCharacter('${c.id}');openTab('personagem',document.querySelectorAll('.tab-btn')[2])">Usar</button><button onclick="exportCharacterCard('${c.id}')">Exportar</button><button class="danger" onclick="deleteCharacter('${c.id}')">Apagar</button></div></div>`).join("")||"<p>Nenhuma ficha.</p>"
 }
 function updateGmOnly(){document.querySelectorAll(".gm-only").forEach(e=>e.style.display=canGM()?"":"none")}
-function renderAll(){updateCode();updateDerived();renderCharacterSelects();renderBio();renderScene();renderMonsterTemplates();renderBattleMonsters();renderSkills();renderLog();renderRound();renderSessionTab();renderGm();renderCharacters();updateGmOnly()}
+
+function renderGmActionToast(){
+  const alertBox=document.getElementById("gmActionAlert");
+  if(!alertBox)return;
+  const pending=actionRequests.filter(r=>r.status==="pending");
+  if(!canGM()||!pending.length){alertBox.classList.remove("show");return;}
+  const r=pending[0];
+  const isTurn=currentTurnId()===r.characterId;
+  document.getElementById("gmAlertMeta").textContent=`Round ${r.round||"?"} • ${isTurn?"turno correto":"fora do turno atual"} • dano ${Number(r.damage||0)} • custo ${Number(r.cost||0)} PE`;
+  document.getElementById("gmAlertText").innerHTML=`<b>${escape(r.actorName)}</b> quer usar <b>${escape(r.moveName)}</b> em <b>${escape(r.targetName)}</b>.<br>${escape(r.text||"")}`;
+  document.getElementById("gmAlertApproveBtn").onclick=()=>approveActionRequest(r.id,false);
+  document.getElementById("gmAlertApprovePassBtn").onclick=()=>approveActionRequest(r.id,true);
+  document.getElementById("gmAlertRejectBtn").onclick=()=>rejectActionRequest(r.id);
+  alertBox.classList.add("show");
+}
+
+function renderAll(){updateCode();updateDerived();renderCharacterSelects();renderBio();renderScene();renderMonsterTemplates();renderBattleMonsters();renderSkills();renderLog();renderRound();renderSessionTab();renderGm();renderCharacters();updateGmOnly();renderGmActionToast()}
 function val(id){return document.getElementById(id)?.value?.trim()||""}
 function num(id,d=0){return Number(document.getElementById(id)?.value||d)}
 function setVal(id,v){const e=document.getElementById(id);if(e)e.value=v}
