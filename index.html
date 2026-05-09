@@ -178,6 +178,36 @@
       background:#080808;
       padding:14px;
       min-height:440px;
+      position:relative;
+      overflow:hidden;
+    }
+    .monster-card.defeated{
+      opacity:.72;
+      filter:grayscale(.85);
+      border-color:rgba(255,75,75,.75)!important;
+      box-shadow:0 0 28px rgba(255,75,75,.18);
+    }
+    .monster-card.defeated::after{
+      content:"DERROTADO";
+      position:absolute;
+      top:22px;
+      right:-44px;
+      transform:rotate(35deg);
+      background:linear-gradient(90deg,#ff4b4b,#111);
+      color:#fff;
+      font-weight:900;
+      letter-spacing:2px;
+      padding:10px 58px;
+      border:1px solid rgba(255,255,255,.35);
+    }
+    .death-note{
+      border:1px solid rgba(255,75,75,.55);
+      background:rgba(255,75,75,.08);
+      color:#fff;
+      border-radius:16px;
+      padding:10px;
+      margin:10px 0;
+      font-weight:800;
     }
     .monster-img{height:240px;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:#111;display:grid;place-items:center;color:#aaa;margin-bottom:10px}
     .hpbar{height:14px;background:#220707;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.12);margin:8px 0}
@@ -957,25 +987,27 @@ function renderMonsterTemplates(){
 function elementClass(e){e=(e||"").toLowerCase();if(e.includes("fogo"))return"fogo";if(e.includes("gelo"))return"gelo";if(e.includes("elétr")||e.includes("eletr"))return"eletrico";if(e.includes("fís")||e.includes("fis"))return"fisico";if(e.includes("corrupt"))return"corrupto";if(e.includes("void"))return"void";if(e.includes("éter")||e.includes("eter"))return"eter";return""}
 function renderBattleMonsters(){
   const box=document.getElementById("battleMonsters");
-  const active=battleMonsters.filter(m=>m.active!==false&&safeNumber(m.hp,safeNumber(m.maxHp,0))>0);
-  box.innerHTML=active.map(m=>{
+  const field=battleMonsters.filter(m=>m.active!==false);
+  box.innerHTML=field.map(m=>{
     const hp=safeNumber(m.hp,safeNumber(m.maxHp,0));
-    const max=safeNumber(m.maxHp,hp||1);
+    const max=Math.max(1,safeNumber(m.maxHp,hp||1));
     const pct=Math.max(0,Math.min(100,(hp/max)*100));
-    return `<div class="monster-card ${elementClass(m.element)}" onclick="setVal('battleTarget','${m.id}')">
-      <div class="monster-img">${m.image?`<img src="${m.image}">`:"MONSTRO"}</div>
+    const defeated=hp<=0;
+    const selectable=!defeated;
+    return `<div class="monster-card ${elementClass(m.element)} ${defeated?'defeated':''}" onclick="${selectable?`setVal('battleTarget','${m.id}')`:''}">
+      <div class="monster-img">${m.image?`<img src="${m.image}">`:defeated?"💀 MONSTRO DERROTADO":"MONSTRO"}</div>
       <h2>${escape(m.name)}</h2>
       <p>${escape(m.type)} • ${escape(m.element)}</p>
       <div class="hpbar"><div class="hpfill" style="width:${pct}%"></div></div>
       <p><b>PV ${hp}/${max}</b></p>
-      <small>Clique no monstro para selecionar como alvo.</small>
+      ${defeated?`<div class="death-note">💀 ${escape(m.name)} caiu. O bicho está morto/fora de combate.</div>`:`<small>Clique no monstro para selecionar como alvo.</small>`}
       <div class="row gm-only" style="margin-top:10px">
         <div><label>Dano/Cura</label><input id="monsterDelta-${m.id}" type="number" value="5" onclick="event.stopPropagation()"></div>
       </div>
       <div class="row gm-only">
         <button class="danger" onclick="event.stopPropagation();damageMonster('${m.id}', val('monsterDelta-${m.id}')||5)">Diminuir PV</button>
         <button onclick="event.stopPropagation();healMonster('${m.id}', val('monsterDelta-${m.id}')||5)">Curar PV</button>
-        <button onclick="event.stopPropagation();monsterAttack('${m.id}')">Monstro age</button>
+        <button onclick="event.stopPropagation();monsterAttack('${m.id}')" ${defeated?'disabled':''}>Monstro age</button>
         <button class="danger" onclick="event.stopPropagation();deleteBattleMonster('${m.id}')">Remover</button>
       </div>
     </div>`
@@ -984,8 +1016,8 @@ function renderBattleMonsters(){
 }
 function renderBattleSelects(){
   const c=currentChar();const skillSel=document.getElementById("battleSkill");const targetSel=document.getElementById("battleTarget");
-  const monsterOptions=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${m.id}">${escape(m.name)} • PV ${m.hp}/${m.maxHp}</option>`).join("")||`<option value="">Nenhum alvo</option>`;
-  skillSel.innerHTML=c?`<option value="basic">Ataque básico (${escape(c.ether)})</option>`+skills.filter(s=>s.characterId===c.id&&(!s.secret||canGM())).map(s=>`<option value="${s.id}">${s.secret?"[SECRETA] ":""}${escape(s.name)} • ${escape(s.element)}</option>`).join(""):`<option>Escolha personagem</option>`;
+  const monsterOptions=battleMonsters.filter(m=>m.active!==false&&safeNumber(m.hp,0)>0).map(m=>`<option value="${m.id}">${escape(m.name)} • PV ${m.hp}/${m.maxHp}</option>`).join("")||`<option value="">Nenhum alvo</option>`;
+  skillSel.innerHTML=c?`<option value="basic">Ataque básico (${escape(c.ether)})</option>`+skills.filter(s=>s.characterId===c.id&&(canGM()||s.ownerAccount===code())).map(s=>`<option value="${s.id}">${s.secret?"[SECRETA] ":""}${escape(s.name)} • ${escape(s.element)}</option>`).join(""):`<option>Escolha personagem</option>`;
   targetSel.innerHTML=monsterOptions;
   const gmTarget=document.getElementById("gmDamageTarget");if(gmTarget)gmTarget.innerHTML=monsterOptions;
   renderMyTurnStatus();
@@ -1054,7 +1086,7 @@ async function getFreshBattleMonster(id){
 }
 async function writeBattleMonsterHp(id,hp,maxHp,damageLog){
   const {db,doc,setDoc}=fb();
-  await setDoc(doc(db,"battleMonsters",String(id)),{hp:Number(hp),maxHp:Number(maxHp),damageLog:damageLog||{}},{merge:true});
+  await setDoc(doc(db,"battleMonsters",String(id)),{hp:Number(hp),maxHp:Number(maxHp),damageLog:damageLog||{},defeated:Number(hp)<=0},{merge:true});
 }
 async function applyDamage(id,dmg,who){
   const m=await getFreshBattleMonster(id);
@@ -1073,6 +1105,7 @@ async function damageMonster(id,d){
   const result=await applyDamage(id,d,"GM");
   if(!result)return;
   await log("Host/GM",`removeu ${result.damage} PV de ${result.monster.name}. PV agora: ${result.hp}/${result.maxHp}.`,"attack",result.monster.image,result.monster.element);
+  if(result.hp<=0)await log("Sistema",`${result.monster.name} foi derrotado e saiu de combate!`,"system",result.monster.image,result.monster.element);
 }
 async function healMonster(id,d){
   if(!canGM())return alert("Só Host/GM mexe no PV do monstro.");
@@ -1153,7 +1186,22 @@ async function createSkill(){
   const {db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"skills")),{...s,createdAt:serverTimestamp()});setVal("skillName","");setVal("skillBase","");setVal("skillDesc","");if(document.getElementById("skillSecret"))document.getElementById("skillSecret").checked=false;alert("Habilidade salva.")
 }
 function renderSkills(){
-  document.getElementById("skillsList").innerHTML=skills.filter(s=>canGM()||(!s.secret&&s.ownerAccount===code())).map(s=>`<div class="card" style="margin:10px 0"><h3>${escape(s.name)} <span class="pill">${escape(s.element)}</span> ${s.secret?'<span class="pill warning">SECRETA GM/BOSS</span>':''}</h3><p>${escape(s.characterName)} • Dano ${Number(s.damage||12)} • Custo ${s.cost} PE • Escala ${escape(s.scale)}</p><p>${escape(s.base||"")}</p><p>${escape(s.desc||"")}</p><button class="danger" onclick="deleteSkill('${s.id}')">Apagar habilidade</button></div>`).join("")||"<p>Nenhuma habilidade.</p>";
+  const visible=skills.filter(s=>canGM()||s.ownerAccount===code());
+  document.getElementById("skillsList").innerHTML=visible.map(s=>{
+    const isMine=s.ownerAccount===code();
+    const secretNote=s.secret
+      ? (canGM()?"Habilidade secreta visível para Host/GM e para o dono da ficha.":"Habilidade secreta liberada pelo GM para sua ficha.")
+      : "Habilidade comum.";
+    const canDelete=canGM()||isMine;
+    return `<div class="card" style="margin:10px 0">
+      <h3>${escape(s.name)} <span class="pill">${escape(s.element)}</span> ${s.secret?'<span class="pill warning">SECRETA GM/BOSS</span>':''}</h3>
+      <p>${escape(s.characterName)} • Dano ${Number(s.damage||12)} • Custo ${Number(s.cost||0)} PE • Escala ${escape(s.scale)}</p>
+      <p><b>${secretNote}</b></p>
+      <p>${escape(s.base||"")}</p>
+      <p>${escape(s.desc||"")}</p>
+      ${canDelete?`<button class="danger" onclick="deleteSkill('${s.id}')">Apagar habilidade</button>`:""}
+    </div>`
+  }).join("")||"<p>Nenhuma habilidade.</p>";
 }
 
 async function log(author,text,kind="system",image="",element=""){const {db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"battleLogs")),{author,text,kind,image,element,time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),createdAt:serverTimestamp()})}
@@ -1163,7 +1211,7 @@ async function clearLog(){if(!canGM())return alert("Só Host/GM.");const {db,doc
 function buildTurns(){
   if(!canGM())return alert("Só Host/GM.");
   const players=(sessionData.party||[]).filter(id=>characters.some(c=>c.id===id));
-  const monsters=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>m.id);
+  const monsters=battleMonsters.filter(m=>m.active!==false&&safeNumber(m.hp,0)>0).map(m=>m.id);
   sessionData.turnOrder=[...players,...monsters];
   sessionData.turnIndex=0;
   if(!sessionData.round)sessionData.round=1;
@@ -1224,7 +1272,7 @@ function renderSessionTab(){
   setText("sessionStatusBig",open?"Sessão aberta: jogadores podem entrar." : "Sessão fechada: aguarde o Host/GM abrir.");
   setText("sessionStatOpen",open?"Aberta":"Fechada");
   setText("sessionStatPlayers",sessionPlayers.length);
-  setText("sessionStatMonsters",battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).length);
+  setText("sessionStatMonsters",battleMonsters.filter(m=>m.active!==false&&safeNumber(m.hp,0)>0).length);
   setText("sessionStatRound",sessionData.round||1);
   const turnId=sessionData.turnOrder?.[sessionData.turnIndex];
   const turnChar=characters.find(c=>c.id===turnId);
