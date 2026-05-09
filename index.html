@@ -360,4 +360,324 @@
 
     let personagens = JSON.parse(localStorage.getItem("personagens") || "[]");
     let monstros = JSON.parse(localStorage.getItem("monstros") || "[]");
-    let
+    let selecionadoId = null;
+
+    if (!localStorage.getItem(PLAYER_ID_KEY)) {
+      localStorage.setItem(PLAYER_ID_KEY, crypto.randomUUID());
+    }
+
+    function playerId() {
+      return localStorage.getItem(PLAYER_ID_KEY);
+    }
+
+    function isHost() {
+      return localStorage.getItem(HOST_KEY) === "true";
+    }
+
+    function salvarTudo() {
+      localStorage.setItem("personagens", JSON.stringify(personagens));
+      localStorage.setItem("monstros", JSON.stringify(monstros));
+      renderizarTudo();
+    }
+
+    function abrirAba(id) {
+      document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      renderizarTudo();
+    }
+
+    function virarHost() {
+      const codigo = document.getElementById("hostCodeInput").value.trim();
+      if (codigo === HOST_CODE) {
+        localStorage.setItem(HOST_KEY, "true");
+        alert("Você virou Host/GM!");
+      } else {
+        alert("Código errado. O código padrão é ZZZHOST2026");
+      }
+      renderizarTudo();
+    }
+
+    function sairHost() {
+      localStorage.removeItem(HOST_KEY);
+      renderizarTudo();
+    }
+
+    function criarPersonagem() {
+      const nome = document.getElementById("nome").value.trim();
+      const classe = document.getElementById("classe").value.trim();
+      const hpMax = Number(document.getElementById("hpMax").value || 100);
+      const energiaMax = Number(document.getElementById("energiaMax").value || 50);
+      const habilidadesTexto = document.getElementById("habilidades").value.trim();
+      const arquivo = document.getElementById("imagem").files[0];
+
+      if (!nome) return alert("Coloca um nome no personagem.");
+
+      const habilidades = habilidadesTexto
+        ? habilidadesTexto.split("\n").map(linha => {
+            const partes = linha.split("|").map(p => p.trim());
+            return {
+              nome: partes[0] || "Ataque",
+              dano: Number(partes[1] || 10),
+              custo: Number(partes[2] || 0)
+            };
+          })
+        : [{ nome: "Ataque básico", dano: 10, custo: 0 }];
+
+      const finalizar = (imagemBase64 = "") => {
+        personagens.push({
+          id: crypto.randomUUID(),
+          owner: playerId(),
+          nome,
+          classe,
+          hp: hpMax,
+          hpMax,
+          energia: energiaMax,
+          energiaMax,
+          habilidades,
+          imagem: imagemBase64
+        });
+        document.getElementById("nome").value = "";
+        document.getElementById("classe").value = "";
+        document.getElementById("habilidades").value = "";
+        document.getElementById("imagem").value = "";
+        salvarTudo();
+        abrirAba("fichas");
+      };
+
+      if (arquivo) {
+        const reader = new FileReader();
+        reader.onload = e => finalizar(e.target.result);
+        reader.readAsDataURL(arquivo);
+      } else {
+        finalizar("");
+      }
+    }
+
+    function apagarPersonagem(id) {
+      const p = personagens.find(x => x.id === id);
+      if (!p) return;
+
+      if (!isHost() && p.owner !== playerId()) {
+        return alert("Você só pode apagar suas fichas. Host apaga qualquer uma.");
+      }
+
+      if (!confirm(`Apagar a ficha de ${p.nome}?`)) return;
+      personagens = personagens.filter(x => x.id !== id);
+      if (selecionadoId === id) selecionadoId = null;
+      salvarTudo();
+    }
+
+    function exportarFicha(id) {
+      const card = document.getElementById(`card-${id}`);
+      html2canvas(card).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "ficha-personagem.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+
+    function criarMonstro() {
+      if (!isHost()) return alert("Só o Host/GM pode criar monstro. Use o código: ZZZHOST2026");
+
+      const nome = document.getElementById("monstroNome").value.trim() || "Monstro sem nome";
+      const hpMax = Number(document.getElementById("monstroHp").value || 100);
+      const dano = Number(document.getElementById("monstroDano").value || 10);
+
+      monstros.push({
+        id: crypto.randomUUID(),
+        nome,
+        hp: hpMax,
+        hpMax,
+        dano
+      });
+
+      document.getElementById("monstroNome").value = "";
+      salvarTudo();
+      abrirAba("batalha");
+    }
+
+    function apagarMonstro(id) {
+      if (!isHost()) return alert("Só Host/GM pode apagar monstro.");
+      monstros = monstros.filter(m => m.id !== id);
+      salvarTudo();
+    }
+
+    function selecionarPersonagem() {
+      selecionadoId = document.getElementById("selectPersonagem").value;
+      renderizarTudo();
+    }
+
+    function atacar(monstroId, habIndex) {
+      const personagem = personagens.find(p => p.id === selecionadoId);
+      const monstro = monstros.find(m => m.id === monstroId);
+      if (!personagem) return alert("Escolha um personagem primeiro.");
+      if (!monstro) return alert("Escolha um monstro primeiro.");
+
+      const habilidade = personagem.habilidades[habIndex];
+      if (!habilidade) return;
+
+      if (personagem.energia < habilidade.custo) {
+        return alert("Energia insuficiente.");
+      }
+
+      personagem.energia -= habilidade.custo;
+      monstro.hp -= habilidade.dano;
+      if (monstro.hp < 0) monstro.hp = 0;
+
+      logar(`${personagem.nome} usou ${habilidade.nome} em ${monstro.nome} e causou ${habilidade.dano} de dano.`);
+
+      if (monstro.hp <= 0) {
+        logar(`💀 ${monstro.nome} foi derrotado!`);
+      }
+
+      salvarTudo();
+    }
+
+    function ataqueMonstro(monstroId) {
+      if (!isHost()) return alert("Só Host/GM pode mandar monstro atacar.");
+
+      const personagem = personagens.find(p => p.id === selecionadoId);
+      const monstro = monstros.find(m => m.id === monstroId);
+      if (!personagem || !monstro) return;
+
+      personagem.hp -= monstro.dano;
+      if (personagem.hp < 0) personagem.hp = 0;
+      logar(`${monstro.nome} atacou ${personagem.nome} e causou ${monstro.dano} de dano.`);
+      salvarTudo();
+    }
+
+    function curarPersonagem(id) {
+      const p = personagens.find(x => x.id === id);
+      if (!p) return;
+      if (!isHost() && p.owner !== playerId()) return alert("Só dá para curar sua ficha ou usar Host.");
+      p.hp = p.hpMax;
+      p.energia = p.energiaMax;
+      salvarTudo();
+    }
+
+    function hpPercent(obj) {
+      if (!obj.hpMax) return 0;
+      return Math.max(0, Math.min(100, (obj.hp / obj.hpMax) * 100));
+    }
+
+    function logar(texto) {
+      const logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      logs.unshift({ texto, hora: new Date().toLocaleTimeString() });
+      localStorage.setItem("logs", JSON.stringify(logs.slice(0, 40)));
+    }
+
+    function renderizarTudo() {
+      document.getElementById("hostStatus").textContent = isHost() ? "Modo Host/GM ativo" : "Modo jogador";
+      renderizarPersonagens();
+      renderizarMonstros();
+      renderizarBatalha();
+      renderizarLog();
+    }
+
+    function renderizarPersonagens() {
+      const box = document.getElementById("listaPersonagens");
+      if (!box) return;
+
+      if (personagens.length === 0) {
+        box.innerHTML = `<div class="card"><p>Nenhuma ficha criada ainda.</p></div>`;
+        return;
+      }
+
+      box.innerHTML = personagens.map(p => `
+        <div class="card character-card" id="card-${p.id}">
+          ${p.imagem ? `<img class="portrait" src="${p.imagem}" />` : `<div class="portrait" style="display:flex;align-items:center;justify-content:center;color:#777;">Sem imagem</div>`}
+          <h3>${p.nome}</h3>
+          <span class="pill">${p.classe || "Sem classe"}</span>
+          <p>HP: ${p.hp}/${p.hpMax}</p>
+          <div class="hpbar"><div class="hpfill" style="width:${hpPercent(p)}%"></div></div>
+          <p>Energia: ${p.energia}/${p.energiaMax}</p>
+          <h4>Habilidades</h4>
+          ${p.habilidades.map(h => `<p>⚡ ${h.nome} - dano ${h.dano}, custo ${h.custo}</p>`).join("")}
+          <div class="small-row">
+            <button onclick="exportarFicha('${p.id}')">Exportar imagem</button>
+            <button class="blue" onclick="curarPersonagem('${p.id}')">Restaurar</button>
+            <button class="red" onclick="apagarPersonagem('${p.id}')">Apagar</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderizarMonstros() {
+      const box = document.getElementById("listaMonstros");
+      if (!box) return;
+
+      if (monstros.length === 0) {
+        box.innerHTML = `<div class="card"><p>Nenhum monstro spawnado ainda.</p></div>`;
+        return;
+      }
+
+      box.innerHTML = monstros.map(m => `
+        <div class="card monster-card">
+          <h3>👾 ${m.nome}</h3>
+          <p>HP: ${m.hp}/${m.hpMax}</p>
+          <div class="hpbar"><div class="hpfill" style="width:${hpPercent(m)}%"></div></div>
+          <p>Dano base: ${m.dano}</p>
+          <button class="red" onclick="apagarMonstro('${m.id}')">Apagar monstro</button>
+        </div>
+      `).join("");
+    }
+
+    function renderizarBatalha() {
+      const sel = document.getElementById("selectPersonagem");
+      const alvo = document.getElementById("selectAlvo");
+      const pBox = document.getElementById("personagemSelecionado");
+      const acoes = document.getElementById("acoesBatalha");
+      const arena = document.getElementById("arenaMonstros");
+      if (!sel || !alvo || !pBox || !acoes || !arena) return;
+
+      sel.innerHTML = `<option value="">Selecione...</option>` + personagens.map(p => `<option value="${p.id}" ${p.id === selecionadoId ? "selected" : ""}>${p.nome}</option>`).join("");
+      alvo.innerHTML = monstros.map(m => `<option value="${m.id}">${m.nome} - HP ${m.hp}/${m.hpMax}</option>`).join("");
+
+      const p = personagens.find(x => x.id === selecionadoId);
+      if (!p) {
+        pBox.innerHTML = `<p class="warning">Nenhum personagem selecionado.</p>`;
+        acoes.innerHTML = `<p>Selecione um personagem para liberar ataques.</p>`;
+      } else {
+        pBox.innerHTML = `
+          <div class="card selected" style="margin-top:12px;">
+            <h3>${p.nome}</h3>
+            <p>HP: ${p.hp}/${p.hpMax}</p>
+            <div class="hpbar"><div class="hpfill" style="width:${hpPercent(p)}%"></div></div>
+            <p>Energia: ${p.energia}/${p.energiaMax}</p>
+          </div>
+        `;
+        acoes.innerHTML = p.habilidades.map((h, i) => `
+          <button style="width:100%; margin-top:8px;" onclick="atacar(document.getElementById('selectAlvo').value, ${i})">
+            ${h.nome} | Dano ${h.dano} | Custo ${h.custo}
+          </button>
+        `).join("");
+      }
+
+      if (monstros.length === 0) {
+        arena.innerHTML = `<div class="card"><p>Nenhum monstro na arena. O Host precisa spawnar.</p></div>`;
+      } else {
+        arena.innerHTML = monstros.map(m => `
+          <div class="card monster-card ${m.hp <= 0 ? "dead" : ""}" onclick="document.getElementById('selectAlvo').value='${m.id}'">
+            <h3>👾 ${m.nome}</h3>
+            <p>HP: ${m.hp}/${m.hpMax}</p>
+            <div class="hpbar"><div class="hpfill" style="width:${hpPercent(m)}%"></div></div>
+            <p>Dano: ${m.dano}</p>
+            ${m.hp <= 0 ? `<p class="warning">Derrotado</p>` : ""}
+            <button class="dark" onclick="event.stopPropagation(); ataqueMonstro('${m.id}')">Monstro atacar</button>
+          </div>
+        `).join("");
+      }
+    }
+
+    function renderizarLog() {
+      const box = document.getElementById("log");
+      if (!box) return;
+      const logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      box.innerHTML = logs.length ? logs.map(l => `<p><b>${l.hora}</b> - ${l.texto}</p>`).join("") : `<p>Nada aconteceu ainda.</p>`;
+    }
+
+    renderizarTudo();
+  </script>
+</body>
+</html>
