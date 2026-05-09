@@ -146,7 +146,34 @@
     .monster-fire{border-color:#ff4444!important;box-shadow:0 0 18px rgba(255,68,68,.2)}
     .monster-ice{border-color:#4da6ff!important;box-shadow:0 0 18px rgba(77,166,255,.2)}
     .monster-corrupt{border-color:#a855f7!important;box-shadow:0 0 18px rgba(168,85,247,.2)}
-    @media(max-width:750px){.bio-card{grid-template-columns:1fr}.bio-photo{width:100%;height:220px}}
+    
+.battle-action-panel{
+  padding:22px!important;
+  border-radius:24px!important;
+  min-height:220px;
+}
+.battle-action-panel h3{
+  font-size:24px!important;
+}
+#liveBattleMonsters{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr))!important;
+  gap:18px!important;
+}
+.big-monster-card{
+  min-height:520px!important;
+  padding:22px!important;
+}
+.big-monster-card img{
+  height:300px!important;
+}
+.control-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+@media(max-width:750px){.bio-card{grid-template-columns:1fr}.bio-photo{width:100%;height:220px}}
 
     @media(max-width:900px){.special-grid{grid-template-columns:1fr}}
 
@@ -441,8 +468,8 @@
 <button onclick="spawnSelectedMonster()">Spawnar na batalha</button>
 </div>
 
-<div class="card span-6 gm-only">
-        <h2>Controle Host/GM</h2>
+<div class="card span-12 gm-only control-grid">
+        <div><h2>Controle Host/GM</h2>
         <p>Host/GM controla rounds, turnos e cenário.</p>
         <div class="row">
           <button onclick="buildTurnOrder()">Montar ordem</button>
@@ -455,8 +482,7 @@
         <button onclick="addBattleEvent()">Adicionar evento</button>
       </div>
 
-      <div class="card span-6 gm-only">
-        <h2>Editar Cenário</h2>
+      </div><div><h2>Editar Cenário</h2>
         <p>Host/GM pode trocar o cenário que aparece para todos.</p>
         <label>Título do cenário</label>
         <input id="sceneTitle" placeholder="Ex: Distrito abandonado da Hollow">
@@ -469,7 +495,7 @@
           <div class="row"><img id="sceneImagePreviewImg"><div><b>Preview do cenário</b><p>Essa imagem aparecerá para todos.</p></div></div>
         </div>
         <button class="green-btn" onclick="saveScene()">Atualizar cenário</button>
-      </div>
+      </div></div>
 
           </div>
   </section>
@@ -943,311 +969,42 @@ async function addSystemLog(text){
 }
 
 async function createMonster(){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode criar monstros.');
-  if(!canEditSheets()) return alert("Somente Host ou GM pode spawnar monstros.");
-  const name=(document.getElementById("monsterName").value||"").trim();
+  if(!isHostOrGm()) return alert("Somente Host ou GM pode criar monstros.");
+
+  const name=(document.getElementById("monsterName")?.value||"").trim();
+  const type=(document.getElementById("monsterType")?.value||"").trim();
+  const element=(document.getElementById("monsterElement")?.value||"").trim();
+  const hp=Number(document.getElementById("monsterHp")?.value||100);
+  const pressure=Number(document.getElementById("monsterPressure")?.value||10);
+  const img=document.getElementById("monsterImagePreviewImg")?.src||"";
+
   if(!name) return alert("Coloque o nome do monstro.");
-  const maxHp=Number(document.getElementById("monsterMaxHp").value||1);
-  const maxPressure=Number(document.getElementById("monsterMaxPressure").value||0);
+
   const monster={
+    id:"template_"+Date.now(),
     name,
-    type:document.getElementById("monsterType").value,
-    element:document.getElementById("monsterElement").value,
-    hp:maxHp,
-    maxHp,
-    pressure:0,
-    maxPressure,
-    round:Number(document.getElementById("monsterRound").value||1),
-    xp:Number(document.getElementById("monsterXp").value||0),
-    damageLog:{},
-    desc:(document.getElementById("monsterDesc").value||"").trim(),
-    image:monsterImageData||"",
-    active:true,
-    createdAtText:new Date().toISOString()
+    type,
+    element,
+    maxHp:hp,
+    hp,
+    maxPressure:pressure,
+    pressure,
+    image:img,
+    active:false
   };
-  const{db,collection,doc,setDoc,serverTimestamp}=fb();
-  await setDoc(doc(collection(db,"monsters")),{...monster,createdAt:serverTimestamp()});
-  saveMonsterTemplate(monster); await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Spawnou monstro: ${monster.name} (${monster.type} • ${monster.element})`,image:monster.image,element:monster.element});
-  clearMonsterForm();
-}
-function clearMonsterForm(){
-  ["monsterName","monsterDesc"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
-  setVal("monsterMaxHp",20);setVal("monsterMaxPressure",10);setVal("monsterRound",1);setVal("monsterXp",100);
-  monsterImageData="";
-  const input=document.getElementById("monsterImageInput"); if(input) input.value="";
-  const box=document.getElementById("monsterImagePreview"); if(box) box.style.display="none";
-}
-function renderMonsters(){
-  const box=document.getElementById("monsterList");
-  if(!box) return;
-  if(!monsters.length){box.innerHTML="<p>Nenhum monstro spawnado ainda.</p>";return;}
-  box.innerHTML=monsters.map(m=>{
-    const pct=Math.max(0,Math.min(100,((Number(m.hp)||0)/(Number(m.maxHp)||1))*100));
-    const ppct=Math.max(0,Math.min(100,((Number(m.pressure)||0)/(Number(m.maxPressure)||1))*100));
-    return `<div class="monster-card">
-      <div class="monster-img">${m.image?`<img src="${m.image}" alt="${escapeHtml(m.name)}">`:"MONSTRO"}</div>
-      <div>
-        <h3>${escapeHtml(m.name)} ${m.active===false?'<span class="warning">[fora]</span>':'<span class="ok">[ativo]</span>'}</h3>
-        <small>${escapeHtml(m.type||"-")} • ${escapeHtml(m.element||"-")} • Rodada ${m.round||1}</small>
-        <p>${escapeHtml(m.desc||"Sem descrição.")}</p>
-        <b>PV ${m.hp||0}/${m.maxHp||0}</b>
-        <div class="hpbar"><div class="hpfill" style="width:${pct}%"></div></div>
-        <b>Pressão ${m.pressure||0}/${m.maxPressure||0}</b>
-        <div class="hpbar"><div class="hpfill" style="width:${ppct}%"></div></div>
-        <div class="xp-board">${renderDamageRanking(m)}</div>
-        <div class="monster-actions">
-          <select id="dealer-${m.id}">${characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select>
-          <input id="delta-${m.id}" type="number" value="1" min="0">
-          <button onclick="changeMonsterHp('${m.id}',-Number(document.getElementById('delta-${m.id}').value||0),document.getElementById('dealer-${m.id}').value)">Dano</button>
-          <button onclick="changeMonsterHp('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">Curar</button>
-          <button onclick="changeMonsterPressure('${m.id}',Number(document.getElementById('delta-${m.id}').value||0))">+Pressão</button>
-          <button onclick="nextMonsterRound('${m.id}')">+Rodada</button>
-          <button onclick="monsterActionLog('${m.id}')">Ação no log</button>
-          <button onclick="toggleMonsterActive('${m.id}')">${m.active===false?"Ativar":"Remover da mesa"}</button>
-          <button class="green-btn" onclick="distributeMonsterXp('${m.id}')">Distribuir XP</button>
-          <button class="danger-btn" onclick="deleteMonster('${m.id}')">Excluir</button>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-}
 
-function characterName(id){
-  return characters.find(c=>c.id===id)?.name||"Desconhecido";
-}
-function renderDamageRanking(m){
-  const log=m.damageLog||{};
-  const entries=Object.entries(log).sort((a,b)=>Number(b[1])-Number(a[1]));
-  if(!entries.length) return "<b>Ranking de dano</b><p>Ninguém causou dano ainda.</p>";
-  const total=entries.reduce((s,[,d])=>s+Number(d||0),0)||1;
-  return `<b>Ranking de dano</b>${entries.map(([id,dmg],i)=>`<div class="rank-row"><span>#${i+1}</span><span>${escapeHtml(characterName(id))}</span><span>${dmg} dano</span><span>${Math.round((Number(dmg)/total)*100)}%</span></div>`).join("")}`;
-}
-async function distributeMonsterXp(id){
-  if(!canEditSheets()) return alert("Somente Host/GM pode distribuir XP.");
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const log=m.damageLog||{};
-  const entries=Object.entries(log).filter(([,d])=>Number(d)>0).sort((a,b)=>Number(b[1])-Number(a[1]));
-  if(!entries.length) return alert("Ninguém causou dano nesse monstro.");
-  const totalDamage=entries.reduce((s,[,d])=>s+Number(d),0);
-  const totalXp=Number(m.xp)||0;
-  let text=`XP de ${m.name} (${totalXp} XP) dividido por dano:\\n`;
-  entries.forEach(([cid,dmg])=>{
-    const xp=Math.round((Number(dmg)/totalDamage)*totalXp);
-    text+=`${characterName(cid)}: ${xp} XP (${dmg} dano)\\n`;
+  saveMonsterTemplate(monster);
+
+  await addSessionLogDirect({
+    role:"GM",
+    author:isOwner()?"Host":"GM",
+    kind:"gm",
+    text:`Monstro criado: ${monster.name}`,
+    image:monster.image,
+    element:monster.element
   });
-  await addSessionLogDirect({role:"Sistema",author:"XP",kind:"system",text,element:m.element});
-  alert("XP distribuído no log.");
-}
-async function changeMonsterHp(id,delta,dealerId=""){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode alterar PV de monstros.');
-  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const oldHp=Number(m.hp)||0;
-  const hp=Math.max(0,Math.min(Number(m.maxHp)||1,oldHp+delta));
-  const update={hp};
-  if(delta<0 && dealerId){
-    const dealt=Math.abs(delta);
-    const log={...(m.damageLog||{})};
-    log[dealerId]=(Number(log[dealerId])||0)+dealt;
-    update.damageLog=log;
-  }
-  const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"monsters",id),update);
-  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: PV ${oldHp} → ${hp}${delta<0&&dealerId?` | dano registrado para ${characterName(dealerId)}`:""}`,element:m.element});
-  if(hp===0 && oldHp>0) await addSessionLogDirect({role:"Sistema",author:"XP",kind:"system",text:`${m.name} caiu! Use Distribuir XP na aba Monstros.`,element:m.element});
-}
-async function changeMonsterPressure(id,delta){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode alterar pressão de monstros.');
-  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const pressure=Math.max(0,Math.min(Number(m.maxPressure)||0,(Number(m.pressure)||0)+delta));
-  const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"monsters",id),{pressure});
-  await addSessionLogDirect({role:"Sistema",author:"Monstros",kind:"system",text:`${m.name}: Pressão ${m.pressure||0} → ${pressure}`,element:m.element});
-}
-async function nextMonsterRound(id){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode alterar rodada de monstros.');
-  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const round=(Number(m.round)||1)+1;
-  const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"monsters",id),{round});
-  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`${m.name} avançou para a rodada ${round}.`,element:m.element});
-}
-async function monsterActionLog(id){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode agir com monstros.');
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const text=prompt("O que o monstro fez?",`${m.name} prepara uma ação ameaçadora.`);
-  if(!text) return;
-  await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"attack",text,move:`Ação de ${m.name}`,target:"Jogadores",element:m.element,image:m.image||""});
-}
-async function toggleMonsterActive(id){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode ativar/remover monstro.');
-  if(!canEditSheets()) return alert("Somente Host/GM pode mexer em monstro.");
-  const m=monsters.find(x=>x.id===id); if(!m) return;
-  const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"monsters",id),{active:!(m.active!==false)});
-}
-async function deleteMonster(id){
-  if(!isHostOrGm()) return alert('Somente Host ou GM pode excluir monstro.');
-  if(!canEditSheets()) return alert("Somente Host/GM pode excluir monstro.");
-  if(!confirm("Excluir monstro da mesa?")) return;
-  const{db,doc,deleteDoc}=fb();
-  await deleteDoc(doc(db,"monsters",id));
-}
-async function addSessionLogDirect({role="Sistema",author="Hollow Break",kind="system",text="",image="",element="",move="",target=""}){
-  const{db,collection,doc,setDoc,serverTimestamp}=fb();
-  await setDoc(doc(collection(db,"sessionLog")),{
-    role,author,kind,text,image,element,move,target,
-    time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
-    createdAt:serverTimestamp(),createdAtText:new Date().toISOString()
-  });
-}
-function renderGmManage(){const box=document.getElementById("gmManageList");if(!characters.length){box.innerHTML="<p>Nenhuma ficha.</p>";return}box.innerHTML=characters.map(c=>`<div class="character-card"><div class="avatar-small">${c.face?`<img src="${c.face}">`:"Sem rosto"}</div><div><h3>${escapeHtml(c.name)} ${c.gm?'<span class="ok">[GM]</span>':""}</h3><small>${escapeHtml(c.player)}</small></div><div><button onclick="toggleGm('${c.id}')">${c.gm?"Remover GM":"Tornar GM"}</button></div></div>`).join("")}
-async function toggleGm(id){if(!isOwner())return alert("Somente o Host pode transformar alguém em GM.");const c=characters.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",id),{gm:!c.gm});alert(c.gm?"GM removido.":"Jogador transformado em GM.")}
 
-function canUseCharacter(c){
-  if(!c) return false;
-  if(isOwner()) return true;
-  const user=currentAccountName();
-  return Boolean(user && c.ownerAccount===user);
-}
-async function createSkill(){
-  if(!window.firebaseReady) return alert("Firebase não conectou.");
-  const charId=document.getElementById("skillCharacter").value;
-  const c=characters.find(x=>x.id===charId);
-  if(!c) return alert("Escolha uma ficha.");
-  if(currentAccountName() && !canUseCharacter(c)) return alert("Você só pode criar habilidade para ficha da sua código.");
-  const name=val("skillName");
-  if(!name) return alert("Coloque o nome da habilidade.");
-  let chosenElement=val("skillElement") || c.ether;
-  if(chosenElement!==c.ether) return alert(`Essa ficha é do elemento ${c.ether}. Você só pode criar habilidade desse elemento.`);
-  const skill={
-    characterId:charId,
-    characterName:c.name,
-    ownerAccount:c.ownerAccount||"",
-    name,
-    type:val("skillType"),
-    element:chosenElement,
-    scale:val("skillScale"),
-    cost:num("skillCost",0),
-    base:val("skillBase"),
-    desc:val("skillDesc"),
-    createdAtText:new Date().toISOString()
-  };
-  const{db,collection,doc,setDoc,serverTimestamp}=fb();
-  await setDoc(doc(collection(db,"skills")),{...skill,createdAt:serverTimestamp()});
-  alert("Habilidade criada.");
-  clearSkillForm();
-}
-function clearSkillForm(){
-  ["skillName","skillBase","skillDesc"].forEach(id=>setVal(id,""));
-  setVal("skillCost",0);
-}
-function deleteSkill(id){
-  const s=skills.find(x=>x.id===id);
-  const c=characters.find(x=>x.id===s?.characterId);
-  if(!isOwner()&&!canUseCharacter(c)) return alert("Você só pode apagar habilidade da sua ficha.");
-  if(!confirm("Apagar habilidade?")) return;
-  const{db,doc,deleteDoc}=fb();
-  deleteDoc(doc(db,"skills",id));
-}
-function renderSkills(){
-  const box=document.getElementById("skillsList");
-  if(!box) return;
-  if(!skills.length){box.innerHTML="<p>Nenhuma habilidade criada ainda.</p>";return;}
-  box.innerHTML=skills.map(s=>`
-    <div class="skill-card">
-      <h3>${escapeHtml(s.name)} <span class="tag">${escapeHtml(s.element)}</span> <span class="tag">${escapeHtml(s.type)}</span></h3>
-      <small>Dono: ${escapeHtml(s.characterName)} • Escala com ${escapeHtml(s.scale)} • Custo ${s.cost} PE</small>
-      <p><b>Base:</b> ${escapeHtml(s.base||"-")}</p>
-      <p>${escapeHtml(s.desc||"")}</p>
-      <div class="row">
-        <button onclick="sendSkillToLog('${s.id}')">Usar no log</button>
-        <button class="danger-btn" onclick="deleteSkill('${s.id}')">Apagar</button>
-      </div>
-    </div>`).join("");
-}
-async function sendSkillToLog(id){
-  const s=skills.find(x=>x.id===id); if(!s) return;
-  const c=characters.find(x=>x.id===s.characterId);
-  if(!c) return alert("Personagem da habilidade não encontrado.");
-  if(!sessionData.open) return alert("Sessão fechada.");
-  await addSessionLogDirect({role:isOwner()||isGmLogged()?"GM":"Jogador",author:c.name,kind:"skill",move:s.name,target:"",element:s.element,text:`${c.name} usa ${s.name}.\\nBase: ${s.base}\\n${s.desc}`});
-}
-function useSelectedSkillInChat(){
-  const id=document.getElementById("chatSkillSelect")?.value;
-  const s=skills.find(x=>x.id===id);
-  if(!s) return;
-  setVal("chatMoveName",s.name);
-  setVal("chatElement",s.element);
-  const skillChar=document.getElementById("skillCharacter");
-  if(skillChar){
-    const mine=isOwner()?characters:characters.filter(c=>c.ownerAccount===currentAccountName()); skillChar.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ownerAccount||"sem código")}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
-  }
-  const chatSkill=document.getElementById("chatSkillSelect");
-  if(chatSkill){
-    chatSkill.innerHTML=`<option value="">Ataque manual</option>`+skills.map(s=>`<option value="${s.id}">${escapeHtml(s.characterName)} - ${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
-  }
-
-
-  const activeSel=document.getElementById("activeCharacterSelect");
-  if(activeSel){
-    const mine=characters.filter(c=>c.ownerAccount===currentAccountName());
-    activeSel.innerHTML=mine.length?mine.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} - ${escapeHtml(c.ether)}</option>`).join(""):`<option value="">Nenhuma ficha sua</option>`;
-    if(getMySessionCharacterId()) activeSel.value=getMySessionCharacterId();
-  }
-  const actionSkill=document.getElementById("actionSkillSelect");
-  if(actionSkill){
-    const charId=getMySessionCharacterId();
-    const c=characters.find(x=>x.id===charId);
-    const ownSkills=skills.filter(s=>s.characterId===charId);
-    actionSkill.innerHTML=`<option value="basic">Ataque básico (${c?.ether||"elemento"})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("");
-  }
-  const actionTarget=document.getElementById("actionTargetSelect");
-  if(actionTarget){
-    actionTarget.innerHTML=`<option value="">Sem alvo</option>`+monsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)} [monstro]</option>`).join("");
-  }
-
-  const actor=document.getElementById("chatActor");
-  if(actor) actor.value=s.characterId;
-  const msg=document.getElementById("chatMessage");
-  if(msg&&!msg.value) msg.value=`${s.characterName} usa ${s.name}.\\nBase: ${s.base}\\n${s.desc}`;
-}
-
-function syncSkillElementToCharacter(){
-  const id=document.getElementById("skillCharacter")?.value;
-  const c=characters.find(x=>x.id===id);
-  const el=document.getElementById("skillElement");
-  const hint=document.getElementById("skillElementHint");
-  if(c&&el){
-    el.value=c.ether||"Físico";
-    if(hint) hint.textContent=`Elemento travado nessa ficha: ${c.ether}`;
-  }
-}
-
-function myCharacters(){
-  const code=currentAccountName()||"visitante";
-  return characters.filter(c=>(c.ownerAccount||"visitante")===code);
-}
-function selectedCharacter(){
-  const id=getMySessionCharacterId();
-  return characters.find(c=>c.id===id) || myCharacters()[0] || null;
-}
-function ensureSelectedCharacter(){
-  const c=selectedCharacter();
-  if(c && getMySessionCharacterId()!==c.id) sessionStorage.setItem("hb_my_character",c.id);
-  return c;
-}
-async function joinSessionFromPersonagem(){
-  const c=ensureSelectedCharacter();
-  if(!c) return alert("Crie ou escolha um personagem primeiro.");
-  if(!sessionData.open) return alert("A sessão ainda está fechada. O Host precisa iniciar.");
-  const party=sessionData.party||[];
-  if(!party.includes(c.id)) party.push(c.id);
-  const{db,doc,updateDoc}=fb();
-  await updateDoc(doc(db,"game","session"),{party});
-  alert(`${c.name} entrou na sessão.`);
+  alert("Monstro criado e salvo para spawn.");
   renderAll();
 }
 function renderPersonagemTab(){
@@ -1431,23 +1188,48 @@ async function removeSecretItem(index){
 
 function renderBattleActionSelects(){
   const c=selectedCharacter();
+
   const skillSel=document.getElementById("battleActionSkillSelect");
   const targetSel=document.getElementById("battleActionTargetSelect");
 
   if(skillSel){
-    const ownSkills=c?skills.filter(s=>s.characterId===c.id):[];
-    skillSel.innerHTML=c
-      ? `<option value="basic">Ataque básico (${escapeHtml(c.ether||"")})</option>`+ownSkills.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.element)})</option>`).join("")
-      : `<option value="">Escolha um personagem na aba Personagem</option>`;
+    skillSel.innerHTML="";
+    if(!c){
+      skillSel.innerHTML='<option value="">Escolha um personagem primeiro</option>';
+    }else{
+      const ownSkills=skills.filter(s=>s.characterId===c.id);
+
+      const basic=document.createElement("option");
+      basic.value="basic";
+      basic.textContent=`Ataque básico (${c.ether||"Sem elemento"})`;
+      skillSel.appendChild(basic);
+
+      ownSkills.forEach(s=>{
+        const opt=document.createElement("option");
+        opt.value=s.id;
+        opt.textContent=`${s.name} • ${s.element}`;
+        skillSel.appendChild(opt);
+      });
+    }
   }
 
   if(targetSel){
+    targetSel.innerHTML="";
     const active=battleMonsters();
-    targetSel.innerHTML=active.length
-      ? active.map(m=>`<option value="${m.id}">${escapeHtml(m.name)} - PV ${m.hp}/${m.maxHp}</option>`).join("")
-      : `<option value="">Nenhum monstro ativo</option>`;
+
+    if(!active.length){
+      targetSel.innerHTML='<option value="">Nenhum monstro ativo</option>';
+    }else{
+      active.forEach(m=>{
+        const opt=document.createElement("option");
+        opt.value=m.id;
+        opt.textContent=`${m.name} • PV ${m.hp}/${m.maxHp}`;
+        targetSel.appendChild(opt);
+      });
+    }
   }
-}async function requestBattleAction(){
+}
+async function requestBattleAction(){
   const c=selectedCharacter();
   if(!c) return alert("Escolha seu personagem na aba Personagem.");
   if(!sessionData.open) return alert("A sessão precisa estar aberta. Host deve iniciar.");
@@ -1575,9 +1357,22 @@ async function addBattleEvent(){
   await addSessionLogDirect({role:"GM",author:isOwner()?"Host":(getLoggedGmCharacter()?.name||"GM"),kind:"gm",text:`Evento de batalha: ${text}`});
   setVal("battleEventText","");
 }
-function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();renderScenario();renderPersonagemTab();renderLiveBattle();renderBattleActionSelects();updateMonsterSelects();updateGmOnlyControls();updateGate()}
+function renderAll(){updateDerived();updateOwnerStatus();renderSelects();renderCharacters();renderGmManage();renderMonsters();renderRules();renderSkills();updateAccountStatus();updateMonsterSelects();renderScenario();renderPersonagemTab();renderLiveBattle();renderBattleActionSelects();updateGmOnlyControls();updateGate()}
 updateRaceInfo();updateElementInfo();renderAll();
 updateGate();
 </script>
 </body>
-</html>
+</html>function updateMonsterSelects(){
+  const sel=document.getElementById("spawnMonsterSelect");
+  if(sel){
+    if(!monsterTemplates.length){
+      sel.innerHTML='<option value="">Nenhum monstro criado</option>';
+      return;
+    }
+    sel.innerHTML=monsterTemplates.map((m,i)=>`
+      <option value="${i}">
+        ${m.name} • ${m.element||"Sem elemento"} • PV ${m.maxHp||0}
+      </option>
+    `).join("");
+  }
+}
