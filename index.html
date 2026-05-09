@@ -414,9 +414,10 @@
               </div>
               <label>Descrição</label>
               <textarea id="battleText" placeholder="Ex: avanço contra o Etéreo e uso Corte Relâmpago."></textarea>
+              <p id="myTurnStatus" class="pill">Aguardando turno...</p>
               <div class="row">
                 <button class="okbtn" onclick="requestAction()">Pedir ação ao Host/GM</button>
-                <button onclick="quickAttack()">Ataque rápido</button>
+                <button class="gm-only" onclick="quickAttack()">Aplicar ataque direto (GM)</button>
               </div>
             </div>
           </div>
@@ -441,6 +442,19 @@
               </div>
               <h3 class="mini-title">Ordem de turno</h3>
               <div id="turnOrderList" class="turn-list"></div>
+              <h3 class="mini-title">Ações pendentes</h3>
+              <div id="actionRequestsList" class="log-box" style="height:240px"></div>
+              <div class="gm-only" style="margin-top:12px">
+                <h3 class="mini-title">Dano manual do GM</h3>
+                <div class="row">
+                  <div><label>Monstro</label><select id="gmDamageTarget"></select></div>
+                  <div><label>Dano/Cura</label><input id="gmDamageValue" type="number" value="10"></div>
+                </div>
+                <div class="row">
+                  <button class="danger" onclick="applyManualDamage()">Diminuir PV</button>
+                  <button onclick="applyManualHeal()">Curar PV</button>
+                </div>
+              </div>
               <h3 style="margin-top:16px">Log</h3>
               <div id="battleLog" class="log-box"></div>
               <div class="row gm-only">
@@ -658,7 +672,7 @@
 
 <script>
 let faceData="",sceneImage="",monsterImage="";
-let characters=[],skills=[],monsterTemplates=[],battleMonsters=[],logs=[],sessionPlayers=[];
+let characters=[],skills=[],monsterTemplates=[],battleMonsters=[],logs=[],sessionPlayers=[],actionRequests=[];
 let sessionData={open:false,party:[],round:1,turnOrder:[],turnIndex:0,scene:{title:"",desc:"",image:""}};
 const DEFAULT_HOST_CODE="HOLLOW2026";
 
@@ -686,6 +700,7 @@ window.addEventListener("firebase-ready",()=>{
   listen("monsterTemplates",d=>{monsterTemplates=d;renderAll()});
   listen("battleMonsters",d=>{battleMonsters=d;renderAll()});
   listen("battleLogs",d=>{logs=d.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));renderAll()});
+  listen("actionRequests",d=>{actionRequests=d.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));renderAll()});
   listen("sessionPlayers",d=>{sessionPlayers=d;renderAll()});
   const {db,doc,onSnapshot,setDoc}=fb();
   const ref=doc(db,"game","session");
@@ -872,8 +887,11 @@ function renderBattleMonsters(){
 }
 function renderBattleSelects(){
   const c=currentChar();const skillSel=document.getElementById("battleSkill");const targetSel=document.getElementById("battleTarget");
+  const monsterOptions=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${m.id}">${escape(m.name)} • PV ${m.hp}/${m.maxHp}</option>`).join("")||`<option value="">Nenhum alvo</option>`;
   skillSel.innerHTML=c?`<option value="basic">Ataque básico (${escape(c.ether)})</option>`+skills.filter(s=>s.characterId===c.id).map(s=>`<option value="${s.id}">${escape(s.name)} • ${escape(s.element)}</option>`).join(""):`<option>Escolha personagem</option>`;
-  targetSel.innerHTML=battleMonsters.filter(m=>m.active!==false&&Number(m.hp)>0).map(m=>`<option value="${m.id}">${escape(m.name)} • PV ${m.hp}/${m.maxHp}</option>`).join("")||`<option value="">Nenhum alvo</option>`;
+  targetSel.innerHTML=monsterOptions;
+  const gmTarget=document.getElementById("gmDamageTarget");if(gmTarget)gmTarget.innerHTML=monsterOptions;
+  renderMyTurnStatus();
 }
 function calcularDano(c,skill){
   const scale=skill?.scale||"forca";
@@ -882,31 +900,47 @@ function calcularDano(c,skill){
   const nivelBonus=Math.floor(Number(c.level||1)/3);
   return Math.max(1,Math.floor(base+atributo+nivelBonus));
 }
+function currentTurnId(){return sessionData.turnOrder?.[sessionData.turnIndex]||""}
+function isMyTurn(c){return Boolean(c&&currentTurnId()===c.id)}
+function renderMyTurnStatus(){
+  const box=document.getElementById("myTurnStatus");if(!box)return;
+  const c=currentChar();
+  if(!sessionData.open){box.textContent="Sessão fechada";box.className="pill warning";return}
+  if(!sessionData.turnOrder?.length){box.textContent="Host/GM ainda não montou a ordem de turno";box.className="pill warning";return}
+  if(!c){box.textContent="Escolha seu personagem";box.className="pill warning";return}
+  if(isMyTurn(c)){box.textContent="É seu turno: você pode pedir uma ação";box.className="pill success";return}
+  box.textContent=`Aguardando sua vez. Turno atual: ${turnName(currentTurnId())}`;box.className="pill";
+}
 async function quickAttack(){
+  if(!canGM())return alert("Ataque direto é só para Host/GM. Jogador precisa pedir ação no próprio turno.");
   const c=currentChar();
   if(!c)return alert("Escolha personagem.");
   const id=val("battleTarget");
   const m=battleMonsters.find(x=>x.id===id);
   if(!m)return alert("Escolha um monstro.");
   const skill=skills.find(s=>s.id===val("battleSkill"));
-  const move=skill?skill.name:"Ataque básico";
-  const element=skill?skill.element:c.ether;
-  const cost=Number(skill?.cost||0);
-  const currentPe=Number(c.pe||0);
-  if(cost>currentPe)return alert("PE insuficiente para usar essa habilidade.");
-  const dmg=calcularDano(c,skill);
-  await applyDamage(id,dmg,c.id);
-  if(cost>0){
-    const {db,doc,updateDoc}=fb();
-    await updateDoc(doc(db,"characters",c.id),{pe:Math.max(0,currentPe-cost)});
-  }
-  await log(c.name,`usou ${move} em ${m.name} e causou ${dmg} de dano.`,"attack","",element);
-  if(m.hp-dmg<=0)await log("Sistema",`${m.name} foi derrotado!`,"system",m.image,m.element);
+  await executeApprovedAction({characterId:c.id,targetId:id,skillId:skill?.id||"basic",actorName:c.name,targetName:m.name,moveName:skill?skill.name:"Ataque básico",element:skill?skill.element:c.ether,damage:calcularDano(c,skill),cost:Number(skill?.cost||0)}, false);
 }
 async function requestAction(){
-  const c=currentChar();if(!c)return alert("Escolha personagem.");const id=val("battleTarget");const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
-  const skill=skills.find(s=>s.id===val("battleSkill"));const move=skill?skill.name:"Ataque básico";const text=val("battleText")||`${c.name} quer usar ${move} em ${m.name}.`;
-  await log("Pedido de ação",text,"system","",skill?skill.element:c.ether);setVal("battleText","")
+  const c=currentChar();if(!c)return alert("Escolha personagem.");
+  if(!sessionData.open)return alert("A sessão está fechada. Peça para o Host/GM abrir.");
+  if(!sessionData.turnOrder?.length)return alert("O Host/GM ainda precisa montar a ordem de turno.");
+  if(!isMyTurn(c))return alert("Ainda não é seu turno. Agora é a vez de: "+turnName(currentTurnId()));
+  const id=val("battleTarget");const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
+  const skill=skills.find(s=>s.id===val("battleSkill"));
+  const move=skill?skill.name:"Ataque básico";
+  const cost=Number(skill?.cost||0);
+  const currentPe=Number(c.pe||0);
+  if(cost>currentPe)return alert("PE insuficiente para pedir essa habilidade.");
+  const dmg=calcularDano(c,skill);
+  const text=val("battleText")||`${c.name} quer usar ${move} em ${m.name}.`;
+  const {db,collection,doc,setDoc,serverTimestamp}=fb();
+  await setDoc(doc(collection(db,"actionRequests")),{
+    status:"pending",characterId:c.id,actorName:c.name,targetId:id,targetName:m.name,skillId:skill?.id||"basic",moveName:move,
+    element:skill?skill.element:c.ether,damage:dmg,cost,text,round:sessionData.round||1,turnIndex:sessionData.turnIndex||0,createdAt:serverTimestamp()
+  });
+  await log("Pedido de ação",`${c.name} pediu para usar ${move} em ${m.name}. Aguardando aprovação do Host/GM.`,"system","",skill?skill.element:c.ether);
+  setVal("battleText","");
 }
 async function applyDamage(id,dmg,who){const m=battleMonsters.find(x=>x.id===id);if(!m)return;const hp=Math.max(0,m.hp-dmg);const logd={...(m.damageLog||{})};logd[who]=(logd[who]||0)+dmg;const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"battleMonsters",id),{hp,damageLog:logd})}
 async function damageMonster(id,d){await applyDamage(id,d,"GM")}
@@ -918,6 +952,52 @@ async function monsterTurn(){
   const m=battleMonsters.find(x=>x.id===id);
   if(!m)return alert("O turno atual não é de um monstro. Escolha um monstro no seletor de turno.");
   await monsterAttack(id);
+}
+async function executeApprovedAction(req, passTurn=false){
+  const c=characters.find(x=>x.id===req.characterId);
+  const m=battleMonsters.find(x=>x.id===req.targetId);
+  if(!c||!m)return alert("Personagem ou monstro não encontrado.");
+  const cost=Number(req.cost||0);
+  const currentPe=Number(c.pe||0);
+  if(cost>currentPe)return alert("Esse personagem não tem PE suficiente agora.");
+  const dmg=Number(req.damage||1);
+  await applyDamage(req.targetId,dmg,req.characterId);
+  if(cost>0){const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"characters",c.id),{pe:Math.max(0,currentPe-cost)});}
+  await log("Host/GM",`Aprovou: ${req.actorName} usou ${req.moveName} em ${req.targetName}, causando ${dmg} de dano.`,"attack","",req.element);
+  if(m.hp-dmg<=0)await log("Sistema",`${m.name} foi derrotado!`,"system",m.image,m.element);
+  if(passTurn)nextTurn();
+}
+async function approveActionRequest(id,passTurn=false){
+  if(!canGM())return alert("Só Host/GM aprova ações.");
+  const req=actionRequests.find(r=>r.id===id);if(!req)return alert("Pedido não encontrado.");
+  if(req.status!=="pending")return alert("Esse pedido já foi resolvido.");
+  await executeApprovedAction(req,passTurn);
+  const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"actionRequests",id),{status:"approved",resolvedAt:new Date().toISOString()});
+}
+async function rejectActionRequest(id){
+  if(!canGM())return alert("Só Host/GM nega ações.");
+  const req=actionRequests.find(r=>r.id===id);if(!req)return alert("Pedido não encontrado.");
+  const {db,doc,updateDoc}=fb();await updateDoc(doc(db,"actionRequests",id),{status:"rejected",resolvedAt:new Date().toISOString()});
+  await log("Host/GM",`Negou a ação de ${req.actorName}: ${req.moveName}.`,"system","",req.element);
+}
+async function applyManualDamage(){
+  if(!canGM())return alert("Só Host/GM mexe no PV manualmente.");
+  const id=val("gmDamageTarget");const dmg=Math.max(0,num("gmDamageValue",0));const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
+  await applyDamage(id,dmg,"GM");await log("Host/GM",`removeu ${dmg} PV de ${m.name}.`,"attack",m.image,m.element);
+}
+async function applyManualHeal(){
+  if(!canGM())return alert("Só Host/GM mexe no PV manualmente.");
+  const id=val("gmDamageTarget");const heal=Math.max(0,num("gmDamageValue",0));const m=battleMonsters.find(x=>x.id===id);if(!m)return alert("Escolha um monstro.");
+  await healMonster(id,heal);await log("Host/GM",`curou ${heal} PV de ${m.name}.`,"system",m.image,m.element);
+}
+function renderActionRequests(){
+  const box=document.getElementById("actionRequestsList");if(!box)return;
+  const pending=actionRequests.filter(r=>r.status==="pending");
+  if(!pending.length){box.innerHTML="<p>Nenhuma ação pendente. Quando for o turno de alguém, o pedido aparece aqui.</p>";return}
+  box.innerHTML=pending.map(r=>{
+    const isTurn=currentTurnId()===r.characterId;
+    return `<div class="log-msg ${elementClass(r.element)}"><small>Round ${r.round||"?"} • ${isTurn?"TURNO CERTO":"fora do turno atual"}</small><p><b>${escape(r.actorName)}</b> quer usar <b>${escape(r.moveName)}</b> em <b>${escape(r.targetName)}</b>.</p><p>${escape(r.text||"")}</p><p>Dano previsto: <b>${Number(r.damage||0)}</b> • Custo: <b>${Number(r.cost||0)} PE</b></p><div class="row gm-only"><button class="okbtn" onclick="approveActionRequest('${r.id}',false)">Aprovar</button><button onclick="approveActionRequest('${r.id}',true)">Aprovar e passar turno</button><button class="danger" onclick="rejectActionRequest('${r.id}')">Negar</button></div></div>`
+  }).join("");
 }
 
 function syncSkillElement(){const c=characters.find(x=>x.id===val("skillCharacter"));if(c)setVal("skillElement",c.ether)}
