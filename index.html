@@ -1,120 +1,676 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D20 Mesa Online RPG</title>
-<style>
-:root{--bg:#080706;--card:#15110d;--line:rgba(255,255,255,.18);--gold:#d6a84f;--text:#f8f4ea;--muted:#b8aa96;--red:#ff6048;--blue:#69bdff;--purple:#a875ff;--green:#65d982}
-*{box-sizing:border-box;font-family:Georgia,'Times New Roman',serif}
-body{margin:0;background:radial-gradient(circle at top left,rgba(214,168,79,.14),transparent 35%),#080706;color:var(--text)}
-header{padding:18px;border-bottom:1px solid var(--line);background:#050403;position:sticky;top:0;z-index:9}
-.head{max-width:1400px;margin:auto;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
-.logo{width:64px;height:64px;border:2px solid var(--gold);border-radius:18px;display:grid;place-items:center;font-size:26px;font-weight:900;color:#ffe1a3;background:#160d06}
-.brand{display:flex;align-items:center;gap:12px}h1,h2,h3{margin:0}p,small{color:var(--muted)}
-label{display:block;margin:10px 0 5px;color:#ffe1a3;font-weight:bold}
-input,select,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:#070604;color:var(--text)}
-textarea{min-height:80px}button,.file-label{border:1px solid rgba(214,168,79,.45);border-radius:13px;background:linear-gradient(#3a2612,#100905);color:#ffe1a3;padding:10px 13px;font-weight:bold;cursor:pointer;display:inline-block}
-button:hover{filter:brightness(1.2)}.ok{background:linear-gradient(#ffe1a3,#bd8130);color:#100905}.danger{background:linear-gradient(#612019,#100905);color:white}
-main{max-width:1500px;margin:18px auto;padding:0 14px 40px;display:grid;grid-template-columns:220px 1fr;gap:16px}
-nav{position:sticky;top:100px;border:1px solid var(--line);border-radius:20px;background:#080604;padding:12px;display:flex;flex-direction:column;gap:8px}
-.tabbtn{text-align:left}.tabbtn.active{background:#ffe1a3;color:#130d08}
-.tab{display:none}.tab.active{display:block}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(#1b1510,#100c08);border:1px solid var(--line);border-radius:22px;padding:16px}
-.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1}
-.portrait,.avatar,.monimg{border:1px solid var(--line);border-radius:18px;background:#090604;display:grid;place-items:center;overflow:hidden;color:#aaa;text-align:center}.portrait{height:230px}.avatar{width:86px;height:86px}.monimg{height:220px}.portrait img,.avatar img,.monimg img{width:100%;height:100%;object-fit:cover}input[type=file]{display:none}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.stat{background:#080604;border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center}.stat strong{display:block;font-size:20px;color:#ffe1a3}
-.item{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;background:#080604;border:1px solid var(--line);border-radius:16px;padding:10px;margin:8px 0}
-.scene{min-height:420px;border:1px solid var(--line);border-radius:24px;padding:18px;background:#090604}.scene img{width:100%;max-height:360px;object-fit:cover;border-radius:18px;border:1px solid var(--line)}
-.battle{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.log{height:360px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:#050403;padding:10px}.msg{border-left:4px solid var(--gold);background:#100c08;border-radius:12px;padding:9px;margin:7px 0}.msg img{max-width:100%;max-height:260px;border-radius:12px}
-.monsters{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.monster{background:#080604;border:1px solid var(--line);border-radius:20px;padding:12px}.hp{height:13px;background:#280d0d;border-radius:999px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red))}
-.fire{border-color:var(--red)!important}.cold{border-color:var(--blue)!important}.magic{border-color:var(--purple)!important}.weapon{border-color:#bbb!important}.gmhide{display:none!important}
-@media(max-width:900px){main{display:block}nav{position:static;flex-direction:row;flex-wrap:wrap;margin-bottom:14px}.s4,.s5,.s6,.s7,.s8,.s12{grid-column:span 12}.battle{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
-</style>
-</head>
-<body>
-<header><div class="head"><div class="brand"><div class="logo">d20</div><div><h1>D20 Mesa Online RPG</h1><p style="margin:0">Fichas, magias, monstros, iniciativa e combate online</p></div></div><div><label>Código do Jogador</label><div class="row"><input id="codeInput" placeholder="ex: nicolas"><button onclick="setCode()">Usar</button></div><small id="codeStatus">Sem código</small></div></div></header>
-<main>
-<nav>
-<button class="tabbtn active" onclick="tab('home',this)">Início</button>
-<button class="tabbtn" onclick="tab('create',this)">Criar Personagem</button>
-<button class="tabbtn" onclick="tab('char',this)">Personagem</button>
-<button class="tabbtn" onclick="tab('battle',this)">Batalha Online</button>
-<button class="tabbtn" onclick="tab('skills',this)">Ataques/Magias</button>
-<button class="tabbtn" onclick="tab('library',this)">Fichas Online</button>
-<button class="tabbtn" onclick="tab('monsters',this)">Monstros</button>
-<button class="tabbtn" onclick="tab('gm',this)">Mestre / GM</button>
-<button class="tabbtn" onclick="tab('rules',this)">Sistema</button>
-</nav>
-<div>
-<section id="home" class="tab active"><div class="card"><h2>Bem-vindo</h2><p>Use seu código, crie uma ficha, escolha personagem e jogue pela batalha online.</p><div class="row"><button class="ok" onclick="tab('create',document.querySelectorAll('.tabbtn')[1])">Criar ficha</button><button onclick="tab('battle',document.querySelectorAll('.tabbtn')[3])">Ir para batalha</button></div></div></section>
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { 
+  getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc 
+} from 'firebase/firestore';
+import { 
+  Sword, Shield, FlaskConical, Skull, Music, Image as ImageIcon, 
+  Settings, LogOut, Plus, Play, Square, Users, Volume2, VolumeX, Droplet, Zap
+} from 'lucide-react';
 
-<section id="create" class="tab"><div class="grid"><div class="card s4"><h2>Retrato</h2><div id="faceBox" class="portrait">Imagem</div><label class="file-label" for="face">Importar imagem</label><input id="face" type="file" accept="image/*"></div><div class="card s8"><h2>Criar Personagem</h2><div class="row"><div><label>Nome</label><input id="cName"></div><div><label>Jogador</label><input id="cPlayer"></div><div><label>Nível</label><input id="cLevel" type="number" value="1" min="1" oninput="calc()"></div></div><div class="row"><div><label>Raça</label><select id="cRace"><option>Humano</option><option>Elfo</option><option>Anão</option><option>Halfling</option><option>Draconato</option><option>Tiefling</option><option>Meio-Orc</option><option>Gnomo</option></select></div><div><label>Classe</label><select id="cClass" onchange="calc()"><option>Guerreiro</option><option>Mago</option><option>Clérigo</option><option>Ladino</option><option>Patrulheiro</option><option>Bárbaro</option><option>Paladino</option><option>Bardo</option><option>Bruxo</option><option>Monge</option><option>Druida</option><option>Feiticeiro</option></select></div><div><label>Armadura</label><select id="armor" onchange="calc()"><option>Sem armadura</option><option>Couro</option><option>Cota de malha</option><option>Placas</option><option>Escudo</option></select></div></div><h3>Atributos</h3><div class="stats"><div class="stat"><label>FOR</label><input id="str" type="number" value="10" oninput="calc()"><strong id="mstr">+0</strong></div><div class="stat"><label>DES</label><input id="dex" type="number" value="10" oninput="calc()"><strong id="mdex">+0</strong></div><div class="stat"><label>CON</label><input id="con" type="number" value="10" oninput="calc()"><strong id="mcon">+0</strong></div><div class="stat"><label>INT</label><input id="int" type="number" value="10" oninput="calc()"><strong id="mint">+0</strong></div><div class="stat"><label>SAB</label><input id="wis" type="number" value="10" oninput="calc()"><strong id="mwis">+0</strong></div><div class="stat"><label>CAR</label><input id="cha" type="number" value="10" oninput="calc()"><strong id="mcha">+0</strong></div></div><div class="row"><div><label>PV</label><input id="hp" readonly></div><div><label>CA</label><input id="ac" readonly></div><div><label>Iniciativa</label><input id="init" readonly></div><div><label>Proficiência</label><input id="prof" readonly></div></div><label>Proficiências</label><div class="row"><select id="p1"><option>Atletismo</option><option>Acrobacia</option><option>Furtividade</option><option>Arcanismo</option><option>História</option><option>Religião</option><option>Percepção</option><option>Sobrevivência</option><option>Persuasão</option><option>Intimidação</option></select><select id="p2"><option>Percepção</option><option>Atletismo</option><option>Furtividade</option><option>Arcanismo</option><option>História</option><option>Religião</option><option>Sobrevivência</option><option>Persuasão</option><option>Intimidação</option></select><select id="p3"><option>Persuasão</option><option>Percepção</option><option>Atletismo</option><option>Furtividade</option><option>Arcanismo</option><option>Religião</option><option>Sobrevivência</option><option>Intimidação</option></select></div><label>Arma principal</label><input id="weapon"><label>Bio</label><textarea id="story"></textarea><button class="ok" onclick="saveChar()">Salvar Personagem</button></div></div></section>
+// --- FIREBASE INITIALIZATION ---
+// Usando as variáveis globais injetadas pelo ambiente
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'rpg-vtt-app';
 
-<section id="char" class="tab"><div class="grid"><div class="card s5"><h2>Meu Personagem</h2><label>Escolher</label><select id="activeChar" onchange="selectChar(this.value)"></select><div id="bio" style="margin-top:12px"></div><div class="row"><button onclick="joinBattle()">Entrar na sessão</button><button class="ok" onclick="startSession()">Iniciar sessão</button></div></div><div class="card s7"><h2>Cenário</h2><div class="scene"><h3 id="smallTitle">Sem cenário</h3><p id="smallDesc">Aguardando Mestre.</p><div id="smallImg"></div></div></div></div></section>
+// --- HELPER COMPONENTS ---
 
-<section id="battle" class="tab"><div class="grid"><div class="card s12"><h2>Batalha Online</h2><p id="sessionText">Sessão fechada.</p><div class="battle"><div><div class="scene"><h2 id="sceneTitle">Sem cenário</h2><p id="sceneDescView">Mestre ainda não definiu o cenário.</p><div id="sceneImg"></div></div><div class="card" style="margin-top:14px"><h2>Minha ação</h2><div class="row"><div><label>Personagem</label><select id="battleChar" onchange="selectChar(this.value)"></select></div><div><label>Ataque/Magia</label><select id="battleSkill"></select></div><div><label>Alvo</label><select id="battleTarget"></select></div></div><label>Descrição</label><textarea id="battleText"></textarea><div class="row"><button class="ok" onclick="requestAction()">Pedir ação</button><button onclick="quickAttack()">Ataque rápido d20</button></div></div></div><div><div class="battle-panel"><h2>Iniciativa</h2><p>Round <b id="round">1</b></p><p>Turno: <b id="turn">Aguardando</b></p><div class="row gm-only"><button onclick="buildTurns()">Montar</button><button onclick="nextTurn()">Próximo</button><button onclick="monsterTurn()">Monstro age</button></div><h3>Log</h3><div id="log" class="log"></div><button class="danger gm-only" onclick="clearLog()">Limpar log</button></div></div></div></div><div class="card s12 gm-only"><h2>Mestre: Cenário e Spawn</h2><div class="row"><div><label>Título</label><input id="scTitle"></div><div><label>Imagem</label><label for="sceneFile" class="file-label">Importar</label><input id="sceneFile" type="file" accept="image/*"></div></div><label>Descrição</label><textarea id="scDesc"></textarea><button onclick="saveScene()">Atualizar cenário</button><hr><h3>Spawnar monstro</h3><div class="row"><div><label>Modelo</label><select id="spawnSelect"></select></div><div><label>Qtd</label><input id="spawnQty" type="number" value="1"></div><button onclick="spawnMonster()">Spawnar</button></div></div><div class="card s12"><h2>Monstros em campo</h2><div id="battleMons" class="monsters"></div></div></div></section>
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
+          <h2 className="text-xl font-bold text-zinc-100">{title}</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
+            ✕
+          </button>
+        </div>
+        <div className="p-6">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-<section id="skills" class="tab"><div class="grid"><div class="card s5"><h2>Criar Ataque/Magia</h2><label>Ficha</label><select id="skillChar"></select><div class="row"><div><label>Nome</label><input id="skName"></div><div><label>Tipo</label><select id="skType"><option>Ataque</option><option>Magia</option><option>Suporte</option><option>Defesa</option></select></div></div><div class="row"><div><label>Dano/Escola</label><select id="skDmg"><option>Arma</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Veneno</option><option>Radiante</option><option>Necrótico</option><option>Psíquico</option><option>Força</option></select></div><div><label>Atributo</label><select id="skScale"><option>str</option><option>dex</option><option>con</option><option>int</option><option>wis</option><option>cha</option></select></div><div><label>Custo</label><input id="skCost"></div></div><label>Dano/Efeito</label><input id="skBase" placeholder="1d8 + FOR"><label>Descrição</label><textarea id="skDesc"></textarea><button class="ok" onclick="createSkill()">Salvar</button></div><div class="card s7"><h2>Ataques/Magias</h2><div id="skillsList"></div></div></div></section>
+const StatBar = ({ label, current, max, colorClass, bgClass, icon: Icon, onUpdate, isHostOrOwner }) => {
+  const percentage = Math.min(100, Math.max(0, (current / max) * 100)) || 0;
+  
+  return (
+    <div className="mb-3">
+      <div className="flex justify-between text-xs mb-1 font-semibold text-zinc-300">
+        <span className="flex items-center gap-1">
+          {Icon && <Icon size={12} />} {label}
+        </span>
+        <span>{current} / {max}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {isHostOrOwner && (
+          <button onClick={() => onUpdate(Math.max(0, current - 1))} className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 hover:bg-zinc-700 text-white font-bold">-</button>
+        )}
+        <div className={`flex-1 h-4 rounded-full overflow-hidden ${bgClass} shadow-inner`}>
+          <div 
+            className={`h-full transition-all duration-300 ease-out ${colorClass}`} 
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+        {isHostOrOwner && (
+          <button onClick={() => onUpdate(Math.min(max, current + 1))} className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 hover:bg-zinc-700 text-white font-bold">+</button>
+        )}
+      </div>
+    </div>
+  );
+};
 
-<section id="library" class="tab"><div class="card"><h2>Fichas Online</h2><div id="charsList"></div></div></section>
+// --- MAIN APP COMPONENT ---
 
-<section id="monsters" class="tab"><div class="grid"><div class="card s5 gm-only"><h2>Criar Monstro</h2><label>Nome</label><input id="monName"><div class="row"><div><label>Tipo</label><select id="monType"><option>Humanoide</option><option>Besta</option><option>Morto-vivo</option><option>Demônio</option><option>Constructo</option><option>Dragão</option></select></div><div><label>Dano</label><select id="monDmg"><option>Arma</option><option>Fogo</option><option>Gelo</option><option>Elétrico</option><option>Veneno</option><option>Radiante</option><option>Necrótico</option><option>Psíquico</option><option>Força</option></select></div></div><div class="row"><div><label>PV</label><input id="monHp" type="number" value="20"></div><div><label>CA</label><input id="monAc" type="number" value="12"></div><div><label>XP</label><input id="monXp" type="number" value="50"></div></div><label>Imagem</label><label class="file-label" for="monFile">Importar</label><input id="monFile" type="file" accept="image/*"><div id="monPrev" class="monimg">Sem imagem</div><label>Descrição</label><textarea id="monDesc"></textarea><button class="ok" onclick="createMonster()">Salvar modelo</button></div><div class="card s7"><h2>Modelos</h2><div id="monTemplates"></div></div></div></section>
+export default function RPGVTT() {
+  // State
+  const [user, setUser] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [characters, setCharacters] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  
+  // UI State
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isCreatingChar, setIsCreatingChar] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  
+  // Forms State
+  const [newSessionData, setNewSessionData] = useState({ name: '', color: '#8b5cf6' });
+  const [newCharData, setNewCharData] = useState({ name: '', avatar: '', hp: 20, mana: 10, stamina: 10 });
+  const [settingsData, setSettingsData] = useState({ bgUrl: '', musicUrl: '', color: '' });
 
-<section id="gm" class="tab"><div class="grid"><div class="card s6"><h2>Mestre</h2><label>Senha</label><input id="ownerPass" type="password"><div class="row"><button onclick="setOwnerPassword()">Criar senha</button><button class="ok" onclick="ownerLogin()">Entrar</button><button class="danger" onclick="ownerLogout()">Sair</button></div></div><div class="card s6"><h2>GM auxiliar</h2><label>Ficha GM</label><select id="gmSelect"></select><div class="row"><button onclick="gmLogin()">Entrar GM</button><button class="danger" onclick="gmLogout()">Sair GM</button></div></div><div class="card s12"><h2>Transformar em GM</h2><div id="gmList"></div></div></div></section>
+  // Refs
+  const audioRef = useRef(null);
 
-<section id="rules" class="tab"><div class="card"><h2>Regras rápidas</h2><p>Teste: d20 + modificador + proficiência quando tiver. Ataque rápido rola d20 contra CA do monstro.</p></div></section>
-</div>
-</main>
+  // --- FIREBASE AUTH & SUBSCRIPTIONS ---
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth erro:", err);
+      }
+    };
+    initAuth();
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-const firebaseConfig={apiKey:"AIzaSyABbF2OD6xAfHUtY0emW-UuU6YsEM1uGnc",authDomain:"ficha-rpg-zenless-zone-zero.firebaseapp.com",projectId:"ficha-rpg-zenless-zone-zero",storageBucket:"ficha-rpg-zenless-zone-zero.firebasestorage.app",messagingSenderId:"632413344872",appId:"1:632413344872:web:c8fc7e99339d8300f097dd"};
-const app=initializeApp(firebaseConfig);const db=getFirestore(app);window.FB={db,collection,doc,setDoc,getDoc,onSnapshot,updateDoc,deleteDoc,serverTimestamp};window.dispatchEvent(new Event("ready"));
-</script>
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
 
-<script>
-let face="",scenePic="",monPic="",chars=[],skills=[],templates=[],mons=[],logs=[],session={open:false,party:[],round:1,turnOrder:[],turnIndex:0,scene:{title:"",desc:"",image:""}};
-const q=id=>document.getElementById(id), v=id=>q(id)?.value?.trim()||"", n=(id,d=0)=>Number(q(id)?.value||d), fb=()=>window.FB;
-function esc(t){return String(t||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
-function code(){return localStorage.getItem("d20code")||"visitante"}function setCode(){if(v("codeInput").length<2)return alert("Digite um código");localStorage.setItem("d20code",v("codeInput").toLowerCase());render()}function updateCode(){q("codeStatus").textContent="Código ativo: "+code();q("codeInput").value=code()}
-function tab(id,b){document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));q(id).classList.add("active");b.classList.add("active");render()}
-function isOwner(){return sessionStorage.getItem("d20owner")==="1"}function gmChar(){return chars.find(c=>c.id===sessionStorage.getItem("d20gm")&&c.gm)}function canGM(){return isOwner()||!!gmChar()}
-window.addEventListener("ready",()=>{listen("d20_characters",d=>{chars=d;render()});listen("d20_skills",d=>{skills=d;render()});listen("d20_monsterTemplates",d=>{templates=d;render()});listen("d20_battleMonsters",d=>{mons=d;render()});listen("d20_battleLogs",d=>{logs=d.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));render()});const{db,doc,onSnapshot,setDoc}=fb();onSnapshot(doc(db,"d20_game","session"),async s=>{if(!s.exists()){await setDoc(doc(db,"d20_game","session"),session);return}session={...session,...s.data()};render()})});
-function listen(c,cb){const{db,collection,onSnapshot}=fb();onSnapshot(collection(db,c),s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))))}
-function mod(x){return Math.floor((Number(x)-10)/2)}function fmt(x){return x>=0?"+"+x:String(x)}function prof(l){return 2+Math.floor(((Number(l)||1)-1)/4)}function roll(d){return Math.floor(Math.random()*d)+1}
-function calc(){["str","dex","con","int","wis","cha"].forEach(id=>q("m"+id).textContent=fmt(mod(n(id,10))));let level=n("cLevel",1),hd={Bárbaro:12,Guerreiro:10,Paladino:10,Patrulheiro:10,Mago:6,Feiticeiro:6}[v("cClass")]||8;let hp=hd+mod(n("con",10))+(level-1)*(Math.ceil(hd/2)+1+mod(n("con",10)));q("hp").value=Math.max(1,hp);let ac=10+mod(n("dex",10));if(v("armor")==="Couro")ac=11+mod(n("dex",10));if(v("armor")==="Cota de malha")ac=16;if(v("armor")==="Placas")ac=18;if(v("armor")==="Escudo")ac=12+mod(n("dex",10))+2;q("ac").value=ac;q("init").value=fmt(mod(n("dex",10)));q("prof").value=fmt(prof(level))}
-["face","sceneFile","monFile"].forEach(id=>q(id).addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{if(id==="face"){face=r.result;q("faceBox").innerHTML=`<img src="${face}">`}if(id==="sceneFile")scenePic=r.result;if(id==="monFile"){monPic=r.result;q("monPrev").innerHTML=`<img src="${monPic}">`}};r.readAsDataURL(f)}));
-function visible(){return canGM()?chars:chars.filter(c=>(c.ownerAccount||"visitante")===code())}function cur(){return chars.find(c=>c.id===sessionStorage.getItem("d20char"))||visible()[0]}function selectChar(id){if(id)sessionStorage.setItem("d20char",id);render()}
-async function saveChar(){let stats={str:n("str",10),dex:n("dex",10),con:n("con",10),int:n("int",10),wis:n("wis",10),cha:n("cha",10)},c={name:v("cName"),player:v("cPlayer"),level:n("cLevel",1),race:v("cRace"),className:v("cClass"),stats,hp:n("hp"),ac:n("ac"),initiative:mod(stats.dex),prof:prof(n("cLevel",1)),proficiencies:[v("p1"),v("p2"),v("p3")].join(", "),weapon:v("weapon"),armor:v("armor"),story:v("story"),face,ownerAccount:code(),gm:false};if(!c.name)return alert("Coloque nome");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"d20_characters")),{...c,createdAt:serverTimestamp()});alert("Salvo")}
-function renderSelects(){let opts=visible().map(c=>`<option value="${c.id}">${esc(c.name)} - ${esc(c.className)}</option>`).join("");["activeChar","battleChar"].forEach(id=>{q(id).innerHTML=opts||"<option>Nenhuma ficha</option>";if(cur())q(id).value=cur().id});q("skillChar").innerHTML=visible().map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");q("battleSkill").innerHTML=cur()?`<option value="basic">Ataque básico (${esc(cur().weapon||"arma")})</option>`+skills.filter(s=>s.characterId===cur().id).map(s=>`<option value="${s.id}">${esc(s.name)} • ${esc(s.damageType)}</option>`).join(""):"<option>Escolha personagem</option>";q("battleTarget").innerHTML=mons.filter(m=>m.active!==false&&m.hp>0).map(m=>`<option value="${m.id}">${esc(m.name)} • CA ${m.ac} • PV ${m.hp}/${m.maxHp}</option>`).join("")||"<option value=''>Nenhum alvo</option>"}
-function renderBio(){let c=cur();q("bio").innerHTML=c?`<div class="bio-card"><div class="bio-img">${c.face?`<img src="${c.face}">`:"Sem imagem"}</div><div><h2>${esc(c.name)}</h2><p>${esc(c.race)} • ${esc(c.className)} • Nv ${c.level}</p><p>PV ${c.hp} • CA ${c.ac} • Inic ${fmt(c.initiative)}</p><p><b>Prof:</b> ${esc(c.proficiencies)}</p><p>${esc(c.story||"Sem bio.")}</p></div></div>`:"<p>Nenhum personagem.</p>"}
-async function startSession(){if(!isOwner())return alert("Só Mestre");session.open=true;await saveSession();await log("Sistema","Sessão iniciada","system")}async function joinBattle(){let c=cur();if(!c)return alert("Escolha personagem");if(!session.open)return alert("Sessão fechada");let p=session.party||[];if(!p.includes(c.id))p.push(c.id);session.party=p;await saveSession();alert("Entrou")}
-async function saveSession(){const{db,doc,setDoc}=fb();await setDoc(doc(db,"d20_game","session"),session)}
-async function saveScene(){if(!canGM())return alert("Só Mestre/GM");session.scene={title:v("scTitle"),desc:v("scDesc"),image:scenePic||session.scene?.image||""};await saveSession();await log("GM","Cenário atualizado","gm",session.scene.image)}
-function renderScene(){let s=session.scene||{};["sceneTitle","smallTitle"].forEach(id=>q(id).textContent=s.title||"Sem cenário");["sceneDescView","smallDesc"].forEach(id=>q(id).textContent=s.desc||"Aguardando Mestre");["sceneImg","smallImg"].forEach(id=>q(id).innerHTML=s.image?`<img src="${s.image}">`:"");q("sessionText").textContent=session.open?"Sessão aberta":"Sessão fechada"}
-async function createMonster(){if(!canGM())return alert("Só Mestre/GM");let m={name:v("monName"),type:v("monType"),damageType:v("monDmg"),maxHp:n("monHp",20),hp:n("monHp",20),ac:n("monAc",12),xp:n("monXp",50),image:monPic,desc:v("monDesc")};if(!m.name)return alert("Nome");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"d20_monsterTemplates")),{...m,createdAt:serverTimestamp()});alert("Modelo salvo")}
-async function spawnMonster(){if(!canGM())return alert("Só Mestre/GM");let t=templates.find(x=>x.id===v("spawnSelect"));if(!t)return alert("Escolha modelo");const{db,collection,doc,setDoc,serverTimestamp}=fb();for(let i=0;i<n("spawnQty",1);i++)await setDoc(doc(collection(db,"d20_battleMonsters")),{...t,templateId:t.id,hp:t.maxHp,active:true,damageLog:{},createdAt:serverTimestamp()});await log("GM",`${n("spawnQty",1)}x ${t.name} apareceu`, "gm", t.image,t.damageType)}
-function cls(e){e=(e||"").toLowerCase();if(e.includes("fogo"))return"fire";if(e.includes("gelo"))return"cold";if(e.includes("elétr"))return"lightning";if(e.includes("veneno"))return"poison";if(e.includes("radiante"))return"radiant";if(e.includes("necr")||e.includes("psí")||e.includes("força"))return"magic";return"weapon"}
-function renderMons(){q("spawnSelect").innerHTML=templates.map(m=>`<option value="${m.id}">${esc(m.name)} • CA ${m.ac} • PV ${m.maxHp}</option>`).join("")||"<option>Nenhum</option>";q("monTemplates").innerHTML=templates.map(m=>`<div class="item"><div class="avatar">${m.image?`<img src="${m.image}">`:"MON"}</div><div><h3>${esc(m.name)}</h3><p>${esc(m.type)} • CA ${m.ac} • PV ${m.maxHp}</p></div></div>`).join("")||"<p>Nenhum modelo.</p>";q("battleMons").innerHTML=mons.filter(m=>m.active!==false&&m.hp>0).map(m=>`<div class="monster ${cls(m.damageType)}"><div class="monimg">${m.image?`<img src="${m.image}">`:"MONSTRO"}</div><h2>${esc(m.name)}</h2><p>${esc(m.type)} • CA ${m.ac}</p><div class="hp"><div class="fill" style="width:${Math.max(0,Math.min(100,m.hp/m.maxHp*100))}%"></div></div><p>PV ${m.hp}/${m.maxHp}</p><div class="row gm-only"><button onclick="damage('${m.id}',5)">-5</button><button onclick="heal('${m.id}',5)">+5</button><button onclick="monsterAct('${m.id}')">Age</button></div></div>`).join("")||"<p>Nenhum monstro.</p>"}
-async function createSkill(){let c=chars.find(x=>x.id===v("skillChar"));if(!c)return alert("Escolha ficha");if(!canGM()&&c.ownerAccount!==code())return alert("Ficha não é sua");let s={characterId:c.id,characterName:c.name,name:v("skName"),type:v("skType"),damageType:v("skDmg"),scale:v("skScale"),cost:v("skCost"),base:v("skBase"),desc:v("skDesc"),ownerAccount:c.ownerAccount};if(!s.name)return alert("Nome");const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"d20_skills")),{...s,createdAt:serverTimestamp()});alert("Salvo")}
-function renderSkills(){q("skillsList").innerHTML=skills.filter(s=>canGM()||s.ownerAccount===code()).map(s=>`<div class="card ${cls(s.damageType)}" style="margin:8px 0"><h3>${esc(s.name)}</h3><p>${esc(s.characterName)} • ${esc(s.damageType)} • usa ${esc(s.scale)}</p><p>${esc(s.base)}</p><p>${esc(s.desc)}</p></div>`).join("")||"<p>Nenhum.</p>"}
-async function quickAttack(){let c=cur(),m=mons.find(x=>x.id===v("battleTarget"));if(!c||!m)return alert("Escolha personagem e alvo");let sk=skills.find(s=>s.id===v("battleSkill")),stat=sk?sk.scale:"str",atk=roll(20)+mod(c.stats[stat])+c.prof,hit=atk>=m.ac,dmg=hit?Math.max(1,roll(8)+mod(c.stats[stat])):0;if(hit)await applyDmg(m.id,dmg,c.id);await log(c.name,`${sk?sk.name:"Ataque básico"}: ${atk} vs CA ${m.ac}. ${hit?`Acertou ${dmg} dano.`:"Errou."}`,"attack","",sk?sk.damageType:"Arma")}
-async function requestAction(){let c=cur(),m=mons.find(x=>x.id===v("battleTarget"));if(!c||!m)return alert("Escolha personagem e alvo");let sk=skills.find(s=>s.id===v("battleSkill"));await log("Pedido",v("battleText")||`${c.name} quer usar ${sk?sk.name:"Ataque básico"} em ${m.name}`,"system","",sk?sk.damageType:"Arma");q("battleText").value=""}
-async function applyDmg(id,dmg,who){let m=mons.find(x=>x.id===id),hp=Math.max(0,m.hp-dmg),dl={...(m.damageLog||{})};dl[who]=(dl[who]||0)+dmg;const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"d20_battleMonsters",id),{hp,damageLog:dl})}
-async function damage(id,d){await applyDmg(id,d,"GM")}async function heal(id,d){let m=mons.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"d20_battleMonsters",id),{hp:Math.min(m.maxHp,m.hp+d)})}async function monsterAct(id){let m=mons.find(x=>x.id===id);if(m)await log(m.name,"O monstro realizou uma ação.","attack",m.image,m.damageType)}
-async function log(author,text,kind="system",image="",damageType=""){const{db,collection,doc,setDoc,serverTimestamp}=fb();await setDoc(doc(collection(db,"d20_battleLogs")),{author,text,kind,image,damageType,time:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),createdAt:serverTimestamp()})}
-function renderLog(){q("log").innerHTML=logs.map(l=>`<div class="msg ${cls(l.damageType)}"><small>${esc(l.author)} • ${esc(l.time)}</small><p>${esc(l.text)}</p>${l.image?`<img src="${l.image}">`:""}</div>`).join("")||"<p>Nenhum log.</p>"}async function clearLog(){if(!canGM())return alert("Só Mestre/GM");const{db,doc,deleteDoc}=fb();for(let l of logs)await deleteDoc(doc(db,"d20_battleLogs",l.id))}
-function buildTurns(){if(!canGM())return alert("Só Mestre/GM");session.turnOrder=[...(session.party||[]),...mons.filter(m=>m.active!==false&&m.hp>0).map(m=>m.id)];session.turnIndex=0;saveSession()}function nextTurn(){if(!canGM())return alert("Só Mestre/GM");if(!session.turnOrder?.length)return alert("Monte a iniciativa");session.turnIndex++;if(session.turnIndex>=session.turnOrder.length){session.turnIndex=0;session.round=(session.round||1)+1}saveSession()}async function monsterTurn(){let m=mons.find(x=>x.active!==false&&x.hp>0);if(m)await monsterAct(m.id)}
-function renderRound(){q("round").textContent=session.round||1;let id=session.turnOrder?.[session.turnIndex],c=chars.find(x=>x.id===id),m=mons.find(x=>x.id===id);q("turn").textContent=c?.name||m?.name||"Aguardando"}
-async function setOwnerPassword(){let p=v("ownerPass");if(p.length<4)return alert("Senha curta");const{db,doc,setDoc,getDoc}=fb();let r=doc(db,"d20_game","owner"),s=await getDoc(r);if(s.exists())return alert("Senha já criada");await setDoc(r,{hash:await hash(p)})}async function ownerLogin(){const{db,doc,getDoc}=fb();let s=await getDoc(doc(db,"d20_game","owner"));if(!s.exists())return alert("Crie senha");if(s.data().hash===await hash(v("ownerPass"))){sessionStorage.setItem("d20owner","1");render()}else alert("Senha errada")}function ownerLogout(){sessionStorage.removeItem("d20owner");render()}
-function gmLogin(){let c=chars.find(x=>x.id===v("gmSelect"));if(!c||!c.gm)return alert("Não é GM");sessionStorage.setItem("d20gm",c.id);render()}function gmLogout(){sessionStorage.removeItem("d20gm");render()}async function toggleGm(id){if(!isOwner())return alert("Só Mestre");let c=chars.find(x=>x.id===id);const{db,doc,updateDoc}=fb();await updateDoc(doc(db,"d20_characters",id),{gm:!c.gm})}
-function renderGm(){q("gmSelect").innerHTML=chars.filter(c=>c.gm).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")||"<option>Nenhum GM</option>";q("gmList").innerHTML=chars.map(c=>`<div class="item"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${esc(c.name)} ${c.gm?"[GM]":""}</h3><p>${esc(c.player)}</p></div><button onclick="toggleGm('${c.id}')">${c.gm?"Remover GM":"Tornar GM"}</button></div>`).join("")}
-function renderChars(){q("charsList").innerHTML=visible().map(c=>`<div class="item"><div class="avatar">${c.face?`<img src="${c.face}">`:""}</div><div><h3>${esc(c.name)} ${c.gm?"[GM]":""}</h3><p>${esc(c.race)} • ${esc(c.className)} • Nv ${c.level}</p><p>PV ${c.hp} • CA ${c.ac} • código ${esc(c.ownerAccount)}</p></div></div>`).join("")||"<p>Nenhuma ficha.</p>"}
-function renderGMOnly(){document.querySelectorAll(".gm-only").forEach(e=>e.classList.toggle("gmhide",!canGM()))}
-function render(){updateCode();calc();renderSelects();renderBio();renderScene();renderMons();renderSkills();renderLog();renderRound();renderGm();renderChars();renderGMOnly()}
-function hash(t){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)).then(h=>Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join(""))}
-calc();updateCode();render();
-</script>
-</body>
-</html>
+  useEffect(() => {
+    if (!user) return;
+
+    // Listen to Sessions
+    const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rpg_sessions');
+    const unsubSessions = onSnapshot(sessionsRef, (snapshot) => {
+      const sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSessions(sessData.filter(s => s.isActive)); // Only active sessions
+    }, (err) => console.error("Sessões erro:", err));
+
+    // Listen to Characters
+    const charsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rpg_characters');
+    const unsubChars = onSnapshot(charsRef, (snapshot) => {
+      const charsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCharacters(charsData);
+    }, (err) => console.error("Characters erro:", err));
+
+    return () => {
+      unsubSessions();
+      unsubChars();
+    };
+  }, [user]);
+
+  // --- DERIVED STATE ---
+  const currentSession = useMemo(() => 
+    sessions.find(s => s.id === currentSessionId), 
+  [sessions, currentSessionId]);
+
+  const sessionCharacters = useMemo(() => 
+    characters.filter(c => c.sessionId === currentSessionId), 
+  [characters, currentSessionId]);
+
+  const isHost = currentSession?.hostId === user?.uid;
+
+  // --- AUDIO SYNC ---
+  useEffect(() => {
+    if (audioRef.current && currentSession) {
+      if (currentSession.musicUrl && audioEnabled) {
+        if (audioRef.current.src !== currentSession.musicUrl) {
+          audioRef.current.src = currentSession.musicUrl;
+        }
+        if (currentSession.isPlayingMusic) {
+          audioRef.current.play().catch(e => console.log("Autoplay prevent:", e));
+        } else {
+          audioRef.current.pause();
+        }
+      } else {
+         audioRef.current.pause();
+      }
+    }
+  }, [currentSession?.musicUrl, currentSession?.isPlayingMusic, audioEnabled]);
+
+  // --- ACTIONS ---
+
+  const handleCreateSession = async (e) => {
+    e.preventDefault();
+    if (!user || !newSessionData.name.trim()) return;
+    
+    const sessionId = `session_${Date.now()}`;
+    const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_sessions', sessionId);
+    
+    await setDoc(sessionRef, {
+      name: newSessionData.name,
+      hostId: user.uid,
+      color: newSessionData.color,
+      bgUrl: '',
+      musicUrl: '',
+      isPlayingMusic: false,
+      isActive: true,
+      createdAt: Date.now()
+    });
+    
+    setIsCreatingSession(false);
+    setCurrentSessionId(sessionId);
+    setNewSessionData({ name: '', color: '#8b5cf6' });
+    setAudioEnabled(true); // Host implicitly enables audio
+  };
+
+  const joinSession = (sessionId) => {
+    setCurrentSessionId(sessionId);
+    setAudioEnabled(false); // Requere interação do usuário
+  };
+
+  const leaveSession = () => {
+    setCurrentSessionId(null);
+    setAudioEnabled(false);
+    if(audioRef.current) audioRef.current.pause();
+  };
+
+  const endSession = async () => {
+    if (!isHost || !currentSessionId) return;
+    const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_sessions', currentSessionId);
+    await updateDoc(sessionRef, { isActive: false });
+    leaveSession();
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    if (!isHost || !currentSessionId) return;
+    
+    const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_sessions', currentSessionId);
+    await updateDoc(sessionRef, {
+      bgUrl: settingsData.bgUrl,
+      musicUrl: settingsData.musicUrl,
+      color: settingsData.color
+    });
+    setIsSettingsOpen(false);
+  };
+
+  const toggleMusic = async () => {
+    if (!isHost || !currentSessionId) return;
+    const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_sessions', currentSessionId);
+    await updateDoc(sessionRef, { isPlayingMusic: !currentSession.isPlayingMusic });
+  };
+
+  const handleCreateCharacter = async (e) => {
+    e.preventDefault();
+    if (!user || !currentSessionId || !newCharData.name.trim()) return;
+
+    const charId = `char_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const charRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_characters', charId);
+    
+    await setDoc(charRef, {
+      sessionId: currentSessionId,
+      ownerId: user.uid,
+      name: newCharData.name,
+      avatar: newCharData.avatar || 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + newCharData.name,
+      hp: Number(newCharData.hp), maxHp: Number(newCharData.hp),
+      mana: Number(newCharData.mana), maxMana: Number(newCharData.mana),
+      stamina: Number(newCharData.stamina), maxStamina: Number(newCharData.stamina),
+      isPoisoned: false
+    });
+    
+    setIsCreatingChar(false);
+    setNewCharData({ name: '', avatar: '', hp: 20, mana: 10, stamina: 10 });
+  };
+
+  const updateCharacterStats = async (charId, field, value) => {
+    const charRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_characters', charId);
+    await updateDoc(charRef, { [field]: value });
+  };
+
+  const deleteCharacter = async (charId) => {
+    const charRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_characters', charId);
+    await deleteDoc(charRef);
+  };
+
+  // --- RENDERERS ---
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white">
+        <div className="animate-spin mb-4"><Sword size={48} className="text-amber-500" /></div>
+        <p className="text-xl font-medieval">Forjando conexão com os deuses antigos...</p>
+      </div>
+    );
+  }
+
+  // --- LOBBY VIEW ---
+  if (!currentSessionId || !currentSession) {
+    return (
+      <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center text-zinc-100 font-sans">
+        <div className="min-h-screen bg-black/70 backdrop-blur-sm p-8">
+          <div className="max-w-4xl mx-auto">
+            
+            <header className="flex justify-between items-center mb-12 border-b border-amber-900/50 pb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-amber-600 to-red-900 rounded-lg shadow-lg border border-amber-500/30">
+                  <Sword size={32} className="text-amber-100" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-200 to-amber-600 bg-clip-text text-transparent drop-shadow-md">
+                    Crônicas de Éter
+                  </h1>
+                  <p className="text-amber-500/80 text-sm tracking-widest uppercase">Taverna Virtual (VTT)</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsCreatingSession(true)}
+                className="flex items-center gap-2 bg-amber-700 hover:bg-amber-600 text-white px-6 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(180,83,9,0.5)] transition-all hover:scale-105"
+              >
+                <Plus size={20} />
+                Hospedar Nova Sessão
+              </button>
+            </header>
+
+            <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2 text-zinc-300">
+                <Users size={24} className="text-amber-500" /> 
+                Sessões Ativas
+              </h2>
+              
+              {sessions.length === 0 ? (
+                <div className="text-center py-12 text-zinc-500">
+                  <Skull size={48} className="mx-auto mb-4 opacity-20" />
+                  <p>Nenhuma sessão ativa no momento. Seja o Mestre e crie uma!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sessions.map(session => (
+                    <div 
+                      key={session.id} 
+                      className="group relative overflow-hidden rounded-xl border border-zinc-700 bg-zinc-800 hover:border-amber-500/50 transition-all cursor-pointer shadow-lg hover:shadow-amber-500/20"
+                      onClick={() => joinSession(session.id)}
+                    >
+                      <div 
+                        className="h-2 w-full" 
+                        style={{ backgroundColor: session.color || '#8b5cf6' }}
+                      />
+                      <div className="p-5">
+                        <h3 className="text-xl font-bold mb-2 text-white group-hover:text-amber-400 transition-colors">{session.name}</h3>
+                        <p className="text-xs text-zinc-400 flex items-center gap-1">
+                          <Settings size={12} /> ID: {session.id.substring(0, 12)}...
+                        </p>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center p-4 transition-opacity">
+                        <span className="font-bold text-amber-400 flex items-center gap-2">
+                          Entrar na Mesa <Sword size={16} />
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Modal: Create Session */}
+        <Modal isOpen={isCreatingSession} onClose={() => setIsCreatingSession(false)} title="Nova Campanha">
+          <form onSubmit={handleCreateSession} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Nome da Sessão</label>
+              <input 
+                type="text" 
+                required
+                value={newSessionData.name}
+                onChange={e => setNewSessionData({...newSessionData, name: e.target.value})}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500 transition-colors"
+                placeholder="Ex: A Caverna do Dragão"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Cor Tema</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={newSessionData.color}
+                  onChange={e => setNewSessionData({...newSessionData, color: e.target.value})}
+                  className="w-12 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
+                />
+                <div className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white flex items-center justify-center uppercase text-sm font-mono">
+                  {newSessionData.color}
+                </div>
+              </div>
+            </div>
+            <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-lg mt-4 transition-colors">
+              Iniciar Sessão como Mestre
+            </button>
+          </form>
+        </Modal>
+      </div>
+    );
+  }
+
+  // --- ACTIVE SESSION VIEW ---
+  return (
+    <div 
+      className="min-h-screen relative flex flex-col font-sans transition-all duration-1000"
+      style={{
+        backgroundColor: '#09090b',
+        backgroundImage: currentSession.bgUrl ? `url(${currentSession.bgUrl})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* Background Overlay */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-0" />
+
+      {/* Hidden Audio Player */}
+      <audio ref={audioRef} loop />
+
+      {/* Top Navigation Bar */}
+      <nav 
+        className="relative z-10 w-full border-b backdrop-blur-md shadow-lg flex items-center justify-between px-6 py-3"
+        style={{ borderColor: `${currentSession.color}40`, backgroundColor: 'rgba(9, 9, 11, 0.85)' }}
+      >
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full animate-pulse shadow-[0_0_10px_currentColor]" style={{ backgroundColor: currentSession.color, color: currentSession.color }} />
+            <span className="text-white drop-shadow-md">{currentSession.name}</span>
+          </h1>
+          
+          {/* Audio Enable Button for Players */}
+          {!isHost && !audioEnabled && (
+             <button 
+               onClick={() => setAudioEnabled(true)}
+               className="ml-4 flex items-center gap-2 text-xs bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg"
+             >
+               <VolumeX size={14} /> Habilitar Áudio da Mesa
+             </button>
+          )}
+          {!isHost && audioEnabled && currentSession.isPlayingMusic && (
+             <div className="ml-4 flex items-center gap-2 text-xs text-amber-400 bg-amber-900/30 px-3 py-1.5 rounded-full border border-amber-700/50">
+               <Music size={14} className="animate-bounce" /> Ouvindo Mestre
+             </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {isHost && (
+            <>
+              <button 
+                onClick={toggleMusic}
+                className={`p-2 rounded-lg transition-colors border ${currentSession.isPlayingMusic ? 'bg-amber-600 border-amber-500 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-white'}`}
+                title={currentSession.isPlayingMusic ? "Pausar Música" : "Tocar Música"}
+              >
+                {currentSession.isPlayingMusic ? <Square size={18} /> : <Play size={18} />}
+              </button>
+              <button 
+                onClick={() => {
+                  setSettingsData({
+                    bgUrl: currentSession.bgUrl || '',
+                    musicUrl: currentSession.musicUrl || '',
+                    color: currentSession.color || '#8b5cf6'
+                  });
+                  setIsSettingsOpen(true);
+                }}
+                className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg border border-zinc-700 transition-colors text-sm"
+              >
+                <Settings size={16} /> <span className="hidden md:inline">Configurar Sessão</span>
+              </button>
+            </>
+          )}
+          
+          <button 
+            onClick={leaveSession}
+            className="flex items-center gap-2 bg-red-900/50 hover:bg-red-800 text-red-200 px-4 py-2 rounded-lg border border-red-900 transition-colors text-sm"
+          >
+            <LogOut size={16} /> <span className="hidden md:inline">Sair</span>
+          </button>
+          
+          {isHost && (
+            <button 
+              onClick={endSession}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg border border-red-700 shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-colors text-sm font-bold ml-2"
+            >
+              <Skull size={16} /> Encerrar Tudo
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="relative z-10 flex-1 p-6 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
+          
+          <div className="flex justify-between items-end mb-8">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2 drop-shadow-lg">
+              <Users size={24} style={{ color: currentSession.color }} />
+              Personagens em Jogo
+            </h2>
+            <button 
+              onClick={() => setIsCreatingChar(true)}
+              className="flex items-center gap-2 bg-zinc-100 hover:bg-white text-zinc-900 px-5 py-2.5 rounded-lg font-bold shadow-xl transition-transform hover:-translate-y-1"
+            >
+              <Plus size={18} /> Novo Personagem
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {sessionCharacters.map(char => {
+              const isOwner = char.ownerId === user.uid;
+              const canEdit = isHost || isOwner;
+
+              return (
+                <div 
+                  key={char.id} 
+                  className={`bg-zinc-900/90 backdrop-blur-md rounded-2xl border-2 overflow-hidden shadow-2xl transition-all duration-300 ${isOwner ? 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'border-zinc-800'}`}
+                >
+                  <div className="relative p-5 border-b border-zinc-800 flex gap-4 items-center" style={{ background: `linear-gradient(to right, ${currentSession.color}20, transparent)` }}>
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-700 flex-shrink-0 relative">
+                      <img src={char.avatar} alt={char.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://api.dicebear.com/7.x/shapes/svg?seed=' + char.id }} />
+                      {char.isPoisoned && (
+                         <div className="absolute inset-0 bg-green-500/30 flex items-center justify-center backdrop-blur-[1px]">
+                           <FlaskConical size={24} className="text-green-300 animate-pulse" />
+                         </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-white truncate">{char.name}</h3>
+                      <p className="text-xs text-zinc-400 uppercase tracking-wider">{isOwner ? 'Seu Personagem' : 'Jogador'}</p>
+                    </div>
+                    {canEdit && (
+                      <button 
+                        onClick={() => deleteCharacter(char.id)}
+                        className="text-zinc-600 hover:text-red-500 transition-colors p-2"
+                        title="Remover Personagem"
+                      >
+                        <LogOut size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-5 space-y-4">
+                    <StatBar 
+                      label="Vida (HP)" 
+                      current={char.hp} 
+                      max={char.maxHp} 
+                      colorClass="bg-red-500" 
+                      bgClass="bg-red-950" 
+                      icon={Shield}
+                      onUpdate={(val) => updateCharacterStats(char.id, 'hp', val)}
+                      isHostOrOwner={canEdit}
+                    />
+                    <StatBar 
+                      label="Mana (MP)" 
+                      current={char.mana} 
+                      max={char.maxMana} 
+                      colorClass="bg-blue-500" 
+                      bgClass="bg-blue-950" 
+                      icon={Droplet}
+                      onUpdate={(val) => updateCharacterStats(char.id, 'mana', val)}
+                      isHostOrOwner={canEdit}
+                    />
+                    <StatBar 
+                      label="Estamina" 
+                      current={char.stamina} 
+                      max={char.maxStamina} 
+                      colorClass="bg-emerald-500" 
+                      bgClass="bg-emerald-950" 
+                      icon={Zap}
+                      onUpdate={(val) => updateCharacterStats(char.id, 'stamina', val)}
+                      isHostOrOwner={canEdit}
+                    />
+
+                    {/* Status Effects */}
+                    <div className="pt-3 mt-3 border-t border-zinc-800">
+                      <p className="text-xs text-zinc-500 mb-2 uppercase font-semibold">Efeitos de Status</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => canEdit && updateCharacterStats(char.id, 'isPoisoned', !char.isPoisoned)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                            char.isPoisoned 
+                              ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+                              : 'bg-zinc-950 border-zinc-800 text-zinc-600 hover:text-zinc-400'
+                          } ${!canEdit && 'cursor-default'}`}
+                        >
+                          <FlaskConical size={14} /> Veneno
+                        </button>
+                        {/* More status effects could be added here easily */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {sessionCharacters.length === 0 && (
+              <div className="col-span-full py-20 text-center bg-zinc-900/50 rounded-2xl border border-zinc-800/50 backdrop-blur-sm">
+                <Shield size={48} className="mx-auto mb-4 text-zinc-700" />
+                <h3 className="text-xl font-bold text-zinc-400">A mesa está vazia</h3>
+                <p className="text-zinc-500 mt-2">Crie o primeiro personagem para iniciar a jornada.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Modals for Active Session */}
+
+      {/* Settings Modal (Host Only) */}
+      {isHost && (
+        <Modal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="Configurações da Mesa">
+          <form onSubmit={handleSaveSettings} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1 flex items-center gap-2">
+                <ImageIcon size={14} /> URL da Imagem de Fundo (PNG/JPG)
+              </label>
+              <input 
+                type="url" 
+                value={settingsData.bgUrl}
+                onChange={e => setSettingsData({...settingsData, bgUrl: e.target.value})}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500"
+                placeholder="https://exemplo.com/mapa.png"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1 flex items-center gap-2">
+                <Music size={14} /> URL da Música Ambiente (MP3)
+              </label>
+              <input 
+                type="url" 
+                value={settingsData.musicUrl}
+                onChange={e => setSettingsData({...settingsData, musicUrl: e.target.value})}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500"
+                placeholder="https://exemplo.com/musica.mp3"
+              />
+              <p className="text-xs text-zinc-500 mt-1">Use links diretos de áudio para garantir que toque para todos.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Cor Tema da Sessão</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={settingsData.color}
+                  onChange={e => setSettingsData({...settingsData, color: e.target.value})}
+                  className="w-12 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
+                />
+              </div>
+            </div>
+            <div className="pt-4 flex justify-end gap-3 border-t border-zinc-800">
+              <button type="button" onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 rounded-lg text-zinc-400 hover:text-white">Cancelar</button>
+              <button type="submit" className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-6 py-2 rounded-lg">Salvar Modificações</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Create Character Modal */}
+      <Modal isOpen={isCreatingChar} onClose={() => setIsCreatingChar(false)} title="Nova Ficha de Personagem">
+        <form onSubmit={handleCreateCharacter} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">Nome do Personagem</label>
+            <input 
+              type="text" required
+              value={newCharData.name}
+              onChange={e => setNewCharData({...newCharData, name: e.target.value})}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">URL do Avatar (Opcional - PNG/JPG)</label>
+            <input 
+              type="url"
+              value={newCharData.avatar}
+              onChange={e => setNewCharData({...newCharData, avatar: e.target.value})}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none"
+              placeholder="Deixe em branco para um avatar gerado automaticamente"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4 pt-2">
+            <div>
+              <label className="block text-xs font-bold text-red-400 mb-1 text-center">Vida (HP)</label>
+              <input type="number" min="1" required value={newCharData.hp} onChange={e => setNewCharData({...newCharData, hp: e.target.value})} className="w-full bg-zinc-950 border border-red-900/50 rounded-lg px-2 py-2 text-center text-white focus:border-red-500 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-blue-400 mb-1 text-center">Mana</label>
+              <input type="number" min="0" required value={newCharData.mana} onChange={e => setNewCharData({...newCharData, mana: e.target.value})} className="w-full bg-zinc-950 border border-blue-900/50 rounded-lg px-2 py-2 text-center text-white focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-emerald-400 mb-1 text-center">Estamina</label>
+              <input type="number" min="0" required value={newCharData.stamina} onChange={e => setNewCharData({...newCharData, stamina: e.target.value})} className="w-full bg-zinc-950 border border-emerald-900/50 rounded-lg px-2 py-2 text-center text-white focus:border-emerald-500 focus:outline-none" />
+            </div>
+          </div>
+          <button type="submit" className="w-full bg-zinc-100 hover:bg-white text-zinc-900 font-bold py-3 rounded-lg mt-4 transition-colors">
+            Forjar Personagem
+          </button>
+        </form>
+      </Modal>
+
+    </div>
+  );
+}
