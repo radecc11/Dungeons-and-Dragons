@@ -2,9 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus VTT - Python Server</title>
+    <title>Nexus VTT - Sessão</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Importa o cliente do Socket.IO -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
     <style>
         .token { filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.6)); }
@@ -13,8 +12,29 @@
 <body class="bg-[#0a0a0a] text-gray-200 h-screen flex overflow-hidden">
     
     <!-- Menu Lateral -->
-    <nav class="w-64 bg-[#121212] border-r border-[#222] flex flex-col z-50 p-4">
-        <h1 class="text-xl font-bold text-white mb-6 tracking-wider">NEXUS<span class="text-indigo-500">VTT</span></h1>
+    <nav class="w-64 bg-[#121212] border-r border-[#222] flex flex-col z-50 p-4 overflow-y-auto">
+        <h1 class="text-xl font-bold text-white mb-4 tracking-wider">NEXUS<span class="text-indigo-500">VTT</span></h1>
+        
+        <!-- Info do Usuário Logado -->
+        <div class="mb-6 border-b border-[#333] pb-4">
+            <p class="text-sm text-gray-400">Usuário: <span class="text-white font-bold">{{ username }}</span></p>
+            <p class="text-xs text-indigo-400 mb-2">Nível: {{ role }}</p>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 underline">Desconectar</a>
+        </div>
+
+        <!-- PAINEL EXCLUSIVO DO MASTER ADMIN -->
+        {% if role == 'master_admin' %}
+        <div class="mb-6 bg-indigo-900/20 p-3 rounded border border-indigo-900/50">
+            <h3 class="font-bold mb-3 text-sm text-indigo-400">👑 Criar Contas (Master)</h3>
+            <input type="text" id="newUsername" placeholder="Novo Login" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
+            <input type="text" id="newPassword" placeholder="Senha" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
+            <select id="newRole" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
+                <option value="admin">Mestre da Sessão</option>
+                <option value="player">Jogador Comum</option>
+            </select>
+            <button onclick="createUser()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 rounded text-xs">Adicionar Usuário</button>
+        </div>
+        {% endif %}
         
         <div class="mb-6 bg-[#1a1a1a] p-4 rounded border border-[#333]">
             <h3 class="font-bold mb-2 text-sm text-gray-400">Criar Personagem</h3>
@@ -23,7 +43,7 @@
             <button onclick="createCharacter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded">Adicionar</button>
         </div>
 
-        <div id="characterList" class="flex flex-col gap-2 overflow-y-auto"></div>
+        <div id="characterList" class="flex flex-col gap-2"></div>
     </nav>
 
     <!-- Tabuleiro -->
@@ -34,8 +54,27 @@
     <script>
         const socket = io();
         let localState = { characters: {}, boardTokens: {} };
+        const userRole = "{{ role }}"; // Variável que vem do Python
 
-        // Sincronização geral (quando entra ou algo grande muda)
+        // --- SISTEMA DE ADMIN ---
+        function createUser() {
+            const user = document.getElementById('newUsername').value;
+            const pass = document.getElementById('newPassword').value;
+            const role = document.getElementById('newRole').value;
+            if(user && pass) {
+                socket.emit('create_user', {username: user, password: pass, role: role});
+            }
+        }
+
+        socket.on('user_created', (res) => {
+            alert(res.msg);
+            if(res.success) {
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+            }
+        });
+
+        // --- SISTEMA DO JOGO ---
         socket.on('sync_state', (serverState) => {
             localState = serverState;
             document.getElementById('board').style.backgroundImage = `url(${serverState.session.backgroundUrl})`;
@@ -43,7 +82,6 @@
             renderTokens();
         });
 
-        // Sincronização rápida de movimento
         socket.on('token_moved', (data) => {
             localState.boardTokens[data.charId] = { x: data.x, y: data.y };
             const tokenEl = document.getElementById(`token-${data.charId}`);
@@ -66,6 +104,7 @@
         }
 
         function toggleBoard(charId) {
+            // Apenas mestres ou master admin podem por na mesa (opcional)
             socket.emit('toggle_board', { charId: charId });
         }
 
@@ -107,7 +146,6 @@
                     <div class="mt-1 px-2 py-0.5 bg-black/70 text-white text-[10px] rounded backdrop-blur-sm truncate max-w-full">${char.name}</div>
                 `;
 
-                // Lógica de arrastar com JavaScript puro
                 token.addEventListener('pointerdown', (e) => {
                     const rect = token.getBoundingClientRect();
                     const boardRect = document.getElementById('board').getBoundingClientRect();
@@ -121,7 +159,6 @@
                         token.style.left = `${x}px`;
                         token.style.top = `${y}px`;
                         
-                        // Envia pro Python em tempo real
                         socket.emit('move_token', { charId: id, x: x, y: y });
                     }
 
