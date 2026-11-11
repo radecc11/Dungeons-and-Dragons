@@ -1,1 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Nexus VTT - Python Server</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importa o cliente do Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
+    <style>
+        .token { filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.6)); }
+    </style>
+</head>
+<body class="bg-[#0a0a0a] text-gray-200 h-screen flex overflow-hidden">
+    
+    <!-- Menu Lateral -->
+    <nav class="w-64 bg-[#121212] border-r border-[#222] flex flex-col z-50 p-4">
+        <h1 class="text-xl font-bold text-white mb-6 tracking-wider">NEXUS<span class="text-indigo-500">VTT</span></h1>
+        
+        <div class="mb-6 bg-[#1a1a1a] p-4 rounded border border-[#333]">
+            <h3 class="font-bold mb-2 text-sm text-gray-400">Criar Personagem</h3>
+            <input type="text" id="charName" placeholder="Nome" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white">
+            <input type="text" id="charImg" placeholder="URL da Imagem PNG" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white">
+            <button onclick="createCharacter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded">Adicionar</button>
+        </div>
 
+        <div id="characterList" class="flex flex-col gap-2 overflow-y-auto"></div>
+    </nav>
+
+    <!-- Tabuleiro -->
+    <main id="board" class="flex-1 relative bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920')">
+        <div id="tokensContainer" class="absolute inset-0"></div>
+    </main>
+
+    <script>
+        const socket = io();
+        let localState = { characters: {}, boardTokens: {} };
+
+        // Sincronização geral (quando entra ou algo grande muda)
+        socket.on('sync_state', (serverState) => {
+            localState = serverState;
+            document.getElementById('board').style.backgroundImage = `url(${serverState.session.backgroundUrl})`;
+            renderCharacters();
+            renderTokens();
+        });
+
+        // Sincronização rápida de movimento
+        socket.on('token_moved', (data) => {
+            localState.boardTokens[data.charId] = { x: data.x, y: data.y };
+            const tokenEl = document.getElementById(`token-${data.charId}`);
+            if (tokenEl) {
+                tokenEl.style.left = `${data.x}px`;
+                tokenEl.style.top = `${data.y}px`;
+            }
+        });
+
+        function createCharacter() {
+            const name = document.getElementById('charName').value;
+            const img = document.getElementById('charImg').value || 'https://via.placeholder.com/80/333333/FFFFFF?text=?';
+            if (!name) return;
+            
+            const charId = 'char_' + Date.now();
+            socket.emit('add_character', { id: charId, name: name, avatarUrl: img });
+            
+            document.getElementById('charName').value = '';
+            document.getElementById('charImg').value = '';
+        }
+
+        function toggleBoard(charId) {
+            socket.emit('toggle_board', { charId: charId });
+        }
+
+        function renderCharacters() {
+            const container = document.getElementById('characterList');
+            container.innerHTML = '';
+            Object.values(localState.characters).forEach(char => {
+                const isOnBoard = !!localState.boardTokens[char.id];
+                container.innerHTML += `
+                    <div class="bg-[#1a1a1a] p-3 rounded border border-[#333] flex justify-between items-center">
+                        <span class="font-bold text-sm truncate w-24">${char.name}</span>
+                        <button onclick="toggleBoard('${char.id}')" class="text-xs px-2 py-1 rounded ${isOnBoard ? 'bg-red-900/50 text-red-400' : 'bg-indigo-900/50 text-indigo-400'}">
+                            ${isOnBoard ? 'Remover' : 'Na Mesa'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTokens() {
+            const container = document.getElementById('tokensContainer');
+            container.innerHTML = '';
+            
+            Object.entries(localState.boardTokens).forEach(([id, pos]) => {
+                const char = localState.characters[id];
+                if (!char) return;
+
+                const token = document.createElement('div');
+                token.id = `token-${id}`;
+                token.className = "absolute cursor-grab flex flex-col items-center select-none";
+                token.style.left = `${pos.x}px`;
+                token.style.top = `${pos.y}px`;
+                token.style.width = '80px';
+                
+                token.innerHTML = `
+                    <div class="token transition-transform hover:scale-105">
+                        <img src="${char.avatarUrl}" draggable="false" class="w-[80px] h-[80px] object-contain pointer-events-none">
+                    </div>
+                    <div class="mt-1 px-2 py-0.5 bg-black/70 text-white text-[10px] rounded backdrop-blur-sm truncate max-w-full">${char.name}</div>
+                `;
+
+                // Lógica de arrastar com JavaScript puro
+                token.addEventListener('pointerdown', (e) => {
+                    const rect = token.getBoundingClientRect();
+                    const boardRect = document.getElementById('board').getBoundingClientRect();
+                    const offsetX = e.clientX - rect.left;
+                    const offsetY = e.clientY - rect.top;
+
+                    function onPointerMove(moveEvent) {
+                        let x = moveEvent.clientX - boardRect.left - offsetX;
+                        let y = moveEvent.clientY - boardRect.top - offsetY;
+                        
+                        token.style.left = `${x}px`;
+                        token.style.top = `${y}px`;
+                        
+                        // Envia pro Python em tempo real
+                        socket.emit('move_token', { charId: id, x: x, y: y });
+                    }
+
+                    function onPointerUp() {
+                        window.removeEventListener('pointermove', onPointerMove);
+                        window.removeEventListener('pointerup', onPointerUp);
+                    }
+
+                    window.addEventListener('pointermove', onPointerMove);
+                    window.addEventListener('pointerup', onPointerUp);
+                });
+
+                container.appendChild(token);
+            });
+        }
+    </script>
+</body>
+</html>
