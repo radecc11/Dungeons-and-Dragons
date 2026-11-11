@@ -1,1 +1,34 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Nexus VTT - Acesso Restrito</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0a0a0a] text-gray-200 h-screen flex items-center justify-center">
+    <div class="bg-[#121212] p-8 rounded-xl border border-[#333] w-96 shadow-2xl">
+        <h1 class="text-3xl font-bold text-center mb-2 tracking-wider">NEXUS<span class="text-indigo-500">VTT</span></h1>
+        <p class="text-center text-gray-500 text-sm mb-6">Acesso restrito à mesa.</p>
+        
+        {% if error %}
+        <div class="bg-red-900/30 border border-red-900 text-red-400 p-2 rounded mb-4 text-sm text-center">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="/login" class="flex flex-col gap-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Usuário</label>
+                <input type="text" name="username" class="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white outline-none focus:border-indigo-500" required>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Senha</label>
+                <input type="password" name="password" class="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white outline-none focus:border-indigo-500" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded mt-4 transition-colors">
+                Entrar na Sessão
+            </button>
+        </form>
+    </div>
+</body>
+</html>
