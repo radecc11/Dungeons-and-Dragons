@@ -2,177 +2,404 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus VTT - Sessão</title>
+    <title>NICOLAS VTT - Sessão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
     <style>
         .token { filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.6)); }
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-[#0a0a0a] text-gray-200 h-screen flex overflow-hidden">
     
-    <!-- Menu Lateral -->
-    <nav class="w-64 bg-[#121212] border-r border-[#222] flex flex-col z-50 p-4 overflow-y-auto">
-        <h1 class="text-xl font-bold text-white mb-4 tracking-wider">NEXUS<span class="text-indigo-500">VTT</span></h1>
-        
-        <!-- Info do Usuário Logado -->
-        <div class="mb-6 border-b border-[#333] pb-4">
-            <p class="text-sm text-gray-400">Usuário: <span class="text-white font-bold">{{ username }}</span></p>
-            <p class="text-xs text-indigo-400 mb-2">Nível: {{ role }}</p>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 underline">Desconectar</a>
+    <!-- Áudio do Jogo -->
+    <audio id="bgMusic" loop></audio>
+
+    <!-- MENU LATERAL -->
+    <nav class="w-64 bg-[#121212] border-r border-[#222] flex flex-col z-50">
+        <div class="p-6 border-b border-[#222]">
+            <h1 class="text-2xl font-bold text-white tracking-wider">NICOLAS<span id="themeLogo" class="text-indigo-500">VTT</span></h1>
+            <p class="text-xs text-gray-500 mt-1">Bem-vindo, {{ username }}</p>
         </div>
 
-        <!-- PAINEL EXCLUSIVO DO MASTER ADMIN -->
-        {% if role == 'master_admin' %}
-        <div class="mb-6 bg-indigo-900/20 p-3 rounded border border-indigo-900/50">
-            <h3 class="font-bold mb-3 text-sm text-indigo-400">👑 Criar Contas (Master)</h3>
-            <input type="text" id="newUsername" placeholder="Novo Login" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
-            <input type="text" id="newPassword" placeholder="Senha" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
-            <select id="newRole" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white text-xs">
-                <option value="admin">Mestre da Sessão</option>
-                <option value="player">Jogador Comum</option>
-            </select>
-            <button onclick="createUser()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 rounded text-xs">Adicionar Usuário</button>
-        </div>
-        {% endif %}
-        
-        <div class="mb-6 bg-[#1a1a1a] p-4 rounded border border-[#333]">
-            <h3 class="font-bold mb-2 text-sm text-gray-400">Criar Personagem</h3>
-            <input type="text" id="charName" placeholder="Nome" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white">
-            <input type="text" id="charImg" placeholder="URL da Imagem PNG" class="w-full bg-[#121212] p-2 rounded mb-2 border border-[#333] text-white">
-            <button onclick="createCharacter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded">Adicionar</button>
+        <div class="flex flex-col p-4 gap-2 flex-1">
+            <button onclick="switchTab('boardTab')" class="text-left p-3 rounded hover:bg-[#1a1a1a] text-gray-300 font-bold">🗺️ Mesa de Jogo</button>
+            <button onclick="switchTab('charsTab')" class="text-left p-3 rounded hover:bg-[#1a1a1a] text-gray-300 font-bold">👤 Personagens</button>
+            {% if role in ['master_admin', 'admin'] %}
+            <button onclick="switchTab('builderTab')" class="text-left p-3 rounded hover:bg-[#1a1a1a] text-gray-300 font-bold">📜 Modelos de Ficha</button>
+            <button onclick="switchTab('settingsTab')" class="text-left p-3 rounded hover:bg-[#1a1a1a] text-gray-300 font-bold">⚙️ Configurações</button>
+            {% endif %}
         </div>
 
-        <div id="characterList" class="flex flex-col gap-2"></div>
+        <div class="p-4 border-t border-[#222]">
+            <a href="/logout" class="block text-center w-full bg-red-900/30 text-red-400 py-2 rounded hover:bg-red-900/50">Sair da Sessão</a>
+        </div>
     </nav>
 
-    <!-- Tabuleiro -->
-    <main id="board" class="flex-1 relative bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920')">
-        <div id="tokensContainer" class="absolute inset-0"></div>
+    <!-- ÁREA PRINCIPAL -->
+    <main class="flex-1 relative flex">
+        
+        <!-- ABA 1: MESA DE JOGO -->
+        <div id="boardTab" class="tab-content active w-full h-full relative bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1920')">
+            <div id="tokensContainer" class="absolute inset-0"></div>
+            
+            <!-- CHAT E DADOS FLUTUANTE -->
+            <div class="absolute bottom-4 left-4 w-72 bg-[#121212]/90 backdrop-blur border border-[#333] rounded-xl flex flex-col shadow-2xl">
+                <div class="p-2 border-b border-[#333] flex gap-2">
+                    <button onclick="rollDice(20)" class="flex-1 bg-indigo-600 text-white rounded py-1 font-bold hover:bg-indigo-500">D20</button>
+                    <button onclick="rollDice(6)" class="flex-1 bg-gray-700 text-white rounded py-1 font-bold hover:bg-gray-600">D6</button>
+                    <button onclick="rollDice(100)" class="flex-1 bg-gray-700 text-white rounded py-1 font-bold hover:bg-gray-600">D100</button>
+                </div>
+                <div id="chatLog" class="h-48 overflow-y-auto p-3 flex flex-col gap-2 custom-scroll text-sm"></div>
+            </div>
+        </div>
+
+        <!-- ABA 2: PERSONAGENS -->
+        <div id="charsTab" class="tab-content w-full h-full flex-col p-8 overflow-y-auto bg-[#0a0a0a]">
+            <h2 class="text-2xl font-bold mb-6">Galeria de Personagens</h2>
+            
+            <div class="bg-[#121212] p-6 rounded-xl border border-[#333] mb-8 flex gap-4">
+                <input type="text" id="charName" placeholder="Nome do Personagem" class="flex-1 bg-[#1a1a1a] p-2 rounded border border-[#333] text-white">
+                <input type="text" id="charImg" placeholder="URL da Imagem (PNG)" class="flex-1 bg-[#1a1a1a] p-2 rounded border border-[#333] text-white">
+                <select id="charTemplate" class="bg-[#1a1a1a] p-2 rounded border border-[#333] text-white"></select>
+                <button onclick="createCharacter()" class="bg-indigo-600 px-6 font-bold rounded">Criar</button>
+            </div>
+
+            <div id="charGrid" class="grid grid-cols-4 gap-6"></div>
+        </div>
+
+        <!-- ABA 3: CONSTRUTOR DE FICHAS -->
+        <div id="builderTab" class="tab-content w-full h-full flex-col p-8 overflow-y-auto bg-[#0a0a0a]">
+            <h2 class="text-2xl font-bold mb-6">Construtor de Modelos</h2>
+            <div class="bg-[#121212] p-6 rounded-xl border border-[#333] mb-8">
+                <input type="text" id="tmplName" placeholder="Nome do Novo Modelo (Ex: D&D)" class="bg-[#1a1a1a] p-2 rounded border border-[#333] text-white mr-2">
+                <button onclick="createTemplate()" class="bg-indigo-600 px-6 py-2 font-bold rounded">Criar Novo Modelo</button>
+            </div>
+            <div id="templatesList" class="flex flex-col gap-6"></div>
+        </div>
+
+        <!-- ABA 4: CONFIGURAÇÕES -->
+        <div id="settingsTab" class="tab-content w-full h-full flex-col p-8 bg-[#0a0a0a]">
+            <h2 class="text-2xl font-bold mb-6">Configurações da Mesa</h2>
+            <div class="bg-[#121212] p-6 rounded-xl border border-[#333] max-w-xl space-y-6">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Fundo do Tabuleiro (URL)</label>
+                    <input type="text" id="setBg" class="w-full bg-[#1a1a1a] p-3 rounded border border-[#333] text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Música de Fundo (URL .mp3)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="setMusic" class="flex-1 bg-[#1a1a1a] p-3 rounded border border-[#333] text-white">
+                        <button onclick="toggleMusic()" id="btnMusic" class="bg-green-600 px-6 font-bold rounded">Tocar</button>
+                    </div>
+                </div>
+                <button onclick="saveSettings()" class="w-full bg-indigo-600 py-3 font-bold rounded mt-4">Salvar Configurações</button>
+            </div>
+            
+            {% if role == 'master_admin' %}
+            <h2 class="text-xl font-bold mt-12 mb-4 text-indigo-400">👑 Painel Master: Adicionar Mestre/Jogador</h2>
+            <div class="bg-[#121212] p-6 rounded-xl border border-[#333] max-w-xl flex gap-2">
+                <input type="text" id="newAccUser" placeholder="Login" class="w-1/3 bg-[#1a1a1a] p-2 rounded border border-[#333] text-white">
+                <input type="text" id="newAccPass" placeholder="Senha" class="w-1/3 bg-[#1a1a1a] p-2 rounded border border-[#333] text-white">
+                <select id="newAccRole" class="w-1/3 bg-[#1a1a1a] p-2 rounded border border-[#333] text-white">
+                    <option value="admin">Mestre</option>
+                    <option value="player">Jogador</option>
+                </select>
+                <button onclick="createAccount()" class="bg-indigo-600 px-4 font-bold rounded">Criar</button>
+            </div>
+            {% endif %}
+        </div>
+
     </main>
 
+    <!-- MODAL DE FICHA (Invisível até clicar) -->
+    <div id="sheetModal" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-8 backdrop-blur">
+        <div class="bg-[#121212] w-full max-w-3xl rounded-xl border border-[#333] flex flex-col max-h-full">
+            <div class="p-4 border-b border-[#333] flex justify-between items-center">
+                <h3 id="sheetTitle" class="text-xl font-bold text-white">Ficha</h3>
+                <button onclick="closeSheet()" class="text-red-400 font-bold hover:text-red-300">Fechar (X)</button>
+            </div>
+            <div id="sheetContent" class="p-6 overflow-y-auto grid grid-cols-2 gap-4"></div>
+        </div>
+    </div>
+
+    <!-- CÓDIGO JS PRINCIPAL -->
     <script>
         const socket = io();
-        let localState = { characters: {}, boardTokens: {} };
-        const userRole = "{{ role }}"; // Variável que vem do Python
+        let state = { characters: {}, boardTokens: {}, templates: {}, settings: {} };
+        const userRole = "{{ role }}"; 
 
-        // --- SISTEMA DE ADMIN ---
-        function createUser() {
-            const user = document.getElementById('newUsername').value;
-            const pass = document.getElementById('newPassword').value;
-            const role = document.getElementById('newRole').value;
-            if(user && pass) {
-                socket.emit('create_user', {username: user, password: pass, role: role});
+        // NAVEGAÇÃO
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // REDE E ATUALIZAÇÃO
+        socket.on('sync_state', (serverState) => {
+            state = serverState;
+            updateUI();
+        });
+
+        function updateUI() {
+            // Configs
+            document.getElementById('boardTab').style.backgroundImage = `url(${state.settings.backgroundUrl})`;
+            document.getElementById('themeLogo').style.color = state.settings.themeColor;
+            
+            // Popula opções de templates no select
+            const tSelect = document.getElementById('charTemplate');
+            tSelect.innerHTML = Object.values(state.templates).map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+            renderCharacters();
+            renderBoard();
+            renderTemplates();
+            renderChat();
+            
+            // Sync config fields
+            document.getElementById('setBg').value = state.settings.backgroundUrl;
+            document.getElementById('setMusic').value = state.settings.audioUrl;
+            
+            // Controle de Musica
+            const audio = document.getElementById('bgMusic');
+            if(state.settings.audioUrl !== audio.src) audio.src = state.settings.audioUrl;
+            if(state.settings.isPlaying) {
+                audio.play().catch(e=>console.log("Audio block"));
+                document.getElementById('btnMusic').innerText = "Parar";
+                document.getElementById('btnMusic').classList.replace('bg-green-600', 'bg-red-600');
+            } else {
+                audio.pause();
+                document.getElementById('btnMusic').innerText = "Tocar";
+                document.getElementById('btnMusic').classList.replace('bg-red-600', 'bg-green-600');
             }
         }
 
-        socket.on('user_created', (res) => {
-            alert(res.msg);
-            if(res.success) {
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newPassword').value = '';
-            }
-        });
-
-        // --- SISTEMA DO JOGO ---
-        socket.on('sync_state', (serverState) => {
-            localState = serverState;
-            document.getElementById('board').style.backgroundImage = `url(${serverState.session.backgroundUrl})`;
-            renderCharacters();
-            renderTokens();
-        });
-
-        socket.on('token_moved', (data) => {
-            localState.boardTokens[data.charId] = { x: data.x, y: data.y };
-            const tokenEl = document.getElementById(`token-${data.charId}`);
-            if (tokenEl) {
-                tokenEl.style.left = `${data.x}px`;
-                tokenEl.style.top = `${data.y}px`;
-            }
-        });
-
+        // PERSONAGENS E FICHAS
         function createCharacter() {
             const name = document.getElementById('charName').value;
             const img = document.getElementById('charImg').value || 'https://via.placeholder.com/80/333333/FFFFFF?text=?';
-            if (!name) return;
-            
+            const tid = document.getElementById('charTemplate').value;
+            if(!name || !tid) return;
+
             const charId = 'char_' + Date.now();
-            socket.emit('add_character', { id: charId, name: name, avatarUrl: img });
+            const tmpl = state.templates[tid];
+            let sheetData = {};
+            tmpl.fields.forEach(f => {
+                sheetData[f.id] = f.type === 'resource' ? {cur: 0, max: 0} : '';
+            });
+
+            const newChar = { id: charId, name: name, avatarUrl: img, templateId: tid, sheet: sheetData };
+            socket.emit('update_state', { category: 'characters', id: charId, value: newChar });
             
             document.getElementById('charName').value = '';
             document.getElementById('charImg').value = '';
         }
 
-        function toggleBoard(charId) {
-            // Apenas mestres ou master admin podem por na mesa (opcional)
-            socket.emit('toggle_board', { charId: charId });
-        }
-
         function renderCharacters() {
-            const container = document.getElementById('characterList');
-            container.innerHTML = '';
-            Object.values(localState.characters).forEach(char => {
-                const isOnBoard = !!localState.boardTokens[char.id];
-                container.innerHTML += `
-                    <div class="bg-[#1a1a1a] p-3 rounded border border-[#333] flex justify-between items-center">
-                        <span class="font-bold text-sm truncate w-24">${char.name}</span>
-                        <button onclick="toggleBoard('${char.id}')" class="text-xs px-2 py-1 rounded ${isOnBoard ? 'bg-red-900/50 text-red-400' : 'bg-indigo-900/50 text-indigo-400'}">
-                            ${isOnBoard ? 'Remover' : 'Na Mesa'}
+            const grid = document.getElementById('charGrid');
+            grid.innerHTML = Object.values(state.characters).map(c => `
+                <div class="bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden flex flex-col">
+                    <img src="${c.avatarUrl}" class="h-32 w-full object-contain bg-[#0a0a0a] p-2">
+                    <div class="p-4 flex flex-col gap-2">
+                        <h4 class="font-bold truncate">${c.name}</h4>
+                        <button onclick="openSheet('${c.id}')" class="bg-gray-700 py-1 rounded text-sm hover:bg-gray-600">Ver Ficha</button>
+                        <button onclick="toggleBoard('${c.id}')" class="py-1 rounded text-sm ${state.boardTokens[c.id] ? 'bg-red-900/50 text-red-400' : 'bg-indigo-900/50 text-indigo-400'}">
+                            ${state.boardTokens[c.id] ? 'Remover da Mesa' : 'Por na Mesa'}
                         </button>
                     </div>
-                `;
-            });
+                </div>
+            `).join('');
         }
 
-        function renderTokens() {
+        let activeSheetChar = null;
+        function openSheet(charId) {
+            activeSheetChar = state.characters[charId];
+            document.getElementById('sheetTitle').innerText = activeSheetChar.name;
+            renderSheetContent();
+            document.getElementById('sheetModal').classList.replace('hidden', 'flex');
+        }
+        function closeSheet() { document.getElementById('sheetModal').classList.replace('flex', 'hidden'); activeSheetChar = null;}
+
+        function renderSheetContent() {
+            if(!activeSheetChar) return;
+            const tmpl = state.templates[activeSheetChar.templateId];
+            const content = document.getElementById('sheetContent');
+            content.innerHTML = tmpl.fields.map(f => {
+                const val = activeSheetChar.sheet[f.id];
+                if(f.type === 'resource') {
+                    return `
+                    <div class="bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-2">${f.name}</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" onchange="updateSheetField('${f.id}', 'cur', this.value)" value="${val.cur}" class="w-16 bg-[#121212] p-1 border border-[#444] rounded text-white text-center">
+                            <span>/</span>
+                            <input type="number" onchange="updateSheetField('${f.id}', 'max', this.value)" value="${val.max}" class="w-16 bg-[#121212] p-1 border border-[#444] rounded text-gray-400 text-center">
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="bg-[#1a1a1a] p-3 rounded border border-[#333]">
+                        <label class="text-xs text-gray-500 font-bold uppercase block mb-2">${f.name}</label>
+                        <input type="text" onchange="updateSheetField('${f.id}', 'val', this.value)" value="${val}" class="w-full bg-[#121212] p-2 border border-[#444] rounded text-white">
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        function updateSheetField(fieldId, prop, value) {
+            if(!activeSheetChar) return;
+            if(prop === 'val') {
+                activeSheetChar.sheet[fieldId] = value;
+            } else {
+                activeSheetChar.sheet[fieldId][prop] = Number(value);
+            }
+            socket.emit('update_state', { category: 'characters', id: activeSheetChar.id, value: activeSheetChar });
+        }
+
+        // MESA E TABULEIRO
+        function toggleBoard(charId) {
+            if(state.boardTokens[charId]) {
+                socket.emit('remove_token', charId);
+            } else {
+                socket.emit('update_state', { category: 'boardTokens', id: charId, value: {x: 200, y: 200} });
+            }
+        }
+
+        function renderBoard() {
             const container = document.getElementById('tokensContainer');
             container.innerHTML = '';
-            
-            Object.entries(localState.boardTokens).forEach(([id, pos]) => {
-                const char = localState.characters[id];
+            Object.entries(state.boardTokens).forEach(([id, pos]) => {
+                const char = state.characters[id];
                 if (!char) return;
 
                 const token = document.createElement('div');
-                token.id = `token-${id}`;
                 token.className = "absolute cursor-grab flex flex-col items-center select-none";
                 token.style.left = `${pos.x}px`;
                 token.style.top = `${pos.y}px`;
-                token.style.width = '80px';
                 
+                // Barrinha de vida na mesa se tiver HP configurado no molde
+                let hpBar = '';
+                const hpField = state.templates[char.templateId]?.fields.find(f => f.name.toLowerCase().includes('vida') || f.name.toLowerCase() === 'hp');
+                if(hpField) {
+                    const hp = char.sheet[hpField.id];
+                    const pct = hp.max > 0 ? (hp.cur/hp.max)*100 : 0;
+                    hpBar = `<div class="w-full h-1 bg-red-900 mt-1"><div class="h-full bg-green-500" style="width: ${pct}%"></div></div>`;
+                }
+
                 token.innerHTML = `
                     <div class="token transition-transform hover:scale-105">
                         <img src="${char.avatarUrl}" draggable="false" class="w-[80px] h-[80px] object-contain pointer-events-none">
                     </div>
-                    <div class="mt-1 px-2 py-0.5 bg-black/70 text-white text-[10px] rounded backdrop-blur-sm truncate max-w-full">${char.name}</div>
+                    ${hpBar}
+                    <div class="mt-1 px-2 py-0.5 bg-black/70 text-white text-[10px] rounded backdrop-blur-sm truncate w-20 text-center">${char.name}</div>
                 `;
 
+                // Logica de arrastar
                 token.addEventListener('pointerdown', (e) => {
-                    const rect = token.getBoundingClientRect();
-                    const boardRect = document.getElementById('board').getBoundingClientRect();
-                    const offsetX = e.clientX - rect.left;
-                    const offsetY = e.clientY - rect.top;
+                    const boardRect = document.getElementById('boardTab').getBoundingClientRect();
+                    const offsetX = e.clientX - token.getBoundingClientRect().left;
+                    const offsetY = e.clientY - token.getBoundingClientRect().top;
+                    
+                    // Mostra ficha rapida ao clicar
+                    openSheet(char.id); 
 
-                    function onPointerMove(moveEvent) {
-                        let x = moveEvent.clientX - boardRect.left - offsetX;
-                        let y = moveEvent.clientY - boardRect.top - offsetY;
-                        
-                        token.style.left = `${x}px`;
-                        token.style.top = `${y}px`;
-                        
-                        socket.emit('move_token', { charId: id, x: x, y: y });
+                    function onPointerMove(ev) {
+                        let x = ev.clientX - boardRect.left - offsetX;
+                        let y = ev.clientY - boardRect.top - offsetY;
+                        token.style.left = `${x}px`; token.style.top = `${y}px`;
+                        socket.emit('update_state', { category: 'boardTokens', id: id, value: {x: x, y: y} });
                     }
-
                     function onPointerUp() {
                         window.removeEventListener('pointermove', onPointerMove);
                         window.removeEventListener('pointerup', onPointerUp);
                     }
-
                     window.addEventListener('pointermove', onPointerMove);
                     window.addEventListener('pointerup', onPointerUp);
                 });
-
                 container.appendChild(token);
             });
+        }
+
+        // CONSTRUTOR DE MODELOS (ADMIN)
+        function createTemplate() {
+            const name = document.getElementById('tmplName').value;
+            if(!name) return;
+            const tid = 'tmpl_' + Date.now();
+            const novo = { id: tid, name: name, fields: [] };
+            socket.emit('update_state', { category: 'templates', id: tid, value: novo });
+            document.getElementById('tmplName').value = '';
+        }
+
+        function addFieldToTemplate(tid) {
+            const tmpl = state.templates[tid];
+            tmpl.fields.push({id: 'f_'+Date.now(), name: 'Novo Atributo', type: 'number'});
+            socket.emit('update_state', { category: 'templates', id: tid, value: tmpl });
+        }
+
+        function updateFieldTemplate(tid, fieldId, prop, value) {
+            const tmpl = state.templates[tid];
+            const field = tmpl.fields.find(f => f.id === fieldId);
+            field[prop] = value;
+            socket.emit('update_state', { category: 'templates', id: tid, value: tmpl });
+        }
+
+        function renderTemplates() {
+            if(userRole === 'player') return;
+            const list = document.getElementById('templatesList');
+            list.innerHTML = Object.values(state.templates).map(t => `
+                <div class="bg-[#1a1a1a] p-4 rounded-xl border border-[#333]">
+                    <h3 class="text-lg font-bold text-indigo-400 mb-4">${t.name}</h3>
+                    <div class="space-y-2 mb-4">
+                        ${t.fields.map(f => `
+                            <div class="flex gap-2 bg-[#121212] p-2 rounded border border-[#222]">
+                                <input type="text" onchange="updateFieldTemplate('${t.id}', '${f.id}', 'name', this.value)" value="${f.name}" class="flex-1 bg-transparent text-sm text-white outline-none">
+                                <select onchange="updateFieldTemplate('${t.id}', '${f.id}', 'type', this.value)" class="bg-[#222] text-sm text-gray-300 rounded border border-[#333] px-2">
+                                    <option value="number" ${f.type==='number'?'selected':''}>Número / Texto</option>
+                                    <option value="resource" ${f.type==='resource'?'selected':''}>Recurso (Vida/Mana)</option>
+                                </select>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="addFieldToTemplate('${t.id}')" class="text-sm text-gray-400 hover:text-white">+ Adicionar Campo</button>
+                </div>
+            `).join('');
+        }
+
+        // DADOS E CHAT
+        function rollDice(sides) {
+            socket.emit('roll_dice', { sides: sides });
+        }
+        function renderChat() {
+            const chat = document.getElementById('chatLog');
+            chat.innerHTML = state.chatLog.map(m => `
+                <div class="bg-[#1a1a1a] p-2 rounded border border-[#333]">
+                    <span class="text-indigo-400 font-bold">${m.player}</span> rolou ${m.dice}: 
+                    <span class="text-white font-bold text-lg ml-1">${m.result}</span>
+                </div>
+            `).join('');
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // CONFIGURAÇÕES GERAIS
+        function saveSettings() {
+            const bg = document.getElementById('setBg').value;
+            socket.emit('update_state', { category: 'settings', value: {backgroundUrl: bg} });
+        }
+        function toggleMusic() {
+            const isPlaying = !state.settings.isPlaying;
+            const url = document.getElementById('setMusic').value;
+            socket.emit('update_state', { category: 'settings', value: {audioUrl: url, isPlaying: isPlaying} });
+        }
+        function createAccount() {
+            const user = document.getElementById('newAccUser').value;
+            const pass = document.getElementById('newAccPass').value;
+            const role = document.getElementById('newAccRole').value;
+            if(user && pass) {
+                socket.emit('create_user', {username: user, password: pass, role: role});
+                alert("Pedido enviado!");
+            }
         }
     </script>
 </body>
